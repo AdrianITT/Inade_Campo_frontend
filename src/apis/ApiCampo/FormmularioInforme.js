@@ -20,6 +20,7 @@ export const updateSitioMuestreo = (id,data) => Api_Host.patch(`/campo/sitiomues
 export const updatePuntoMuestreo = (id,data) => Api_Host.patch(`/campo/puntomuestreo/${id}/`,data);
 export const updateProcedimientoMuestreo = (id,data) => Api_Host.patch(`/campo/procedimientomuestreo/${id}/`,data);
 export const updatePlanMuestreo = (id,data) => Api_Host.patch(`/campo/planmuestreo/${id}/`,data);
+export const updateIntermediario = (id,data) => Api_Host.patch(`/campo/intermediario/${id}/`,data);
 
 export const fetchProtocolo = async (id) => {
   const { data } = await Api_Host.get(`/campo/protocolomuestreo/${id}/`);

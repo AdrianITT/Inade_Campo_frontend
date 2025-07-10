@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Table, Button, Card, Dropdown, Menu, message, Modal } from "antd";
+import { Table, Button, Card, Dropdown, Menu, message, Modal, Collapse, Space, Typography } from "antd";
 import { RightCircleTwoTone, FileTextTwoTone, FilePdfTwoTone, MailTwoTone, DeleteOutlined, EditTwoTone } from "@ant-design/icons";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {getDetallesAguaResidualInforme} from "../../apis/ApiCampo/DetallesAguasResiduales";
+import {createIntermediario} from "../../apis/ApiCampo/FormmularioInforme";
 import "./css/DAR.css"; // Asegúrate de importar el archivo CSS
 
-
+const { Panel } = Collapse;
+const { Text } = Typography;
 
 const DetallesAguasResiduales = () => {
   const { id } = useParams();
@@ -28,8 +30,6 @@ const DetallesAguasResiduales = () => {
 
   // Obtener el ID de la organización una sola vez
      //const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
-     
-       useEffect(() => {
     const fetchData = async () => {
       try {
           setLoadingId(id);
@@ -53,46 +53,43 @@ const DetallesAguasResiduales = () => {
           setLoadingId(null); 
       }
     };
-    fetchData();
-  }, [id]);
-
-  const columnasServicios = [
-    {
-      title: "Nombre del servicio",
-      key: "id",
-      render: (_, record) => `Informes de aguas residuales #${record.id}`,
-    },
-     {
-          title: "Opciones", 
-          key: "opciones",
-          render: (_, record) => (
-          <Link to={`/ImformesAguas/${record.id}`}>
-            <Button className="detalles-button">Continuar</Button>
-          </Link>
-          ),
-     },
-
-  ];
+     useEffect(() => {
+      fetchData();
+    }, [id]);
   
 
-    // Función para mostrar el modal de eliminación
-  const showDeleteModal = () => {
-    setIsDeleteModalVisible(true);
-  };
+  //   // Función para mostrar el modal de eliminación
+  // const showDeleteModal = () => {
+  //   setIsDeleteModalVisible(true);
+  // };
 
-      // Función para cancelar la eliminación
-  const handleCancelDelete = () => {
-    setIsDeleteModalVisible(false);
-  };
+  //     // Función para cancelar la eliminación
+  // const handleCancelDelete = () => {
+  //   setIsDeleteModalVisible(false);
+  // };
 
-
-  /*<Menu.Item key="2" icon={<FileTextTwoTone />}>
-        <Link to={`/CrearFactura/${orderId}`}>Detalles de Facturar</Link>
-      </Menu.Item> */
   const menu = (
     <Menu>
-      <Menu.Item key="1" icon={<RightCircleTwoTone />}>
-        <Link to={`/Formularios/${id}`}>Crear Informe AR</Link>
+      <Menu.Item key="1" icon={<RightCircleTwoTone />}
+      onClick={async () => {
+      try {
+        await createIntermediario({ aguaResidualInforme: id });
+        message.success("Intermediario creado");
+        fetchData(); // 🔁 Recargar Collapse con nuevos datos
+        } catch (err) {
+          message.error("Error al crear el intermediario");
+          console.error(err);
+        }
+      }}
+      >
+        Crear Intermediario
+      </Menu.Item>
+      <Menu.Item key="2" icon={<FileTextTwoTone />}>
+        <Link to={`/FormularioProtocoloMuestreo/${id}`}>
+          <Button type="link" style={{ padding: 0 }}>
+        Crear Croquis de Ubicación
+          </Button>
+      </Link>
       </Menu.Item>
     </Menu>
 
@@ -132,14 +129,82 @@ const DetallesAguasResiduales = () => {
       </Card>
 
       <h2 className="concepts-title">Conceptos Asociados</h2>
-      <Table
+      {/* <Table
         className="services-table"
         dataSource={servicesData}
         columns={columnasServicios}
         bordered
         pagination={false}
         rowKey={(record) => record.uid}// O si tu record tiene id
-      />
+      /> */}
+
+      <Collapse accordion>
+      {servicesData.map((item) => (
+        <Panel
+          key={item.id}
+          header={
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>Intermediario ID: {item.id}</span>
+              <Space>
+                <Link to={`/FormularioProtocoloMuestreo/${item.id}`}>
+                <Button size="small">Crear Protocolo de Muestreo</Button>
+                </Link>
+                <Link to={`/HojaCampoMuestreo/${item.id}`}>
+                <Button size="small" >Crear Hoja de campo</Button>
+                </Link>
+                <Link to={`/ImformesAguas/${item.id}`}>
+                <Button size="small" >Eliminar</Button>
+                {/* onClick={() => handleEliminarIntermediario(item.id)} */}
+                </Link>
+              </Space>
+            </div>
+          }
+        >
+          {item.protocoloMuestreo && (
+          <div style={{ marginBottom: 16 }}>
+            <Text strong>Protocolo de Muestreo:</Text>{" "}
+            {item.protocoloMuestreo || "No asignado"}
+            <br />
+            <Space wrap style={{ marginTop: 8 }}>
+              <Button size="small" type="primary" >
+                Crear Protocolo
+              </Button>
+              <Button size="small" danger>
+                Eliminar Protocolo
+              </Button>
+            </Space>
+          </div>
+        )}
+
+          {item.hojaCampo && (
+          <div style={{ marginBottom: 16 }}>
+            <Text strong>Hoja de Campo:</Text>{" "}
+            {item.hojaCampo || "No asignada"}
+            <br />
+            <Space wrap style={{ marginTop: 8 }}>
+              <Button size="small" type="primary" >
+                Crear Hoja de Campo
+              </Button>
+              <Button size="small" danger >
+                Eliminar Hoja de Campo
+              </Button>
+            </Space>
+          </div>
+          )}
+
+          {/* <div>
+            <Space wrap>
+              <Button size="small" >
+                Crear Croquis
+              </Button>
+              <Button size="small" danger >
+                Eliminar Intermediario
+              </Button>
+            </Space>
+          </div> */}
+        </Panel>
+      ))}
+    </Collapse>
 
     </div>
   );

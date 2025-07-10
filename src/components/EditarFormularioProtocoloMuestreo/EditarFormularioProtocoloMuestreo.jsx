@@ -1,5 +1,5 @@
 import React, {useRef, useState} from "react";
-import "./FormularioProtocoloMuestreo.css";
+import "./EditarFormularioProtocoloMuestreo.css";
 import {
   Form,
   Input,
@@ -49,7 +49,7 @@ const INSTRUMENTOS = [
   { label: "Cadena de custodia",       value: 14 },
 ];
 
-const FormularioProtocoloMuestreo = () => {
+const EditarFormularioProtocoloMuestreo = () => {
   const [form] = Form.useForm();
   const [idProtocoloMuestreo, setIdProtocoloMuestreo] = useState(null);
   const [idIntermediario, setIdIntermediario] = useState(null);
@@ -518,4 +518,4 @@ const enviarSeccion = async (punto, ref) => {
   );
 };
 
-export default FormularioProtocoloMuestreo;
+export default EditarFormularioProtocoloMuestreo;

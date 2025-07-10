@@ -21,6 +21,7 @@ import {
 } from "../../apis/ApiCampo/HojaCampo";
 import { saveHojaCampo } from "./hojaCampoService";
 import { useParams } from "react-router-dom";
+import { TextInput } from "@react-pdf/renderer";
 
 
 const HojaCampoMuestreo = ({ initialValues = {}, onBack, onNext }) => {
@@ -60,7 +61,7 @@ const onFinish = (values) => {
 };
 const handleSave = async (values) => {
   let hojaCampoId;
-  const intermediarioGuardado = localStorage.getItem("intermediarioId");
+  const intermediarioGuardado = id;
   console.log("intermediarioGuardado:", intermediarioGuardado);
   const hojaCampoExistente = await fetchHojaCampoFromIntermediario(intermediarioGuardado);
   const mapMuestrasToFormValues = (muestras) => {
@@ -109,11 +110,13 @@ const handleSave = async (values) => {
   }));
 };
 
-  console.log("Hoja de campo existente:", hojaCampoExistente);
+  console.log("Hoja de campo existente1:", hojaCampoExistente);
+  //hojaCampoExistente.muestras?.length
+  console.log("Hoja de campo existente2:", hojaCampoExistente?.muestras?.length);
   try {
-    if (hojaCampoExistente && hojaCampoExistente.muestras?.length > 0) {
-    const registrosFormateados = mapMuestrasToFormValues(hojaCampoExistente.muestras);
-    values.registros = registrosFormateados;
+    if (hojaCampoExistente ) {
+    // const registrosFormateados = mapMuestrasToFormValues(hojaCampoExistente.muestras);
+    // values.registros = registrosFormateados;
     hojaCampoId = hojaCampoExistente;
     console.log("Hoja de campo ya existe, actualizando:", hojaCampoId);
     await updateHojaCampo(hojaCampoId,{
@@ -134,7 +137,7 @@ const handleSave = async (values) => {
       normaReferencia  : values.normaReferencia ,
       condicionMuestreo: values.condicionMuestreo ,
       fechaMuestreo    : dayjs().format?.("YYYY-MM-DD"),
-      observacion      : values.observacion,
+      observacion      : values.observaciones,
       muestreador      : values.muestreador,
       supervisor       : values.supervisor,
     });
@@ -146,6 +149,12 @@ const handleSave = async (values) => {
       hojaCampo: hojaCampoId,
     });
   }
+
+  if (hojaCampoExistente?.muestras?.length > 0) {
+  const registrosFormateados = mapMuestrasToFormValues(hojaCampoExistente.muestras);
+  values.registros = registrosFormateados;
+  }
+
 
   // Ahora guarda las muestras
   await saveHojaCampo(values, hojaCampoId, form);
@@ -280,7 +289,10 @@ const handleSave = async (values) => {
         )}
         
       </Form.List>
-
+      
+      <Col span={24}><Form.Item label="Observaciones:" name="observaciones"><Input.TextArea/></Form.Item></Col>
+      <Col span={24}><Form.Item  label="Muestreo Realizado por:" name="muestreador"><Input/></Form.Item></Col>
+      <Col span={24}><Form.Item  label="Supervisado por:" name="supervisor"><Input/></Form.Item></Col>
       <Divider />
 
       <Form.Item>

@@ -77,14 +77,15 @@ const AppRouter = () => {
             </PageWrapper>
           }
         >
-          <Route path="/FormularioProtocoloMuestreo" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><FormularioProtocoloMuestreo /></ProtectedRoute>} />
-          <Route path="/HojaCampoMuestreo" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><HojaCampoMuestreo/></ProtectedRoute>} />
+          {/* <Route path="/FormularioProtocoloMuestreo" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><FormularioProtocoloMuestreo /></ProtectedRoute>} /> */}
+          <Route path="/HojaCampoMuestreo/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><HojaCampoMuestreo/></ProtectedRoute>} />
           <Route path="/FormularioCroquisUbicacion" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><FormularioCroquisUbicacion/></ProtectedRoute>} />
           <Route path="/home" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Home/></ProtectedRoute>} />
           <Route path="/AguasResiduales" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><AguasResiduales/></ProtectedRoute>} />
           <Route path="/OrdenTrabajo" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><OrdenTrabajo/></ProtectedRoute>} />
           <Route path="/DetallesAguasResiduales/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><DetallesAguasResiduales/></ProtectedRoute>} />
           <Route path="/Formularios/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Formularios/></ProtectedRoute>} />
+          <Route path="/FormularioProtocoloMuestreo/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><FormularioProtocoloMuestreo /></ProtectedRoute>} />
           {/* Rutas protegidas para los diferentes roles /AguasResiduales*/}
         </Route>
       </Routes>
