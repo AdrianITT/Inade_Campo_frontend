@@ -1,0 +1,6 @@
+export const updatePhMuestra           = (id,data) => Api_Host.patch(`/campo/phmuestra${id}/`, data);
+export const updateTemperaturaMuestra  = (id,data) => Api_Host.patch(`/campo/temperaturamuestra${id}/`, data);
+export const updateConductividadMuestra= (id,data) => Api_Host.patch(`/campo/conductividadmuestra${id}/`, data);
+export const updateTemperaturaAire     = (id,data) => Api_Host.patch(`/campo/temperaturaairemuestra${id}/`, data);
+export const updateTiempoMuestra       = (id,data) => Api_Host.patch(`/campo/tiempomuestra${id}/`, data);
+export const updateVolumenMuestra      = (id,data) => Api_Host.patch(`/campo/volumenmuestra${id}/`, data);

@@ -1,0 +1,8 @@
+.panel-header-sticky {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 5;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
