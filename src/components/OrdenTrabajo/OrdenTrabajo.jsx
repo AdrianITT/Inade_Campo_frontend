@@ -112,7 +112,7 @@ const handleAgregar = (record) => {
         console.log("Croquis creado:", croquis);
         /* Paso 2: informe de agua residual */
         await createAguaResidualInforme({
-          OrdenTrabajo: record.estado.id, // Asegúrate de que este campo sea correcto
+          OrdenTrabajo: record.orden, // Asegúrate de que este campo sea correcto
           CroquisUbicacion: croquis.id,
           // ⚠️  agrega aquí los demás campos obligatorios de tu modelo
         });
