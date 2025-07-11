@@ -25,7 +25,7 @@ const DetallesAguasResiduales = () => {
   const [informes, setInformes] = useState(null);
   const [estadoOrden, setEstadoOrden] = useState(null);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [IdCotizacion, setIdCotizacion] = useState([]); // Datos de los servicios (tabla "servicio")
+  const [IdCoquis, setIdCoquis] = useState([]); // Datos de los servicios (tabla "servicio")
   const [loadingId, setLoadingId] = useState(null);
 
   // Obtener el ID de la organización una sola vez
@@ -43,7 +43,7 @@ const DetallesAguasResiduales = () => {
         setRecep(data.ordenTrabajo.receptor);
         setOrderHeader(data.ordenTrabajo);
         setServicesData(data.intermediario);
-
+        setIdCoquis(data.croquis);
 
         // Si necesitas un "método" adicional, tendrías que mapear
         // y hacer llamadas a getMetodoById(...) como hacías antes.
@@ -86,7 +86,7 @@ const DetallesAguasResiduales = () => {
         Crear Intermediario
       </Menu.Item>
       <Menu.Item key="2" icon={<FileTextTwoTone />}>
-        <Link to={`/FormularioCroquisUbicacion/${id}`}>
+        <Link to={`/FormularioCroquisUbicacion/${IdCoquis.id}`}>
           <Button type="link" style={{ padding: 0 }}>
         Crear Croquis de Ubicación
           </Button>
@@ -129,7 +129,7 @@ const DetallesAguasResiduales = () => {
         )}
       </Card>
 
-      <h2 className="concepts-title">Conceptos Asociados</h2>
+      <h2 className="concepts-title">Croquis</h2>
       {/* <Table
         className="services-table"
         dataSource={servicesData}
@@ -138,7 +138,37 @@ const DetallesAguasResiduales = () => {
         pagination={false}
         rowKey={(record) => record.uid}// O si tu record tiene id
       /> */}
+    <Collapse accordion>
+      <Panel
+        key={IdCoquis.id}
+        header={
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>croquis ID: {IdCoquis.id}</span>
+            <Space>
+              <Link to={`/FormularioCroquisUbicacion/${IdCoquis.id}`}>
+                <Button size="small">Eliminar</Button>
+              </Link>
+            </Space>
+          </div>
+        }
+      >
+        {IdCoquis.comentario && (
+          <div style={{ marginBottom: 16 }}>
+            <Text strong>Protocolo de Muestreo:</Text>{" "}
+            {IdCoquis.protocoloMuestreo || "No asignado"}
+            <br />
+            <span>{IdCoquis.domicilio}</span>
+            <span>{IdCoquis.comentario}</span>
+            {/* <Space wrap style={{ marginTop: 8 }}>
+              <Button size="small" type="primary">Continuar con Croquis</Button>
+              <Button size="small" danger>Eliminar</Button>
+            </Space> */}
+          </div>
+        )}
+      </Panel>
+    </Collapse>
 
+        <h2 className="concepts-title">Intermediario</h2>
       <Collapse accordion>
       {servicesData.map((item) => (
         <Panel
@@ -168,7 +198,7 @@ const DetallesAguasResiduales = () => {
             <br />
             <Space wrap style={{ marginTop: 8 }}>
               <Button size="small" type="primary" >
-                Crear Protocolo
+                Continuar Protocolo
               </Button>
               <Button size="small" danger>
                 Eliminar Protocolo
@@ -184,7 +214,7 @@ const DetallesAguasResiduales = () => {
             <br />
             <Space wrap style={{ marginTop: 8 }}>
               <Button size="small" type="primary" >
-                Crear Hoja de Campo
+                Continuar Hoja de Campo
               </Button>
               <Button size="small" danger >
                 Eliminar Hoja de Campo

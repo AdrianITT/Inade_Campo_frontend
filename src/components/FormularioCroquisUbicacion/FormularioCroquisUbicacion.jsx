@@ -12,19 +12,22 @@ import {
   Upload
 } from "antd";
 import { updateCroquisUbicacion } from "../../apis/ApiCampo/CroquisUbicacion";
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { ControlOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import ImageEditorModal from "./ImageEditorModal";
+import { useParams } from "react-router-dom";
 
 const { Panel } = Collapse;
 
 const FormularioCroquisUbicacion = () => {
   const [form] = Form.useForm();
+  const {id} = useParams();
   const [activePanelKey, setActivePanelKey] = useState("1");
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
   const punto1Ref = useRef(null);
   const [editorVisible, setEditorVisible] = useState(false);
   const [tempImage, setTempImage] = useState(null); // imagen sin editar
+  const [fileObj, setFileObj] = useState(null);
 
 
   // Para convertir la imagen en base64 (opcional si quieres mostrarla en vista previa)
@@ -70,14 +73,23 @@ const handleChange = info => {
     setLoading(true);
     return;
   }
+
   if (info.file.originFileObj) {
+    // 1️⃣  Guarda el File para después
+    setFileObj(info.file.originFileObj);
+
+    // 2️⃣  Genera una mini-preview (thumbUrl) para mostrar
+    setImageUrl(info.file.thumbUrl || URL.createObjectURL(info.file.originFileObj));
+
+    // 3️⃣  Si quieres abrir el editor con la imagen original en base64
     getBase64(info.file.originFileObj, (url) => {
-      setTempImage(url); // guarda imagen original
-      setEditorVisible(true); // abre editor
+      setTempImage(url);
+      setEditorVisible(true);
       setLoading(false);
     });
   }
 };
+
 
 
   const uploadButton = (
@@ -87,29 +99,23 @@ const handleChange = info => {
     </div>
   );
 
-     const onFinish = async (values) => {
-     try {
-     let webpImage = null;
-     if (imageUrl) {
-          webpImage = await convertirBase64AWebp(imageUrl);
-     }
+const onFinish = async (values) => {
+  try {
+    const fd = new FormData();
+    fd.append('domicilio', values.domicilioUbicacion);
+    fd.append('comentario', values.comentarios || '');
 
-     const payload = {
-          ...values,
-          croquisWebp: webpImage, // imagen en base64.webp
-     };
+    // ✅ Importante: adjuntamos el archivo
+    if (fileObj) fd.append('croquis', fileObj);
 
-     console.log("Datos del formulario con imagen WebP:", payload);
+    await updateCroquisUbicacion(id, fd);
+    message.success('Formulario enviado correctamente');
+  } catch (err) {
+    console.error(err);
+    message.error('Error al enviar el formulario');
+  }
+};
 
-     // Aquí puedes hacer la petición al backend, por ejemplo:
-     // await axios.post('/api/tu-endpoint', payload);
-
-     message.success("Formulario enviado correctamente.");
-     } catch (error) {
-     console.error(error);
-     message.error("Error al enviar el formulario.");
-     }
-     };
 
 
   const enviarSeccion = async (punto) => {
@@ -133,6 +139,15 @@ const handleChange = info => {
       message.error("Error al enviar los datos");
     }
   };
+  function base64ToFile(b64, filename) {
+  const arr = b64.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const binary = atob(arr[1]);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+  return new File([bytes], filename, { type: mime });
+}
 
   return (
     <Form
@@ -152,7 +167,7 @@ const handleChange = info => {
                 <h3 style={{ margin: 0 }}>Punto 1 - Datos del Sitio de Muestreo</h3>
               </Col>
               <Col>
-                <Button 
+                {/* <Button 
                   type="primary" 
                   onClick={(e) => {
                     e.stopPropagation(); 
@@ -165,14 +180,14 @@ const handleChange = info => {
                   }}
                 >
                   Guardar
-                </Button>
+                </Button> */}
               </Col>
             </Row>
           </div>
 
-          <Form.Item label="Nombre de la Empresa" name="nombreEmpresa">
+          {/* <Form.Item label="Nombre de la Empresa" name="nombreEmpresa">
             <Input placeholder="Nombre de la empresa" />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item label="Domicilio / Ubicación Física" name="domicilioUbicacion">
             <Input.TextArea placeholder="Dirección del sitio" rows={2} />
@@ -197,10 +212,15 @@ const handleChange = info => {
           <ImageEditorModal
           visible={editorVisible}
           imageSrc={tempImage}
-          onSave={(editedBase64) => {
-          setImageUrl(editedBase64); // guarda imagen editada
-          setEditorVisible(false);
-          message.success("Imagen editada correctamente.");
+          onSave={(editedB64) => {
+            // 1️⃣  Convierte el base64 editado en File
+            const editedFile = base64ToFile(editedB64, 'croquis.webp');
+
+            // 2️⃣  Actualiza el estado
+            setFileObj(editedFile);
+            setImageUrl(editedB64);       // solo para seguir mostrando preview
+            setEditorVisible(false);
+            message.success('Imagen editada correctamente');
           }}
           onCancel={() => {
           setEditorVisible(false);
@@ -215,11 +235,11 @@ const handleChange = info => {
         </Panel>
       </Collapse>
 
-      {/* <Form.Item>
+      <Form.Item>
         <Button type="primary" htmlType="submit">
           Enviar
         </Button>
-      </Form.Item> */}
+      </Form.Item>
     </Form>
   );
 };
