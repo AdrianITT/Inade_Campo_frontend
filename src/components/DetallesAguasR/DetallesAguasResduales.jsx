@@ -22,7 +22,7 @@ const DetallesAguasResiduales = () => {
   const [clientData, setClientData] = useState(null); // Datos del cliente (que contiene el id de la empresa)
   const [recep, setRecep] = useState(null);
   const [empresa, setEmpresa] = useState(null);
-  const [estadoEmpresa, setEstadoEmpresa] = useState(null);
+  const [informes, setInformes] = useState(null);
   const [estadoOrden, setEstadoOrden] = useState(null);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [IdCotizacion, setIdCotizacion] = useState([]); // Datos de los servicios (tabla "servicio")
@@ -44,11 +44,12 @@ const DetallesAguasResiduales = () => {
         setOrderHeader(data.ordenTrabajo);
         setServicesData(data.intermediario);
 
+
         // Si necesitas un "método" adicional, tendrías que mapear
         // y hacer llamadas a getMetodoById(...) como hacías antes.
       } catch (error) {
         console.error("Error al obtener el detalle de la orden:", error);
-
+        console.error(error.response?.data || error);
       }finally{
           setLoadingId(null); 
       }
@@ -85,7 +86,7 @@ const DetallesAguasResiduales = () => {
         Crear Intermediario
       </Menu.Item>
       <Menu.Item key="2" icon={<FileTextTwoTone />}>
-        <Link to={`/FormularioProtocoloMuestreo/${id}`}>
+        <Link to={`/FormularioCroquisUbicacion/${id}`}>
           <Button type="link" style={{ padding: 0 }}>
         Crear Croquis de Ubicación
           </Button>

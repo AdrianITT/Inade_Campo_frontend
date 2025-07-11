@@ -11,6 +11,7 @@ import {
   message,
   Upload
 } from "antd";
+import { updateCroquisUbicacion } from "../../apis/ApiCampo/CroquisUbicacion";
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import ImageEditorModal from "./ImageEditorModal";
 
@@ -114,6 +115,7 @@ const handleChange = info => {
   const enviarSeccion = async (punto) => {
     const values = await form.getFieldsValue();
     console.log("Imagen subida:", imageUrl); // aquí podrías enviar la imagen si la tienes en base64
+    // await updateCroquisUbicacion
     const data = {
       punto,
       ...values
@@ -213,11 +215,11 @@ const handleChange = info => {
         </Panel>
       </Collapse>
 
-      <Form.Item>
+      {/* <Form.Item>
         <Button type="primary" htmlType="submit">
           Enviar
         </Button>
-      </Form.Item>
+      </Form.Item> */}
     </Form>
   );
 };

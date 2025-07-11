@@ -14,6 +14,13 @@ import {
      updatePlanMuestreo,
 } from "../../apis/ApiCampo/FormmularioInforme";
 
+function cleanPayload(obj) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(
+      ([_, v]) => v !== null && v !== undefined && v !== ""
+    )
+  );
+}
 
 /**
  * Envía una sección del protocolo de muestreo.
@@ -25,16 +32,18 @@ export async function sendProtocolSections(punto, values, id, protocoloId) {
   try {
      const protocolo = await fetchProtocolo(protocoloId);
     let data = {};
+   let payload= {};
 
     switch (punto) {
       case "punto1": {
         console.log("Enviando punto 1", values.giroActividad);
-        const payload = {
+         payload = {
           protocoloMuestreo: protocoloId,
           domicilio: values.domicilioUbicacion,
           giroEmpresa: values.giroActividad,
         };
-
+        // payload = cleanPayload(payload);
+        console.log("Payload para sitio de muestreo:", payload);
         if (protocolo.sitioMuestreo) {
           // actualizar
           await updateSitioMuestreo(protocolo.sitioMuestreo, payload);
@@ -58,6 +67,8 @@ export async function sendProtocolSections(punto, values, id, protocoloId) {
           aguaResidualTratamiento:values.tratamientoAntesDescarga,
           tipoDescarga: values.modalidadDescarga,
         };
+        // data = cleanPayload(data);
+        console.log("data2 para sitio de muestreo:", data);
         if (protocolo.puntoMuestreo) {
           await updatePuntoMuestreo(protocolo.puntoMuestreo, data);
         } else {
@@ -79,6 +90,8 @@ export async function sendProtocolSections(punto, values, id, protocoloId) {
           cuerpoReceptor: values.cuerpoReceptor,
           cuerpoReceptorOtro: values.cuerpoReceptorOtro
         };
+        //  data = cleanPayload(data);
+        console.log("data3 para sitio de muestreo:", data);
         if(protocolo.procedimientoMuestreo){
           await updateProcedimientoMuestreo(protocolo.procedimientoMuestreo,data);
         }else{
@@ -96,6 +109,8 @@ export async function sendProtocolSections(punto, values, id, protocoloId) {
           horaFinal: values.horaTermino && dayjs(values.horaTermino).format("HH:mm"),
           observacion: values.Observaciones,
         };
+        //  data = cleanPayload(data);
+        console.log("data4 para sitio de muestreo:", data);
         if(protocolo.planMuestreo){
           await updatePlanMuestreo(protocolo.planMuestreo,data);
         }else{

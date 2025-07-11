@@ -79,7 +79,7 @@ const AppRouter = () => {
         >
           {/* <Route path="/FormularioProtocoloMuestreo" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><FormularioProtocoloMuestreo /></ProtectedRoute>} /> */}
           <Route path="/HojaCampoMuestreo/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><HojaCampoMuestreo/></ProtectedRoute>} />
-          <Route path="/FormularioCroquisUbicacion" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><FormularioCroquisUbicacion/></ProtectedRoute>} />
+          <Route path="/FormularioCroquisUbicacion/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><FormularioCroquisUbicacion/></ProtectedRoute>} />
           <Route path="/home" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Home/></ProtectedRoute>} />
           <Route path="/AguasResiduales" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><AguasResiduales/></ProtectedRoute>} />
           <Route path="/OrdenTrabajo" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><OrdenTrabajo/></ProtectedRoute>} />
