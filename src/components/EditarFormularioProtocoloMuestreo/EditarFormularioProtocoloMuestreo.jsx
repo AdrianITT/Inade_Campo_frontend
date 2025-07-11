@@ -1,4 +1,5 @@
-import React, {useRef, useState} from "react";
+import React, {useRef, useState, useEffect} from "react";
+import dayjs from 'dayjs';
 import "./EditarFormularioProtocoloMuestreo.css";
 import {
   Form,
@@ -14,11 +15,9 @@ import {
   Collapse,
   message
 } from "antd";
-import {
-     createProtocoloMuestreo,
-     updateIntermediario,
-} from "../../apis/ApiCampo/FormmularioInforme";
-import { sendProtocolSections } from "./sendProtocolSections";
+
+import {getProtocoloCompleto} from "../../apis/ApiCampo/EditProtocoloMuestreo"
+import { sendDataProtocolSections } from "./sendDataProtocolSections";
 import { useParams } from "react-router-dom";
 const { Panel } = Collapse;
 
@@ -59,6 +58,10 @@ const EditarFormularioProtocoloMuestreo = () => {
   const punto2Ref = useRef(null);
   const punto3Ref = useRef(null);
   const punto4Ref = useRef(null);
+  const sitioIdRef   = useRef(null);
+  const puntoIdRef   = useRef(null);
+  const procIdRef    = useRef(null);
+  const planIdRef    = useRef(null);
   const { id } = useParams(); 
   const protocoloRef   = useRef(null); // id real para lógica (no depende de setState)
   const intermediarioRef = useRef(null);
@@ -67,25 +70,75 @@ const EditarFormularioProtocoloMuestreo = () => {
   const indeterminate = checkedList.length && checkedList.length < allValues.length;
   const checkAll     = checkedList.length === allValues.length;
 
-  /* helpers dentro del componente */
-  const ensureProtocolo = async () => {
-  // ya existen
-  if (protocoloRef.current) return protocoloRef.current;
+  useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const { data } = await getProtocoloCompleto(id);
+      console.log("Protocolo completo:", data);
+      const proto = data.intermediarios?.[0]?.protocoloMuestreo;
+     if (!proto) {
+       message.warning("No hay protocolo para este informe");
+       return;
+     }
+      protocoloRef.current = data.id;  // Guardar ID en ref
+      console.log("RAW data ↴");
+      // guarda ids de sub-tablas si los necesitas:
+      sitioIdRef.current   = proto.sitioMuestreo?.id;
+      puntoIdRef.current   = proto.puntoMuestreo?.id;
+      procIdRef.current    = proto.procedimientoMuestreo?.id;
+      planIdRef.current    = proto.planMuestreo?.id;
+      console.dir(data, { depth: null });     // Muestra todo el objeto
 
-  const { data: proto } = await createProtocoloMuestreo({
-    aguaResidualInforme: id,
-  });
-  protocoloRef.current = proto.id;
-  setIdProtocoloMuestreo(proto.id);
+      console.log("sitioMuestreo:", data.sitioMuestreo);
+      console.log("puntoMuestreo:", data.puntoMuestreo);
+      console.log("procedimientoMuestreo:", data.procedimientoMuestreo);
+      console.log("planMuestreo:", data.planMuestreo);
 
-  await updateIntermediario(id,{
-    protocoloMuestreo   : proto.id
-  });
-  intermediarioRef.current = id;
-  setIdIntermediario(id);
+      const initialValues = {
+        domicilioUbicacion: proto.sitioMuestreo?.domicilio || "",
+        giroActividad: proto.sitioMuestreo?.giroEmpresa || "",
+        identificacionCampo: proto.puntoMuestreo?.identificacionPunto || "",
+        descripcionProceso: proto.puntoMuestreo?.descripcionProceso || "",
+        origenMuestra: proto.puntoMuestreo?.origenMuestra || "",
+        horasOpera: proto.puntoMuestreo?.horasOperacion || "",
+        horasDescarga: proto.puntoMuestreo?.horasDescarga || "",
+        frecuenciaDescarga: proto.puntoMuestreo?.frecuenciaDescarga || "",
+        modalidadDescarga: proto.puntoMuestreo?.tipoDescarga || undefined,
+        tratamientoAntesDescarga: proto.puntoMuestreo?.aguaResidualTratamiento || undefined,
+        tratamientoAntesDescargaOtro: proto.puntoMuestreo?.aguaResidualOtro || "",
+        nombreResponsable: proto.puntoMuestreo?.informacionProporcionada?.split(".")[0] || "",
+        puestoResponsable: proto.puntoMuestreo?.informacionProporcionada?.split(".")[1] || "",
+        parametroDeterminado: proto.procedimientoMuestreo?.parametroADeterminar || "",
+        instrumentoMedicion: proto.procedimientoMuestreo?.materialUso || [],
+        recipiente: proto.procedimientoMuestreo?.recipiente || [],
+        reactivoUtilizado: proto.procedimientoMuestreo?.preservadorUtilizado || [],
+        tipoMuestreo: proto.procedimientoMuestreo?.tipoMuestreo ?? null,
+        frecuenciaMuestreo: proto.procedimientoMuestreo?.frecuenciaMuestreo || undefined,
+        tipoAgua: proto.procedimientoMuestreo?.tipoAgua || undefined,
+        tipoAguaOtro: proto.procedimientoMuestreo?.tipoAguaOtro || "",
+        cuerpoReceptor: proto.procedimientoMuestreo?.cuerpoReceptor || undefined,
+        cuerpoReceptorOtro: proto.procedimientoMuestreo?.cuerpoReceptorOtro || "",
+        inicial: proto.planMuestreo?.inicial || "",
+        horaInicio: proto.planMuestreo?.horaInicial ? dayjs(proto.planMuestreo.horaInicial, "HH:mm") : null,
+        final: proto.planMuestreo?.final || "",
+        horaTermino: proto.planMuestreo?.horaFinal ? dayjs(proto.planMuestreo.horaFinal, "HH:mm") : null,
+        Observaciones: proto.planMuestreo?.observacion || ""
+      };
 
-  return proto.id;
+      // Establecer valores en el formulario
+      form.setFieldsValue(initialValues);
+
+      // Establecer valores visuales también si usas estados (como en el caso de los instrumentos seleccionados)
+      setCheckedList(initialValues.instrumentoMedicion || []);
+
+    } catch (err) {
+      console.error("Error al obtener protocolo:", err);
+      message.error("No se pudieron cargar los datos del protocolo.");
+    }
   };
+
+  fetchData();
+}, [id]);
 
 
 /* reemplaza tu onFinish */
@@ -95,18 +148,18 @@ const EditarFormularioProtocoloMuestreo = () => {
       const allValues = await form.validateFields();
 
       // 2️⃣  asegúrate de tener protocolo + intermediario
-      const protocoloId = await ensureProtocolo();
+      // const protocoloId = await ensureProtocolo();
 
       // 3️⃣  envía los 4 puntos en orden (puede ser Promise.all si no importan los mensajes por secciones)
-      for (const punto of ["punto1", "punto2", "punto3", "punto4"]) {
-        const ok = await sendProtocolSections(
-          punto,
-          allValues,
-          id,           // AguaResidualInforme
-          protocoloId   // ProtocoloMuestreo
-        );
-        if (!ok) throw new Error(`Fallo al guardar ${punto}`);
-      }
+      // for (const punto of ["punto1", "punto2", "punto3", "punto4"]) {
+      //   const ok = await sendDataProtocolSections(
+      //     punto,
+      //     allValues,
+      //     id,           // AguaResidualInforme
+      //     protocoloId   // ProtocoloMuestreo
+      //   );
+      //   if (!ok) throw new Error(`Fallo al guardar ${punto}`);
+      // }
 
       message.success("Todos los puntos guardados ✅");
     } catch (err) {
@@ -125,19 +178,19 @@ const enviarSeccion = async (punto, ref) => {
     /* 1️⃣  crear protocolo + intermediario sólo una vez -------- */
     if (!protocoloRef.current) {
       try {
-        console.log("Creando protocolo e intermediario...");
-        const { data: proto } = await createProtocoloMuestreo({
-          aguaResidualInforme: id,
-        });
-        protocoloRef.current = proto.id;
-        setIdProtocoloMuestreo(proto.id);          // mantiene UI
+        // console.log("Creando protocolo e intermediario...");
+        // const { data: proto } = await createProtocoloMuestreo({
+        //   aguaResidualInforme: id,
+        // });
+        // protocoloRef.current = proto.id;
+        // setIdProtocoloMuestreo(proto.id);          // mantiene UI
 
-        await updateIntermediario(id,{
-          protocoloMuestreo: proto.id
-        });
-        intermediarioRef.current = id
-        // localStorage.setItem("intermediarioId", id);
-        setIdIntermediario(id);
+        // await updateIntermediario(id,{
+        //   protocoloMuestreo: proto.id
+        // });
+        // intermediarioRef.current = id
+        // // localStorage.setItem("intermediarioId", id);
+        // setIdIntermediario(id);
 
         message.success("Protocolo e intermediario creados");
       } catch (err) {
@@ -148,7 +201,7 @@ const enviarSeccion = async (punto, ref) => {
     }
 
     /* 2️⃣  enviar la sección (upsert) ------------------------- */
-    const ok = await sendProtocolSections(
+    const ok = await sendDataProtocolSections(
       punto,
       await form.getFieldsValue(),
       id,                         // ← AguaResidualInforme
@@ -165,6 +218,7 @@ const enviarSeccion = async (punto, ref) => {
       }, 200);
     }
   };
+
 
   return (
     

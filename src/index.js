@@ -14,6 +14,7 @@ import Home from "./components/Home/Home.js";
 import AguasResiduales from "./components/AguasResiduales/AguasResiduales.jsx";
 import OrdenTrabajo from "./components/OrdenTrabajo/OrdenTrabajo.jsx";
 import DetallesAguasResiduales from "./components/DetallesAguasR/DetallesAguasResduales.jsx";
+import EditarFormularioProtocoloMuestreo from "./components/EditarFormularioProtocoloMuestreo/EditarFormularioProtocoloMuestreo.jsx";
 import Formularios from "./App.js";
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -86,7 +87,8 @@ const AppRouter = () => {
           <Route path="/DetallesAguasResiduales/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><DetallesAguasResiduales/></ProtectedRoute>} />
           <Route path="/Formularios/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Formularios/></ProtectedRoute>} />
           <Route path="/FormularioProtocoloMuestreo/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><FormularioProtocoloMuestreo /></ProtectedRoute>} />
-          {/* Rutas protegidas para los diferentes roles /AguasResiduales*/}
+          <Route path="/EditarFormularioProtocoloMuestreo/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><EditarFormularioProtocoloMuestreo /></ProtectedRoute>} />
+          {/* Rutas protegidas para los diferentes roles /AguasResiduales EditarFormularioProtocoloMuestreo*/}
         </Route>
       </Routes>
 

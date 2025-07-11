@@ -197,9 +197,11 @@ const DetallesAguasResiduales = () => {
             {item.protocoloMuestreo || "No asignado"}
             <br />
             <Space wrap style={{ marginTop: 8 }}>
+              <Link to={`/EditarFormularioProtocoloMuestreo/${item.protocoloMuestreo}`}>  
               <Button size="small" type="primary" >
                 Continuar Protocolo
               </Button>
+              </Link>
               <Button size="small" danger>
                 Eliminar Protocolo
               </Button>
