@@ -1,13 +1,13 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-// import Header from "../Headers/Header";
+import Header from "../Header/Header";
 // import CustomFooter from "../footerjs/Footer";
 
 
 const Layout = () => {
   return (
     <div id="layout-container">
-      {/* <Header /> */}
+      <Header />
       <main id="main-content">
         <Outlet /> {/* Renderiza las rutas hijas aquí */}
       </main>

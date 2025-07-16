@@ -1,4 +1,4 @@
-import React, {useRef, useEffect } from "react";
+import React, {useRef, useEffect, useState } from "react";
 import {
   Form,
   Input,
@@ -17,18 +17,24 @@ import {
   createHojaCampo,
   updateHojaCampo,
   updateIntermediario,
-  fetchHojaCampoFromIntermediario
+  fetchHojaCampoFromIntermediario,
+  HojaCampoById,
 } from "../../apis/ApiCampo/HojaCampo";
+import{
+     deleteMuestraHojaCampo
+} from "../../apis/ApiCampo/MuestraHojaCampoApi";
 import { saveHojaCampo } from "./hojaCampoService";
 import { useParams } from "react-router-dom";
 import { TextInput } from "@react-pdf/renderer";
 
 
-const HojaCampoMuestreo = ({ initialValues = {}, onBack, onNext }) => {
+const EditarHojaCampoMuestreo = ({ initialValues = {}, onBack, onNext }) => {
 
   const [form] = Form.useForm();
   const { id } = useParams(); 
   const intermediarioRef = useRef(null);
+  const [registrosEliminados, setRegistrosEliminados] = useState([]);
+
 
   const REFERENCIA = [
   { label: "NMX-AA-003-1980",       value: "NMX-AA-003-1980" },
@@ -45,79 +51,95 @@ const CONDICION_CLIMA = [
   { label: "1/2 Nublado", value: "Medio_nublado" }, // esto es lo que espera el backend
 ];
 
-  useEffect(() => {
-  form.setFieldsValue(initialValues);
-}, [initialValues, form]);
+const cargarDatos = async () => {
+  try {
+    const {data} = await HojaCampoById(id); // <- debe devolver los datos JSON de tu vista
+    console.log("Datos cargados:", data);
+        
+    const hoja = {
+      nombreEmpresa: "", // Asigna si lo tienes
+      identificacionCampo: data.idMuestra,
+      normaReferencia: data.normaReferencia,
+      condicionMuestreo: data.condicionMuestreo === "Bajo techo", // convierte a booleano
+      observaciones: data.observacion,
+      muestreador: data.muestreador,
+      supervisor: data.supervisor,
+      registros: (data.muestras || []).map((m) => ({
+        id: m.id,
+        phId: m.ph?.id,
+        temperaturaId: m.temperatura?.id,
+        conductividadId: m.conductividad?.id,
+        temperaturaAireId: m.temperaturaAire?.id,
+        tiempoId: m.tiempoMuestra?.id,
+        volumenId: m.volumenMuestra?.id,
+
+        numero: m.numero,
+        hora: dayjs(m.hora, "HH:mm:ss"),
+
+        ph1: m.ph?.ph1,
+        ph2: m.ph?.ph2,
+        ph3: m.ph?.ph3,
+
+        temperatura1: m.temperatura?.temp1,
+        temperatura2: m.temperatura?.temp2,
+        temperatura3: m.temperatura?.temp3,
+
+        conductividad1: m.conductividad?.cond1,
+        conductividad2: m.conductividad?.cond2,
+        conductividad3: m.conductividad?.cond3,
+
+        temperaturaAmbiente1: m.temperaturaAire?.tempAire1,
+        temperaturaAmbiente2: m.temperaturaAire?.tempAire2,
+        temperaturaAmbiente3: m.temperaturaAire?.tempAire3,
+
+        tiempo1: m.tiempoMuestra?.tiempo1,
+        tiempo2: m.tiempoMuestra?.tiempo2,
+        tiempo3: m.tiempoMuestra?.tiempo3,
+
+        volumen1: m.volumenMuestra?.volumen1,
+        volumen2: m.volumenMuestra?.volumen2,
+        volumen3: m.volumenMuestra?.volumen3,
+
+        color: m.color,
+        olor: m.olor,
+        materiaFlotante: m.materiaFlotante ? ["PRESENTE"] : ["AUSENTE"],
+        solidos: m.solido ? "Sí" : "No",
+        lluvia: m.lluvia ? "Sí" : "No",
+        condiciones: m.condicion,
+      }))
+    };
+
+    form.setFieldsValue(hoja);
+    console.log("Valores aplicados al form:", form.getFieldsValue());
+  } catch (error) {
+    console.error("Error al cargar datos del backend:", error);
+  }
+};
+useEffect(() => {
+
+  cargarDatos();
+}, [form, id]);
 
 
-  useEffect(() => {
-    form.setFieldsValue({
-      registros: [{}] // inserta un registro vacío inicial
-    });
-  }, [form]);
+
 
 const onFinish = (values) => {
   onNext(values); // pasamos los datos al componente padre
 };
+
 const handleSave = async (values) => {
   let hojaCampoId;
-  const intermediarioGuardado = id;
-  console.log("intermediarioGuardado:", intermediarioGuardado);
-  const hojaCampoExistente = await fetchHojaCampoFromIntermediario(intermediarioGuardado);
-  const mapMuestrasToFormValues = (muestras) => {
-  return muestras.map((m) => ({
-    id: m.id,
-    phId: m.ph?.id,
-    temperaturaId: m.temperatura?.id,
-    conductividadId: m.conductividad?.id,
-    temperaturaAireId: m.temperaturaAire?.id,
-    tiempoId: m.tiempoMuestra?.id,
-    volumenId: m.volumenMuestra?.id,
+  console.log("id:", id);
+//   const id = await fetchHojaCampoFromIntermediario(id);
 
-    numero: m.numero,
-    hora: dayjs(m.hora, "HH:mm:ss"),
-
-    ph1: m.ph?.ph1,
-    ph2: m.ph?.ph2,
-    ph3: m.ph?.ph3,
-
-    temperatura1: m.temperatura?.temp1,
-    temperatura2: m.temperatura?.temp2,
-    temperatura3: m.temperatura?.temp3,
-
-    conductividad1: m.conductividad?.cond1,
-    conductividad2: m.conductividad?.cond2,
-    conductividad3: m.conductividad?.cond3,
-
-    temperaturaAmbiente1: m.temperaturaAire?.tempAire1,
-    temperaturaAmbiente2: m.temperaturaAire?.tempAire2,
-    temperaturaAmbiente3: m.temperaturaAire?.tempAire3,
-
-    tiempo1: m.tiempoMuestra?.tiempo1,
-    tiempo2: m.tiempoMuestra?.tiempo2,
-    tiempo3: m.tiempoMuestra?.tiempo3,
-
-    volumen1: m.volumenMuestra?.volumen1,
-    volumen2: m.volumenMuestra?.volumen2,
-    volumen3: m.volumenMuestra?.volumen3,
-
-    color: m.color,
-    olor: m.olor,
-    materiaFlotante: m.materiaFlotante ? ["PRESENTE"] : ["AUSENTE"],
-    solidos: m.solido ? "Sí" : "No",
-    lluvia: m.lluvia ? "Sí" : "No",
-    condiciones: m.condicion,
-  }));
-};
-
-  console.log("Hoja de campo existente1:", hojaCampoExistente);
-  //hojaCampoExistente.muestras?.length
-  console.log("Hoja de campo existente2:", hojaCampoExistente?.muestras?.length);
+  console.log("Hoja de campo existente1:", id);
+  //id.muestras?.length
+  console.log("Hoja de campo existente2:", id?.muestras?.length);
   try {
-    if (hojaCampoExistente ) {
-    // const registrosFormateados = mapMuestrasToFormValues(hojaCampoExistente.muestras);
+    if (id ) {
+    // const registrosFormateados = mapMuestrasToFormValues(id.muestras);
     // values.registros = registrosFormateados;
-    hojaCampoId = hojaCampoExistente;
+    hojaCampoId = id;
     console.log("Hoja de campo ya existe, actualizando:", hojaCampoId);
     await updateHojaCampo(hojaCampoId,{
       idMuestra        : values.identificacionCampo,
@@ -144,20 +166,10 @@ const handleSave = async (values) => {
     console.log("Nueva hoja de campo creada:", nuevaHoja);
     hojaCampoId = nuevaHoja.id;
 
-    // Enlazar con el intermediario
-    await updateIntermediario(intermediarioGuardado, {
-      hojaCampo: hojaCampoId,
-    });
-  }
-
-  if (hojaCampoExistente?.muestras?.length > 0) {
-  const registrosFormateados = mapMuestrasToFormValues(hojaCampoExistente.muestras);
-  values.registros = registrosFormateados;
-  }
-
-
+  }  
   // Ahora guarda las muestras
   await saveHojaCampo(values, hojaCampoId, form);
+  await cargarDatos();
   } catch (err) {
     console.error("Error al guardar la hoja de campo: 1er");
     console.error(err);
@@ -221,13 +233,13 @@ const handleSave = async (values) => {
             {fields.map(({ key, name, ...restField }, index) => (
               <div key={key} style={{ padding: 16, border: "1px solid #ccc", marginBottom: 32, borderRadius: 8, backgroundColor: "#f9f9f9" }}>
                 {/* 🔒 Campos ocultos para mantener los ID relacionados */}
-                <Form.Item name={[name, "id"]} hidden><Input  /></Form.Item>
-                <Form.Item name={[name, "phId"]} hidden><Input /></Form.Item>
-                <Form.Item name={[name, "temperaturaId"]} hidden><Input  /></Form.Item>
-                <Form.Item name={[name, "conductividadId"]} hidden><Input /></Form.Item>
-                <Form.Item name={[name, "temperaturaAireId"]} hidden><Input  /></Form.Item>
-                <Form.Item name={[name, "tiempoId"]} hidden><Input /></Form.Item>
-                <Form.Item name={[name, "volumenId"]} hidden><Input  /></Form.Item>
+                <Form.Item name={[name, "id"]} hidden preserve={true}><Input  /></Form.Item>
+                <Form.Item name={[name, "phId"]} hidden preserve={true}><Input /></Form.Item>
+                <Form.Item name={[name, "temperaturaId"]} hidden preserve={true}><Input  /></Form.Item>
+                <Form.Item name={[name, "conductividadId"]} hidden preserve={true}><Input /></Form.Item>
+                <Form.Item name={[name, "temperaturaAireId"]} hidden preserve={true}><Input  /></Form.Item>
+                <Form.Item name={[name, "tiempoId"]} hidden preserve={true}><Input /></Form.Item>
+                <Form.Item name={[name, "volumenId"]} hidden preserve={true}><Input/></Form.Item>
                 <h4>Registro {index + 1}</h4>
                 <Row gutter={16}>
                   {/* <Col span={6}><Form.Item {...restField} name={[name, "numero"]} label="Número de muestra"><InputNumber min={1} style={{ width: "100%" }} /></Form.Item></Col> */}
@@ -269,7 +281,28 @@ const handleSave = async (values) => {
                 </Row>
 
                 <Row justify="end">
-                  <Col><Button danger onClick={() => remove(name)}>Eliminar Registro</Button></Col>
+                    <Button
+                    danger
+                    onClick={async () => {
+                    const idMuestra = form.getFieldValue(["registros", name, "id"]);
+                    const confirmar = window.confirm("¿Seguro que deseas eliminar este registro?");
+                    if (!confirmar) return;
+
+                    if (idMuestra) {
+                         try {
+                         await deleteMuestraHojaCampo(idMuestra);
+                         remove(name); // ❗️remueve del frontend justo después de eliminar
+                         message.success("Registro eliminado");
+                         } catch (err) {
+                         message.error("No se pudo eliminar el registro");
+                         }
+                    } else {
+                         remove(name); // si aún no estaba guardado en BD
+                    }
+                    }}
+                    >
+                    Eliminar Registro
+                    </Button>
                 </Row>
               </div>
             ))}
@@ -304,4 +337,4 @@ const handleSave = async (values) => {
   );
 };
 
-export default HojaCampoMuestreo;
+export default EditarHojaCampoMuestreo;

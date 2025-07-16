@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import dayjs from 'dayjs';
 import { Table, Button, Card, Dropdown, Menu, message, Modal, Collapse, Space, Typography } from "antd";
 import { RightCircleTwoTone, FileTextTwoTone, FilePdfTwoTone, MailTwoTone, DeleteOutlined, EditTwoTone } from "@ant-design/icons";
 import { Link, useParams, useNavigate } from "react-router-dom";
@@ -44,6 +45,7 @@ const DetallesAguasResiduales = () => {
         setOrderHeader(data.ordenTrabajo);
         setServicesData(data.intermediario);
         setIdCoquis(data.croquis);
+        setInformes(data.informe);
 
         // Si necesitas un "método" adicional, tendrías que mapear
         // y hacer llamadas a getMetodoById(...) como hacías antes.
@@ -74,7 +76,7 @@ const DetallesAguasResiduales = () => {
       <Menu.Item key="1" icon={<RightCircleTwoTone />}
       onClick={async () => {
       try {
-        await createIntermediario({ aguaResidualInforme: id });
+        await createIntermediario({ aguaResidualInforme: id, fechaIntermediario:dayjs().format('YYYY-MM-DD') });
         message.success("Intermediario creado");
         fetchData(); // 🔁 Recargar Collapse con nuevos datos
         } catch (err) {
@@ -86,7 +88,7 @@ const DetallesAguasResiduales = () => {
         Crear Intermediario
       </Menu.Item>
       <Menu.Item key="2" icon={<FileTextTwoTone />}>
-        <Link to={`/FormularioCroquisUbicacion/${IdCoquis.id}`}>
+        <Link to={`/FormularioCroquisUbicacion/${id}`}>
           <Button type="link" style={{ padding: 0 }}>
         Crear Croquis de Ubicación
           </Button>
@@ -98,7 +100,7 @@ const DetallesAguasResiduales = () => {
 
   return (
     <div className="container">
-      <h1 className="page-title">Detalles de Aguas: {orderHeader?.codigo }</h1>
+      <h1 className="page-title"> Detalles de Aguas: {informes?.numeroInfo} OT: {orderHeader?.codigo }</h1>
       <div className="button-container">
         <Dropdown overlay={menu} placement="bottomRight" arrow>
           <Button type="primary" className="action-button">
@@ -139,11 +141,12 @@ const DetallesAguasResiduales = () => {
         rowKey={(record) => record.uid}// O si tu record tiene id
       /> */}
     <Collapse accordion>
+    {IdCoquis.comentario && (
       <Panel
         key={IdCoquis.id}
         header={
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span>croquis ID: {IdCoquis.id}</span>
+            <span>croquis ID: {IdCoquis.numeroCroquis}</span>
             <Space>
               <Link to={`/FormularioCroquisUbicacion/${IdCoquis.id}`}>
                 <Button size="small">Eliminar</Button>
@@ -152,20 +155,29 @@ const DetallesAguasResiduales = () => {
           </div>
         }
       >
-        {IdCoquis.comentario && (
           <div style={{ marginBottom: 16 }}>
             <Text strong>Protocolo de Muestreo:</Text>{" "}
-            {IdCoquis.protocoloMuestreo || "No asignado"}
-            <br />
-            <span>{IdCoquis.domicilio}</span>
-            <span>{IdCoquis.comentario}</span>
+            {IdCoquis.numeroCroquis || "No asignado"}
+            <br/>
+            <span>Domicilio: {IdCoquis.domicilio}</span><br/>
+            <span>Comentarios: {IdCoquis.comentario}</span><br/>
+            <Space wrap style={{ marginTop: 8 }}>
+              <Link to={`/EditarCroquisUbicacion/${IdCoquis.id}`}>  
+              <Button size="small" type="primary" >
+                Editar Croquis
+              </Button>
+              </Link>
+              <Button size="small" danger>
+                Eliminar Croquis
+              </Button>
+            </Space>
             {/* <Space wrap style={{ marginTop: 8 }}>
               <Button size="small" type="primary">Continuar con Croquis</Button>
               <Button size="small" danger>Eliminar</Button>
             </Space> */}
           </div>
-        )}
       </Panel>
+        )}
     </Collapse>
 
         <h2 className="concepts-title">Intermediario</h2>
@@ -175,14 +187,16 @@ const DetallesAguasResiduales = () => {
           key={item.id}
           header={
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span>Intermediario ID: {item.id}</span>
+              <span>Intermediario ID: {item.numeroInter}</span>
               <Space>
+                {!item.protocoloMuestreo && (
                 <Link to={`/FormularioProtocoloMuestreo/${item.id}`}>
                 <Button size="small">Crear Protocolo de Muestreo</Button>
-                </Link>
+                </Link>)}
+                { !item.hojaCampo &&(
                 <Link to={`/HojaCampoMuestreo/${item.id}`}>
                 <Button size="small" >Crear Hoja de campo</Button>
-                </Link>
+                </Link>)}
                 <Link to={`/ImformesAguas/${item.id}`}>
                 <Button size="small" >Eliminar</Button>
                 {/* onClick={() => handleEliminarIntermediario(item.id)} */}
@@ -194,13 +208,14 @@ const DetallesAguasResiduales = () => {
           {item.protocoloMuestreo && (
           <div style={{ marginBottom: 16 }}>
             <Text strong>Protocolo de Muestreo:</Text>{" "}
-            {item.protocoloMuestreo || "No asignado"}
+            {item.protocoloMuestreoNumero || "No asignado"}
             <br />
             <Space wrap style={{ marginTop: 8 }}>
               <Link to={`/EditarFormularioProtocoloMuestreo/${item.protocoloMuestreo}`}>  
               <Button size="small" type="primary" >
                 Continuar Protocolo
               </Button>
+              <br></br>
               </Link>
               <Button size="small" danger>
                 Eliminar Protocolo
@@ -212,12 +227,14 @@ const DetallesAguasResiduales = () => {
           {item.hojaCampo && (
           <div style={{ marginBottom: 16 }}>
             <Text strong>Hoja de Campo:</Text>{" "}
-            {item.hojaCampo || "No asignada"}
+            {item.hojaCampoNumero || "No asignada"}
             <br />
             <Space wrap style={{ marginTop: 8 }}>
+              <Link to={`/EditarHojaCampoMuestreo/${item.hojaCampo}`}>
               <Button size="small" type="primary" >
                 Continuar Hoja de Campo
               </Button>
+              </Link>
               <Button size="small" danger >
                 Eliminar Hoja de Campo
               </Button>

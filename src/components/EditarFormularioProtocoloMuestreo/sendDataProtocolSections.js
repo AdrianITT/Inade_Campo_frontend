@@ -1,139 +1,123 @@
-// logic/enviarSeccionProtocolo.js
 import { message } from "antd";
-import dayjs from "dayjs";
 import {
-     createSitioMuestreo,
-     createPuntoMuestreo,
-     createProcedimientoMuestreo,
-     createPlanMuestreo,
-     updateProtocoloMuestreo,
-     updateSitioMuestreo,
-     fetchProtocolo,
-     updatePuntoMuestreo ,
-     updateProcedimientoMuestreo,
-     updatePlanMuestreo,
+  createSitioMuestreo, updateSitioMuestreo,
+  createPuntoMuestreo, updatePuntoMuestreo,
+  createProcedimientoMuestreo, updateProcedimientoMuestreo,
+  createPlanMuestreo, updatePlanMuestreo,
+  updateProtocoloMuestreo
 } from "../../apis/ApiCampo/FormmularioInforme";
+import { upsert } from "../../apis/ApiCampo/helper";   // helper del paso 3
 
-function cleanPayload(obj) {
-  return Object.fromEntries(
-    Object.entries(obj).filter(
-      ([_, v]) => v !== null && v !== undefined && v !== ""
-    )
-  );
+export const sendDataProtocolSections = async (
+  punto, values,id, protocoloId,
+  { sitioIdRef, puntoIdRef, procIdRef, planIdRef }
+) => {
+  function normalize(values) {
+  return {
+    /* punto 1 -------------- */
+    sitio: {
+      domicilio   : values.domicilioUbicacion,
+      giroEmpresa : values.giroActividad
+    },
+    /* punto 2 -------------- */
+    punto: {
+      identificacionPunto : values.identificacionCampo,
+      descripcionProceso  : values.descripcionProceso,
+      origenMuestra       : values.origenMuestra,
+      horasOperacion      : values.horasOpera,
+      horasDescarga       : values.horasDescarga,
+      frecuenciaDescarga  : values.frecuenciaDescarga,
+      tipoDescarga        : values.modalidadDescarga,
+      aguaResidualTratamiento: values.tratamientoAntesDescarga,
+      aguaResidualOtro    : values.tratamientoAntesDescargaOtro,
+      informacionProporcionada:
+        `${values.nombreResponsable}.${values.puestoResponsable}`
+    },
+    /* punto 3 -------------- */
+    proc: {
+      parametroADeterminar : values.parametroDeterminado,
+      materialUso          : values.instrumentoMedicion,   // [1,9]
+      recipientes          : values.recipiente,
+      preservadores        : values.reactivoUtilizado,
+      tipoMuestreo         : values.tipoMuestreo,
+      frecuenciaMuestreo   : values.frecuenciaMuestreo,
+      tipoAgua             : values.tipoAgua,
+      tipoAguaOtro         : values.tipoAguaOtro,
+      cuerpoReceptor       : values.cuerpoReceptor,
+      cuerpoReceptorOtro   : values.cuerpoReceptorOtro
+    },
+    /* punto 4 -------------- */
+    plan: {
+      inicial      : values.inicial,
+      final        : values.final,
+      horaInicial  : values.horaInicio && values.horaInicio.format("HH:mm"),
+      horaFinal    : values.horaTermino && values.horaTermino.format("HH:mm"),
+      observacion  : values.Observaciones
+    }
+  };
 }
 
-/**
- * Envía una sección del protocolo de muestreo.
- * @param {string} punto        - 'punto1' | 'punto2' | 'punto3' | 'punto4'
- * @param {object} values       - Values completos del form (o subset)
- * @param {number|string} id - ID del AguaResidualInforme
- */
-export async function sendDataProtocolSections(punto, values, id, protocoloId) {
-  try {
-     const protocolo = await fetchProtocolo(protocoloId);
-    let data = {};
-   let payload= {};
+  const { sitio, punto: p2, proc, plan } = normalize(values);
 
+  try {
     switch (punto) {
       case "punto1": {
-        console.log("Enviando punto 1", values.giroActividad);
-         payload = {
-          protocoloMuestreo: protocoloId,
-          domicilio: values.domicilioUbicacion,
-          giroEmpresa: values.giroActividad,
-        };
-        // payload = cleanPayload(payload);
-        console.log("Payload para sitio de muestreo:", payload);
-        if (protocolo.sitioMuestreo) {
-          // actualizar
-          await updateSitioMuestreo(protocolo.sitioMuestreo, payload);
-        } else {
-          // crear y enlazar
-          const { data: sitio } = await createSitioMuestreo(payload);
-          await updateProtocoloMuestreo(protocoloId, { sitioMuestreo: sitio.id });
-        }
+        const newId = await upsert(
+          sitioIdRef.current,
+          createSitioMuestreo,
+          updateSitioMuestreo,
+          sitio
+        );
+        // console.log("Nuevo ID de sitio:", sitioIdRef.current);
+        // sitioIdRef.current = newId;
+        // await updateProtocoloMuestreo(protocoloId, { sitioMuestreo: newId });
         break;
-     }
-      case "punto2":
-        data = {
-          identificacionPunto: values.identificacionCampo,
-          descripcionProceso: values.descripcionProceso,
-          origenMuestra: values.origenMuestra,
-          aguaResidualOtro: values.tratamientoAntesDescargaOtro,
-          horasOperacion:values.horasOpera,
-          horasDescarga: values.horasDescarga,
-          frecuenciaDescarga: values.modalidadDescarga,
-          informacionProporcionada: values.nombreResponsable+"."+values.puestoResponsable,
-          aguaResidualTratamiento:values.tratamientoAntesDescarga,
-          tipoDescarga: values.modalidadDescarga,
-        };
-        // data = cleanPayload(data);
-        console.log("data2 para sitio de muestreo:", data);
-        if (protocolo.puntoMuestreo) {
-          await updatePuntoMuestreo(protocolo.puntoMuestreo, data);
-        } else {
-          const { data: punto } = await createPuntoMuestreo(data);
-          await updateProtocoloMuestreo(protocoloId, { puntoMuestreo: punto.id });
-        }
-        break;
+      }
 
-      case "punto3":
-        data = {
-          parametroADeterminar: values.parametroDeterminado,
-          materialUso: values.instrumentoMedicion,
-          recipiente: values.recipiente,
-          preservadorUtilizado: values.reactivoUtilizado,
-          tipoMuestreo: values.tipoMuestreo,
-          frecuenciaMuestreo: values.frecuenciaMuestreo,
-          tipoAgua: values.tipoAgua,
-          tipoAguaOtro: values.tipoAguaOtro,
-          cuerpoReceptor: values.cuerpoReceptor,
-          cuerpoReceptorOtro: values.cuerpoReceptorOtro
-        };
-        //  data = cleanPayload(data);
-        console.log("data3 para sitio de muestreo:", data);
-        if(protocolo.procedimientoMuestreo){
-          await updateProcedimientoMuestreo(protocolo.procedimientoMuestreo,data);
-        }else{
-          const {data:proc}= await createProcedimientoMuestreo(data);
-          await updateProtocoloMuestreo(protocoloId,{procedimientoMuestreo: proc.id});
-        }
-     //    await createProcedimientoMuestreo(data);
+      case "punto2": {
+        const newId = await upsert(
+          puntoIdRef.current,
+          createPuntoMuestreo,
+          updatePuntoMuestreo,
+          p2
+        );
+        // puntoIdRef.current = newId;
+        // await updateProtocoloMuestreo(protocoloId, { puntoMuestreo: newId });
         break;
+      }
 
-      case "punto4":
-        data = {
-          inicial: values.inicial,
-          final: values.final,
-          horaInicial: values.horaInicio && dayjs(values.horaInicio).format("HH:mm"),
-          horaFinal: values.horaTermino && dayjs(values.horaTermino).format("HH:mm"),
-          observacion: values.Observaciones,
-        };
-        //  data = cleanPayload(data);
-        console.log("data4 para sitio de muestreo:", data);
-        if(protocolo.planMuestreo){
-          await updatePlanMuestreo(protocolo.planMuestreo,data);
-        }else{
-          const {data: plan} = await createPlanMuestreo(data);
-          await updateProtocoloMuestreo(protocoloId,{planMuestreo:plan.id})
-        }
-     //    await createPlanMuestreo(data);
+      case "punto3": {
+        const newId = await upsert(
+          procIdRef.current,
+          createProcedimientoMuestreo,
+          updateProcedimientoMuestreo,
+          proc
+        );
+        // procIdRef.current = newId;
+        // await updateProtocoloMuestreo(protocoloId, { procedimientoMuestreo: newId });
         break;
+      }
 
+      case "punto4": {
+        const newId = await upsert(
+          planIdRef.current,
+          createPlanMuestreo,
+          updatePlanMuestreo,
+          plan
+        );
+        // planIdRef.current = newId;
+        // await updateProtocoloMuestreo(protocoloId, { planMuestreo: newId });
+        break;
+      }
       default:
-        throw new Error("Punto no reconocido");
+        throw new Error("punto no reconocido");
     }
 
-    message.success(`Datos de ${punto} enviados correctamente`);
+    message.success(`Datos de ${punto} guardados`);
     return true;
   } catch (err) {
     console.error(err);
-    console.error(err.response?.data);
-    message.error("Error al enviar los datos");
+    message.error("Error al guardar");
     return false;
   }
-}
-
-function inserId(idProtocoloMuestreo, idIntermediario){
-
-}
+};

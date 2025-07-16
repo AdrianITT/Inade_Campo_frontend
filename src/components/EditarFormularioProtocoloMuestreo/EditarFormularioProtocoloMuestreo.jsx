@@ -13,12 +13,12 @@ import {
   Col,
   TimePicker,
   Collapse,
-  message
+  message, Modal
 } from "antd";
 
 import {getProtocoloCompleto} from "../../apis/ApiCampo/EditProtocoloMuestreo"
 import { sendDataProtocolSections } from "./sendDataProtocolSections";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 const { Panel } = Collapse;
 
 const tratamientoOpciones = [
@@ -69,60 +69,59 @@ const EditarFormularioProtocoloMuestreo = () => {
   const allValues  = INSTRUMENTOS.map(i => i.value);
   const indeterminate = checkedList.length && checkedList.length < allValues.length;
   const checkAll     = checkedList.length === allValues.length;
+  const navigate = useNavigate();
 
   useEffect(() => {
   const fetchData = async () => {
     try {
+      const mapIds = arr => Array.isArray(arr) ? arr.map(o => Number(o.id)) : [];
       const { data } = await getProtocoloCompleto(id);
       console.log("Protocolo completo:", data);
-      const proto = data.intermediarios?.[0]?.protocoloMuestreo;
-     if (!proto) {
-       message.warning("No hay protocolo para este informe");
-       return;
-     }
       protocoloRef.current = data.id;  // Guardar ID en ref
       console.log("RAW data ↴");
-      // guarda ids de sub-tablas si los necesitas:
-      sitioIdRef.current   = proto.sitioMuestreo?.id;
-      puntoIdRef.current   = proto.puntoMuestreo?.id;
-      procIdRef.current    = proto.procedimientoMuestreo?.id;
-      planIdRef.current    = proto.planMuestreo?.id;
       console.dir(data, { depth: null });     // Muestra todo el objeto
 
-      console.log("sitioMuestreo:", data.sitioMuestreo);
-      console.log("puntoMuestreo:", data.puntoMuestreo);
-      console.log("procedimientoMuestreo:", data.procedimientoMuestreo);
-      console.log("planMuestreo:", data.planMuestreo);
+      sitioIdRef.current   = data.sitioMuestreo?.id || null;
+      console.log("sitioMuestreo ID:", sitioIdRef.current);
+      puntoIdRef.current   = data.puntoMuestreo?.id || null;
+      procIdRef.current    = data.procedimientoMuestreo?.id || null;
+      planIdRef.current    = data.planMuestreo?.id || null;
+      console.log("sitioMuestreo ID:", sitioIdRef.current);
+
+    // console.log("sitioMuestreo:", data.sitioMuestreo);
+    // console.log("puntoMuestreo:", data.puntoMuestreo);
+    // console.log("procedimientoMuestreo:", data.procedimientoMuestreo);
+    // console.log("planMuestreo:", data.planMuestreo);
 
       const initialValues = {
-        domicilioUbicacion: proto.sitioMuestreo?.domicilio || "",
-        giroActividad: proto.sitioMuestreo?.giroEmpresa || "",
-        identificacionCampo: proto.puntoMuestreo?.identificacionPunto || "",
-        descripcionProceso: proto.puntoMuestreo?.descripcionProceso || "",
-        origenMuestra: proto.puntoMuestreo?.origenMuestra || "",
-        horasOpera: proto.puntoMuestreo?.horasOperacion || "",
-        horasDescarga: proto.puntoMuestreo?.horasDescarga || "",
-        frecuenciaDescarga: proto.puntoMuestreo?.frecuenciaDescarga || "",
-        modalidadDescarga: proto.puntoMuestreo?.tipoDescarga || undefined,
-        tratamientoAntesDescarga: proto.puntoMuestreo?.aguaResidualTratamiento || undefined,
-        tratamientoAntesDescargaOtro: proto.puntoMuestreo?.aguaResidualOtro || "",
-        nombreResponsable: proto.puntoMuestreo?.informacionProporcionada?.split(".")[0] || "",
-        puestoResponsable: proto.puntoMuestreo?.informacionProporcionada?.split(".")[1] || "",
-        parametroDeterminado: proto.procedimientoMuestreo?.parametroADeterminar || "",
-        instrumentoMedicion: proto.procedimientoMuestreo?.materialUso || [],
-        recipiente: proto.procedimientoMuestreo?.recipiente || [],
-        reactivoUtilizado: proto.procedimientoMuestreo?.preservadorUtilizado || [],
-        tipoMuestreo: proto.procedimientoMuestreo?.tipoMuestreo ?? null,
-        frecuenciaMuestreo: proto.procedimientoMuestreo?.frecuenciaMuestreo || undefined,
-        tipoAgua: proto.procedimientoMuestreo?.tipoAgua || undefined,
-        tipoAguaOtro: proto.procedimientoMuestreo?.tipoAguaOtro || "",
-        cuerpoReceptor: proto.procedimientoMuestreo?.cuerpoReceptor || undefined,
-        cuerpoReceptorOtro: proto.procedimientoMuestreo?.cuerpoReceptorOtro || "",
-        inicial: proto.planMuestreo?.inicial || "",
-        horaInicio: proto.planMuestreo?.horaInicial ? dayjs(proto.planMuestreo.horaInicial, "HH:mm") : null,
-        final: proto.planMuestreo?.final || "",
-        horaTermino: proto.planMuestreo?.horaFinal ? dayjs(proto.planMuestreo.horaFinal, "HH:mm") : null,
-        Observaciones: proto.planMuestreo?.observacion || ""
+        domicilioUbicacion: data.sitioMuestreo?.domicilio || "",
+        giroActividad: data.sitioMuestreo?.giroEmpresa || "",
+        identificacionCampo: data.puntoMuestreo?.identificacion || "",
+        descripcionProceso: data.puntoMuestreo?.descripcionProceso || "",
+        origenMuestra: data.puntoMuestreo?.origenMuestra || "",
+        horasOpera: data.puntoMuestreo?.horasOperacion || "",
+        horasDescarga: data.puntoMuestreo?.horasDescarga || "",
+        frecuenciaDescarga: data.puntoMuestreo?.frecuenciaDescarga || "",
+        modalidadDescarga: data.puntoMuestreo?.tipoDescarga?.id || undefined,
+        tratamientoAntesDescarga: data.puntoMuestreo?.aguaResidualTratamiento?.id || undefined,
+        tratamientoAntesDescargaOtro: data.puntoMuestreo?.aguaResidualOtro || "",
+        nombreResponsable: data.puntoMuestreo?.informacionProporcionada?.split(".")[0] || "",
+        puestoResponsable: data.puntoMuestreo?.informacionProporcionada?.split(".")[1] || "",
+        parametroDeterminado: data.procedimientoMuestreo?.parametroADeterminar || "",
+        instrumentoMedicion: mapIds(data.procedimientoMuestreo?.materialUso) || [],
+        recipiente: mapIds(data.procedimientoMuestreo?.recipientes) || [],
+        reactivoUtilizado: mapIds(data.procedimientoMuestreo?.preservadores) || [],
+        tipoMuestreo: data.procedimientoMuestreo?.tipoMuestreo ?? null,
+        frecuenciaMuestreo: data?.procedimientoMuestreo?.frecuenciaMuestreo?.id || undefined,
+        tipoAgua: data.procedimientoMuestreo?.tipoAgua?.id || undefined,
+        tipoAguaOtro: data.procedimientoMuestreo?.tipoAguaOtro || "",
+        cuerpoReceptor: data.procedimientoMuestreo?.cuerpoReceptor?.id || undefined,
+        cuerpoReceptorOtro: data.procedimientoMuestreo?.cuerpoReceptorOtro || "",
+        inicial: data.planMuestreo?.inicial || "",
+        horaInicio: data.planMuestreo?.horaInicial ? dayjs(data.planMuestreo.horaInicial, "HH:mm") : null,
+        final: data.planMuestreo?.final || "",
+        horaTermino: data.planMuestreo?.horaFinal ? dayjs(data.planMuestreo.horaFinal, "HH:mm") : null,
+        Observaciones: data.planMuestreo?.observacion || ""
       };
 
       // Establecer valores en el formulario
@@ -139,7 +138,15 @@ const EditarFormularioProtocoloMuestreo = () => {
 
   fetchData();
 }, [id]);
-
+  const confirmarEnvio = () => {
+  Modal.confirm({
+    title: "¿Estás seguro de enviar el protocolo?",
+    content: "Verifica que toda la información esté completa antes de continuar.",
+    okText: "Sí, enviar",
+    cancelText: "Cancelar",
+    onOk: () => handleSubmit(),  // llama a la función real de envío
+  });
+  };
 
 /* reemplaza tu onFinish */
   const handleSubmit = async () => {
@@ -160,6 +167,16 @@ const EditarFormularioProtocoloMuestreo = () => {
       //   );
       //   if (!ok) throw new Error(`Fallo al guardar ${punto}`);
       // }
+      for (const punto of ["punto1", "punto2", "punto3", "punto4"]) {
+        const ok = await sendDataProtocolSections(
+          punto,
+          allValues,
+          id,           // AguaResidualInforme
+          protocoloRef.current,   // ProtocoloMuestreo
+          { sitioIdRef, puntoIdRef, procIdRef, planIdRef }
+        );
+        if (!ok) throw new Error(`Fallo al guardar ${punto}`);
+      }
 
       message.success("Todos los puntos guardados ✅");
     } catch (err) {
@@ -169,6 +186,11 @@ const EditarFormularioProtocoloMuestreo = () => {
       } else {
         message.error(err.message || "Error al enviar");
       }
+    }finally {
+      message.success("Todos los puntos guardados ✅");
+      setTimeout(() => {
+        navigate('/AguasResiduales'); // regresar a la página anterior
+      }, 1000);
     }
   };
 
@@ -178,19 +200,6 @@ const enviarSeccion = async (punto, ref) => {
     /* 1️⃣  crear protocolo + intermediario sólo una vez -------- */
     if (!protocoloRef.current) {
       try {
-        // console.log("Creando protocolo e intermediario...");
-        // const { data: proto } = await createProtocoloMuestreo({
-        //   aguaResidualInforme: id,
-        // });
-        // protocoloRef.current = proto.id;
-        // setIdProtocoloMuestreo(proto.id);          // mantiene UI
-
-        // await updateIntermediario(id,{
-        //   protocoloMuestreo: proto.id
-        // });
-        // intermediarioRef.current = id
-        // // localStorage.setItem("intermediarioId", id);
-        // setIdIntermediario(id);
 
         message.success("Protocolo e intermediario creados");
       } catch (err) {
@@ -204,8 +213,9 @@ const enviarSeccion = async (punto, ref) => {
     const ok = await sendDataProtocolSections(
       punto,
       await form.getFieldsValue(),
-      id,                         // ← AguaResidualInforme
-      protocoloRef.current        // ← siempre válido
+      id,                     // informe
+      protocoloRef.current,   // protocolo
+      { sitioIdRef, puntoIdRef, procIdRef, planIdRef }   // ← NUEVO
     );
 
     /* 3️⃣  UX: cerrar panel y hacer scroll -------------------- */
@@ -225,7 +235,7 @@ const enviarSeccion = async (punto, ref) => {
     <Form
       layout="vertical"
       form={form}
-      onFinish={handleSubmit}
+      // onFinish={handleSubmit}
       style={{ maxWidth: 800, margin: "0 auto" }}
     >
       <Collapse 
@@ -254,13 +264,13 @@ const enviarSeccion = async (punto, ref) => {
           </Col>
         </Row>
       </div>
-      <Form.Item label="Fecha" name="fecha">
+      {/* <Form.Item label="Fecha" name="fecha">
         <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
       </Form.Item>
 
       <Form.Item label="Nombre de la Empresa" name="nombreEmpresa">
         <Input placeholder="Nombre de la empresa" />
-      </Form.Item>
+      </Form.Item> */}
 
       <Form.Item label="Domicilio / Ubicación Física" name="domicilioUbicacion">
         <Input.TextArea placeholder="Dirección del sitio" rows={2} />
@@ -301,9 +311,9 @@ const enviarSeccion = async (punto, ref) => {
         <Input placeholder="Ejemplo: descarga directa, pozo, etc." />
       </Form.Item>
 
-      <Form.Item label="¿Cuántas horas al día descarga el proceso?" name="horasDescargaP2">
+      {/* <Form.Item label="¿Cuántas horas al día descarga el proceso?" name="horasDescargaP2">
         <Input style={{ width: "100%" }} />
-      </Form.Item>
+      </Form.Item> */}
 
       <Form.Item label="Tratamiento Antes de la Descarga" name="tratamientoAntesDescarga">
         <Radio.Group options={tratamientoOpciones} />
@@ -564,7 +574,7 @@ const enviarSeccion = async (punto, ref) => {
      </Collapse>
 
       <Form.Item>
-        <Button type="primary" htmlType="submit">
+        <Button type="primary" onClick={confirmarEnvio}>
           Enviar
         </Button>
       </Form.Item>

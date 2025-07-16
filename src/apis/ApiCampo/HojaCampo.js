@@ -36,3 +36,6 @@ export const updateMuestraHojaCampo = (id,data) =>
 /*  Intermediario  -------------------------------------------------------*/
 export const updateIntermediario = (id, payload) =>
   Api_Host.patch(`/campo/intermediario/${id}/`, payload);
+
+export const HojaCampoById= (id) =>
+  Api_Host.get(`/campo/hojaCampoInformeCompleto/${id}/`);

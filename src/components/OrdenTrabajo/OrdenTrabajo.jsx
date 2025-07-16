@@ -105,15 +105,15 @@ const handleAgregar = (record) => {
         setLoadingId(record.orden);   // 1️⃣ spinner solo en la fila
         console.log("Agregando croquis para la OT:", record);
         /* Paso 1: crear croquis */
-        const croquis = await createCroquisUbicacion({
-          domicilio: "data1",
-          // ⚠️  agrega aquí los demás campos obligatorios de tu modelo
-        });
-        console.log("Croquis creado:", croquis);
+        // const croquis = await createCroquisUbicacion({
+        //   domicilio: "data1",
+        //   // ⚠️  agrega aquí los demás campos obligatorios de tu modelo
+        // });
+        // console.log("Croquis creado:", croquis);
         /* Paso 2: informe de agua residual */
         await createAguaResidualInforme({
-          OrdenTrabajo: record.orden, // Asegúrate de que este campo sea correcto
-          CroquisUbicacion: croquis.id,
+          OrdenTrabajo: record.orden // Asegúrate de que este campo sea correcto
+          // CroquisUbicacion: croquis.id,
           // ⚠️  agrega aquí los demás campos obligatorios de tu modelo
         });
 

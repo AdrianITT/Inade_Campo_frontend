@@ -1,5 +1,5 @@
-import React, { useRef, useState } from "react";
-// import "./FormularioCroquisUbicacion.css";
+import React, { useRef, useState, useEffect } from "react";
+// import "./EditarCroquisUbicacion.css";
 import {
   Form,
   Input,
@@ -9,18 +9,16 @@ import {
   Col,
   Collapse,
   message,
-  Upload,
-  Modal
+  Upload
 } from "antd";
-import { createCroquisUbicacion } from "../../apis/ApiCampo/CroquisUbicacion";
-import { updateAguaResidualInforme } from "../../apis/ApiCampo/AguaResidualInforme";
+import { getCroquisUbicacionById, updateCroquisUbicacion } from "../../apis/ApiCampo/CroquisUbicacion";
 import { ControlOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import ImageEditorModal from "./ImageEditorModal";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 const { Panel } = Collapse;
 
-const FormularioCroquisUbicacion = () => {
+const EditarCroquisUbicacion = () => {
   const [form] = Form.useForm();
   const {id} = useParams();
   const [activePanelKey, setActivePanelKey] = useState("1");
@@ -30,9 +28,30 @@ const FormularioCroquisUbicacion = () => {
   const [editorVisible, setEditorVisible] = useState(false);
   const [tempImage, setTempImage] = useState(null); // imagen sin editar
   const [fileObj, setFileObj] = useState(null);
-  const navigate = useNavigate();
 
 
+
+     useEffect(() => {
+     const fetchData = async () => {
+     try {
+          const croquisData = await getCroquisUbicacionById(id); // 👈 trae el croquis usando el ID del informe
+          console.log("Croquis data:", croquisData);
+          const croquis = croquisData[0]; // si es array
+          console.log("Croquis:", croquis);
+          form.setFieldsValue({
+          domicilioUbicacion: croquisData.data.domicilio || "",
+          comentarios: croquisData.data.comentario || ""
+          });
+          setImageUrl(croquisData.data.croquis); // 👈 para mostrar la imagen en el formulario
+          setFileObj(null); // como ya hay imagen, aún no hay un archivo nuevo
+     } catch (err) {
+          console.error("Error al obtener el croquis:", err);
+          message.error("No se pudo cargar el croquis existente.");
+     }
+     };
+
+     fetchData();
+     }, [id]);
   // Para convertir la imagen en base64 (opcional si quieres mostrarla en vista previa)
   const getBase64 = (img, callback) => {
     const reader = new FileReader();
@@ -102,26 +121,6 @@ const handleChange = info => {
     </div>
   );
 
-  const confirmarEnvio = () => {
-    Modal.confirm({
-      title: "¿Estás seguro de enviar el formulario?",
-      content: "Verifica que toda la información esté correcta antes de enviarla.",
-      okText: "Sí, enviar",
-      cancelText: "Cancelar",
-      onOk: async () => {
-        try {
-          const values = await form.validateFields(); // 🔍 valida los campos primero
-          await onFinish(values); // 🧠 llama a la función original
-          navigate('/AguasResiduales/'); // 🚀 redirige
-        } catch (err) {
-          message.error("Error al validar el formulario.");
-          console.error(err);
-        }
-      },
-    });
-  };
-
-
 const onFinish = async (values) => {
   try {
     const fd = new FormData();
@@ -131,11 +130,7 @@ const onFinish = async (values) => {
     // ✅ Importante: adjuntamos el archivo
     if (fileObj) fd.append('croquis', fileObj);
     console.log("Datos del formulario:", fd);
-    const data=await createCroquisUbicacion(fd);
-    await updateAguaResidualInforme(id, {
-      CroquisUbicacion: data.id,
-      // Aquí puedes agregar otros campos que necesites enviar
-    });
+    await updateCroquisUbicacion(id, fd);
     message.success('Formulario enviado correctamente');
   } catch (err) {
     console.error(err);
@@ -180,6 +175,7 @@ const onFinish = async (values) => {
     <Form
       layout="vertical"
       form={form}
+      onFinish={onFinish}
       style={{ maxWidth: 800, margin: "0 auto" }}
     >
       <Collapse 
@@ -262,7 +258,7 @@ const onFinish = async (values) => {
       </Collapse>
 
       <Form.Item>
-        <Button type="primary" onClick={confirmarEnvio}>
+        <Button type="primary" htmlType="submit">
           Enviar
         </Button>
       </Form.Item>
@@ -270,4 +266,4 @@ const onFinish = async (values) => {
   );
 };
 
-export default FormularioCroquisUbicacion;
+export default EditarCroquisUbicacion;

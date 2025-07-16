@@ -41,6 +41,7 @@ const Generarorden = () => {
         const response = await ByIdAguaResidualInforme(organizationId);
         console.log("Órdenes de trabajo response:", response);
         const mapeado= response.data.map((item)=> ({
+          numero: item.informe.numero,
           id:item.informe.id,
           OTcodigo:item.orden_trabajo.codigo,
           contacto:item.cliente.nombre,
@@ -106,8 +107,8 @@ const columns = useMemo(
   () => [
     {
       title: "ID",
-      dataIndex: "id",
-      key: "id",
+      dataIndex: "numero",
+      key: "numero",
       sorter: (a, b) => a.id - b.id,
     },
     {

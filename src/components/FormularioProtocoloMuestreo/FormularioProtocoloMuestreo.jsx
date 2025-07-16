@@ -12,14 +12,14 @@ import {
   Col,
   TimePicker,
   Collapse,
-  message
+  message, Modal
 } from "antd";
 import {
      createProtocoloMuestreo,
      updateIntermediario,
 } from "../../apis/ApiCampo/FormmularioInforme";
 import { sendProtocolSections } from "./sendProtocolSections";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 const { Panel } = Collapse;
 
 const tratamientoOpciones = [
@@ -66,6 +66,7 @@ const FormularioProtocoloMuestreo = () => {
   const allValues  = INSTRUMENTOS.map(i => i.value);
   const indeterminate = checkedList.length && checkedList.length < allValues.length;
   const checkAll     = checkedList.length === allValues.length;
+  const navigate = useNavigate();
 
   /* helpers dentro del componente */
   const ensureProtocolo = async () => {
@@ -87,6 +88,15 @@ const FormularioProtocoloMuestreo = () => {
   return proto.id;
   };
 
+  const confirmarEnvio = () => {
+  Modal.confirm({
+    title: "¿Estás seguro de enviar el protocolo?",
+    content: "Verifica que toda la información esté completa antes de continuar.",
+    okText: "Sí, enviar",
+    cancelText: "Cancelar",
+    onOk: () => handleSubmit(),  // llama a la función real de envío
+  });
+  };
 
 /* reemplaza tu onFinish */
   const handleSubmit = async () => {
@@ -116,6 +126,11 @@ const FormularioProtocoloMuestreo = () => {
       } else {
         message.error(err.message || "Error al enviar");
       }
+    }finally {
+      message.success("Todos los puntos guardados ✅");
+      setTimeout(() => {
+        navigate('/AguasResiduales'); // regresar a la página anterior
+      }, 1000);
     }
   };
 
@@ -200,13 +215,13 @@ const enviarSeccion = async (punto, ref) => {
           </Col>
         </Row>
       </div>
-      <Form.Item label="Fecha" name="fecha">
+      {/* <Form.Item label="Fecha" name="fecha">
         <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
       </Form.Item>
 
       <Form.Item label="Nombre de la Empresa" name="nombreEmpresa">
         <Input placeholder="Nombre de la empresa" />
-      </Form.Item>
+      </Form.Item> */}
 
       <Form.Item label="Domicilio / Ubicación Física" name="domicilioUbicacion">
         <Input.TextArea placeholder="Dirección del sitio" rows={2} />
@@ -510,8 +525,8 @@ const enviarSeccion = async (punto, ref) => {
      </Collapse>
 
       <Form.Item>
-        <Button type="primary" htmlType="submit">
-          Enviar
+        <Button type="primary" onClick={confirmarEnvio}>
+          Salir y Guardar Protocolo
         </Button>
       </Form.Item>
     </Form>

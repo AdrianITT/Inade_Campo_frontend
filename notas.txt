@@ -65,3 +65,16 @@ INSERT INTO core_metodos (codigo,organizacion_id) VALUES
 ('NMX-AA-026-SCFI-2010',3),
 ('NMX-AA-050-SCFI-2001',3);
 
+class CroquisUbicacion(models.Model):
+    # Podria no ser necesario si se trae de una consulta ⬇︎
+    domicilio = models.CharField(max_length=255)
+    croquis = models.ImageField(upload_to='croquis/', null=True, blank=True)
+    comentario = models.TextField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"Croquis Id {self.id} - Domicilio: {self.domicilio}"
+
+class Intermediario(models.Model):
+    protocoloMuestreo = models.ForeignKey('ProtocoloMuestreo', on_delete=models.CASCADE, null=True, blank=True)
+    hojaCampo = models.ForeignKey('HojaCampo', on_delete=models.CASCADE, null=True, blank=True)
+    aguaResidualInforme = models.ForeignKey('AguaResidualInforme', on_delete=models.CASCADE)
