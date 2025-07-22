@@ -37,8 +37,8 @@ export const sendDataProtocolSections = async (
     proc: {
       parametroADeterminar : values.parametroDeterminado,
       materialUso          : values.instrumentoMedicion,   // [1,9]
-      recipientes          : values.recipiente,
-      preservadores        : values.reactivoUtilizado,
+      recipiente          : values.recipiente,
+      preservadorUtilizado : values.reactivoUtilizado,
       tipoMuestreo         : values.tipoMuestreo,
       frecuenciaMuestreo   : values.frecuenciaMuestreo,
       tipoAgua             : values.tipoAgua,

@@ -26,4 +26,7 @@ export const fetchProtocolo = async (id) => {
   const { data } = await Api_Host.get(`/campo/protocolomuestreo/${id}/`);
   return data;                 //  <-- sólo el cuerpo JSON
 };
+
+export const deleteProtocoloMuestreo = (id) => Api_Host.delete(`/campo/protocolomuestreo/${id}/`);
+export const deleteIntermediario = (id) => Api_Host.delete(`/campo/intermediario/${id}/`);
 // export const updateOrdenTrabajo = (id,data) => Api_Host.patch(`/ordentrabajo/${id}/`, data);

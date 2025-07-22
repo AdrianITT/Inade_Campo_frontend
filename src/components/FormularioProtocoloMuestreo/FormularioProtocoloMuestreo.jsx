@@ -59,7 +59,7 @@ const FormularioProtocoloMuestreo = () => {
   const punto2Ref = useRef(null);
   const punto3Ref = useRef(null);
   const punto4Ref = useRef(null);
-  const { id } = useParams(); 
+  const { id, idAguas } = useParams(); 
   const protocoloRef   = useRef(null); // id real para lógica (no depende de setState)
   const intermediarioRef = useRef(null);
   const [checkedList, setCheckedList] = useState([]);      // estado local
@@ -129,7 +129,7 @@ const FormularioProtocoloMuestreo = () => {
     }finally {
       message.success("Todos los puntos guardados ✅");
       setTimeout(() => {
-        navigate('/AguasResiduales'); // regresar a la página anterior
+        navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
       }, 1000);
     }
   };

@@ -39,3 +39,5 @@ export const updateIntermediario = (id, payload) =>
 
 export const HojaCampoById= (id) =>
   Api_Host.get(`/campo/hojaCampoInformeCompleto/${id}/`);
+
+export const deleteHojaCampo = (id) => Api_Host.delete(`/campo/hojacampo/${id}/`);

@@ -10,7 +10,8 @@ import {
   Col,
   Divider,
   Radio, 
-  message
+  message,
+  Modal
 } from "antd";
 import dayjs from 'dayjs';
 import {
@@ -20,15 +21,16 @@ import {
   fetchHojaCampoFromIntermediario
 } from "../../apis/ApiCampo/HojaCampo";
 import { saveHojaCampo } from "./hojaCampoService";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { TextInput } from "@react-pdf/renderer";
 
 
 const HojaCampoMuestreo = ({ initialValues = {}, onBack, onNext }) => {
 
   const [form] = Form.useForm();
-  const { id } = useParams(); 
+  const { id,idAguas } = useParams(); 
   const intermediarioRef = useRef(null);
+  const navigate = useNavigate();
 
   const REFERENCIA = [
   { label: "NMX-AA-003-1980",       value: "NMX-AA-003-1980" },
@@ -57,8 +59,24 @@ const CONDICION_CLIMA = [
   }, [form]);
 
 const onFinish = (values) => {
-  onNext(values); // pasamos los datos al componente padre
+  confirmarEnvio(values); // pasamos los datos al componente padre
 };
+
+const confirmarEnvio = async (values) => {
+  try {
+    const values = await form.validateFields();
+    Modal.confirm({
+      title: "¿Estás seguro de enviar la Hoja de campo?",
+      content: "Verifica que toda la información esté completa antes de continuar.",
+      okText: "Sí, enviar",
+      cancelText: "Cancelar",
+      onOk: () => handleSave(values), // ← ahora sí pasa los valores
+    });
+  } catch (error) {
+    message.warning("Completa todos los campos obligatorios antes de continuar.");
+  }
+};
+
 const handleSave = async (values) => {
   let hojaCampoId;
   const intermediarioGuardado = id;
@@ -163,6 +181,11 @@ const handleSave = async (values) => {
     console.error(err);
     console.error(err.response?.data || err);
     message.error("No se pudo guardar la hoja de campo");
+  }finally {
+    message.success("Todos los puntos guardados ✅");
+    setTimeout(() => {
+      navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
+    }, 1000);
   }
 };
 
@@ -197,7 +220,7 @@ const handleSave = async (values) => {
     <Form
     form={form}
     layout="vertical"
-    onFinish={handleSave}
+    onFinish={onFinish}
     style={{ maxWidth: 1100, margin: "0 auto" }}
     >
       <Col span={24}>
@@ -296,7 +319,7 @@ const handleSave = async (values) => {
       <Divider />
 
       <Form.Item>
-        <Button type="primary" htmlType="submit">
+        <Button type="primary" onClick={() => form.submit()}>
           Guardar Registros
         </Button>
       </Form.Item>

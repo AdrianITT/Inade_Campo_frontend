@@ -23,15 +23,22 @@ import {
 import{
      deleteMuestraHojaCampo
 } from "../../apis/ApiCampo/MuestraHojaCampoApi";
+import {
+  confirmSave
+ } from "./ConfirmSaveModal";
+import { 
+  confirmDelete 
+} from "./ModalHojaCampoMuestreo";
 import { saveHojaCampo } from "./hojaCampoService";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { TextInput } from "@react-pdf/renderer";
 
 
 const EditarHojaCampoMuestreo = ({ initialValues = {}, onBack, onNext }) => {
 
   const [form] = Form.useForm();
-  const { id } = useParams(); 
+  const { id, idAguas } = useParams(); 
+  const navigate = useNavigate();
   const intermediarioRef = useRef(null);
   const [registrosEliminados, setRegistrosEliminados] = useState([]);
 
@@ -128,6 +135,8 @@ const onFinish = (values) => {
 };
 
 const handleSave = async (values) => {
+  const aceptar = await confirmSave(values);
+  if (!aceptar) return;
   let hojaCampoId;
   console.log("id:", id);
 //   const id = await fetchHojaCampoFromIntermediario(id);
@@ -146,7 +155,7 @@ const handleSave = async (values) => {
       normaReferencia  : values.normaReferencia ,
       condicionMuestreo: values.condicionMuestreo ,
       fechaMuestreo    : dayjs().format?.("YYYY-MM-DD"),
-      observacion      : values.observacion,
+      observacion      : values.observaciones,
       muestreador      : values.muestreador,
       supervisor       : values.supervisor,
     });
@@ -175,6 +184,11 @@ const handleSave = async (values) => {
     console.error(err);
     console.error(err.response?.data || err);
     message.error("No se pudo guardar la hoja de campo");
+  }finally {
+    message.success("Hoja de campo guardada correctamente");
+      setTimeout(() => {
+        navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
+      }, 1000);
   }
 };
 
@@ -285,8 +299,10 @@ const handleSave = async (values) => {
                     danger
                     onClick={async () => {
                     const idMuestra = form.getFieldValue(["registros", name, "id"]);
-                    const confirmar = window.confirm("¿Seguro que deseas eliminar este registro?");
-                    if (!confirmar) return;
+                    const userConfirmed = await confirmDelete({
+                      content: "¿Seguro que deseas eliminar este registro?"
+                    });
+                    if (!userConfirmed) return;
 
                     if (idMuestra) {
                          try {

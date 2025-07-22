@@ -1,0 +1,12 @@
+/* phBlock.css */
+.ph-grid {
+  display: grid;
+  grid-template-columns: 148px 1fr 16px 148px 1fr; /* 16 px = separador */
+  gap: 4px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.ph-cell        { border: 1px solid #d9d9d9; padding: 2px 4px; }
+.ph-header      { background: #fafafa; font-weight: 500; text-align: center; }
+.ph-separator   { border: none; background: #fff; }

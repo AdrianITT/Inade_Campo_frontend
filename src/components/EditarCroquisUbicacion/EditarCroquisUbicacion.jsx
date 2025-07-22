@@ -9,18 +9,19 @@ import {
   Col,
   Collapse,
   message,
-  Upload
+  Upload, 
+  Modal
 } from "antd";
 import { getCroquisUbicacionById, updateCroquisUbicacion } from "../../apis/ApiCampo/CroquisUbicacion";
 import { ControlOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import ImageEditorModal from "./ImageEditorModal";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const { Panel } = Collapse;
 
 const EditarCroquisUbicacion = () => {
   const [form] = Form.useForm();
-  const {id} = useParams();
+  const {id, idAguas} = useParams();
   const [activePanelKey, setActivePanelKey] = useState("1");
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
@@ -28,8 +29,7 @@ const EditarCroquisUbicacion = () => {
   const [editorVisible, setEditorVisible] = useState(false);
   const [tempImage, setTempImage] = useState(null); // imagen sin editar
   const [fileObj, setFileObj] = useState(null);
-
-
+  const navigate = useNavigate();
 
      useEffect(() => {
      const fetchData = async () => {
@@ -112,6 +112,24 @@ const handleChange = info => {
   }
 };
 
+  const confirmarEnvio = () => {
+    Modal.confirm({
+      title: "¿Estás seguro de enviar el formulario?",
+      content: "Verifica que toda la información esté correcta antes de enviarla.",
+      okText: "Sí, enviar",
+      cancelText: "Cancelar",
+      onOk: async () => {
+        try {
+          const values = await form.validateFields(); // 🔍 valida los campos primero
+          await onFinish(values); // 🧠 llama a la función original
+          navigate(`/DetallesAguasResiduales/${idAguas}`); // 🚀 redirige
+        } catch (err) {
+          message.error("Error al validar el formulario.");
+          console.error(err);
+        }
+      },
+    });
+  };
 
 
   const uploadButton = (
@@ -175,7 +193,7 @@ const onFinish = async (values) => {
     <Form
       layout="vertical"
       form={form}
-      onFinish={onFinish}
+      // onFinish={onFinish}
       style={{ maxWidth: 800, margin: "0 auto" }}
     >
       <Collapse 
@@ -258,7 +276,7 @@ const onFinish = async (values) => {
       </Collapse>
 
       <Form.Item>
-        <Button type="primary" htmlType="submit">
+        <Button type="primary" onClick={confirmarEnvio}>
           Enviar
         </Button>
       </Form.Item>

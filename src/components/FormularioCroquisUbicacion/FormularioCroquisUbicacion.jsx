@@ -112,7 +112,7 @@ const handleChange = info => {
         try {
           const values = await form.validateFields(); // 🔍 valida los campos primero
           await onFinish(values); // 🧠 llama a la función original
-          navigate('/AguasResiduales/'); // 🚀 redirige
+          navigate(`/DetallesAguasResiduales/${id}`); // 🚀 redirige
         } catch (err) {
           message.error("Error al validar el formulario.");
           console.error(err);
