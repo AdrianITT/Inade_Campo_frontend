@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Table, Select, Card, Typography, message, Space,Button } from "antd";
+import "./TablaInformeAguas.css"
 
 const { Option } = Select;
 const { Title } = Typography;
@@ -68,11 +69,18 @@ const allItems = [
       ),
     },
   ];
-
+// style={{ width: "100%"}}
   return (
-<Card style={{ maxWidth: 600, margin: "auto", marginTop: 40 }}>
+<Card style={{ maxWidth: 600, margin: "auto", marginTop: 40 , width: "100%", padding: "16px",}} bodyStyle={{ padding: "16px" }}>
       <Title level={4}>Agregar productos a la tabla</Title>
 
+        <div
+        style={{
+          display: "flex",
+          flexDirection: "column", // para móviles
+          gap: 12,
+          marginBottom: 20,
+        }}>
       <Space style={{ marginBottom: 20 }} align="start">
         <Select
           showSearch
@@ -96,14 +104,18 @@ const allItems = [
           Agregar a la tabla
         </Button>
       </Space>
-
+      </div>
+      <div className="scrollable-table-wrapper">
       <Table
         dataSource={data}
         columns={columns}
         rowKey="id"
         pagination={false}
         bordered
+        scroll={{ x: "max-content" }}
       />
+    </div>
+
     </Card>
   );
 };

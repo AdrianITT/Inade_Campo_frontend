@@ -111,14 +111,16 @@ const handleAgregar = (record) => {
         // });
         // console.log("Croquis creado:", croquis);
         /* Paso 2: informe de agua residual */
-        await createAguaResidualInforme({
-          OrdenTrabajo: record.orden // Asegúrate de que este campo sea correcto
-          // CroquisUbicacion: croquis.id,
+        const data=await createAguaResidualInforme({
+          OrdenTrabajo: record.orden, // Asegúrate de que este campo sea correcto
+          estado: 2
           // ⚠️  agrega aquí los demás campos obligatorios de tu modelo
         });
-
+        console.log(data);
         message.success("Croquis ligado correctamente 🎉");
-        navigate("/AguasResiduales");
+        // navigate("/AguasResiduales");
+        navigate(`/DetallesAguasResiduales/${data.data.id}`);
+        //`/DetallesAguasResiduales/${record.id}`
      //    reload?.();
       } catch (err) {
         console.error(err);
@@ -266,6 +268,7 @@ const handleAgregar = (record) => {
               pageSize,
               onChange: handlePageChange,
             }}
+            scroll={{ x: "max-content" }}
           />
           <div className="generarorden-summary">
             <div className="summary-container">

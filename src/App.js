@@ -1,9 +1,9 @@
 import logo from './logo.svg';
 import React, { useState, useRef } from 'react';
 import './App.css';
-import FormularioProtocoloMuestreo from './components/FormularioProtocoloMuestreo/FormularioProtocoloMuestreo';
+import FormularioProtocoloMuestreo from './components/CampoAguas/FormularioProtocoloMuestreo/FormularioProtocoloMuestreo';
 import HojaCampoMuestreo from './components/HojaCampoMuestreo/HojaCampoMuestreo';
-import FormularioCroquisUbicacion from './components/FormularioCroquisUbicacion/FormularioCroquisUbicacion';
+import FormularioCroquisUbicacion from './components/CampoAguas/FormularioCroquisUbicacion/FormularioCroquisUbicacion';
 import useConfirmLeave from "./components/hooks/useConfirmLeave";
 // import TablaInformeAguas from './components/TablaInformeAguas/TablaInformeAguas';
 import { Collapse, Col, Row, Button } from 'antd';

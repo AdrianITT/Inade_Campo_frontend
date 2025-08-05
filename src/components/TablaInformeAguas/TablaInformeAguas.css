@@ -1,0 +1,9 @@
+/* App.css o global */
+.scrollable-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.scrollable-table-wrapper .ant-table {
+  min-width: 800px; /* Ajusta según tus columnas */
+}
