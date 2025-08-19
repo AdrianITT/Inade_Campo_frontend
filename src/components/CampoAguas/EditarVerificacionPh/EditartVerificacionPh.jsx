@@ -154,7 +154,7 @@ export default function EditarCalibracionLab() {
                          aceptacionPar3: data.calibracionPhCampo?.primerPuntoCampo?.asectacion,
                          aceptacionPar4: data.calibracionPhCampo?.segundoPuntoCampo?.asectacion,
                          tiraPhUtilizada: data.calibracionPhCampo?.usoPh,
-                         rangoMin: data.calibracionPhCampo?.randoA,
+                         rangoMin: data.calibracionPhCampo?.rangoA,
                          rangoMax: data.calibracionPhCampo?.rangoB,
                          ...ids,
                     };

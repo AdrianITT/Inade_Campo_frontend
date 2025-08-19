@@ -48,6 +48,13 @@ const INSTRUMENTOS = [
   { label: "Probeta graduada 1 L",     value: 13 },
   { label: "Hielera",                  value: 14 },
 ];
+const opcionesFrecuencia = [
+  { value: 1, horas: "Menor que 4", muestras: "Mínimo 2", intervalo: "N.E.", intervalomaximo: "N.E." },
+  { value: 2, horas: "De 4 a 8", muestras: "4", intervalo: "1", intervalomaximo: "2" },
+  { value: 3, horas: "Mayor que 8 y ≤ 12", muestras: "4", intervalo: "2", intervalomaximo: "3" },
+  { value: 4, horas: "Mayor que 12 y ≤ 18", muestras: "6", intervalo: "2", intervalomaximo: "3" },
+  { value: 5, horas: "Mayor que 18 y ≤ 24", muestras: "6", intervalo: "3", intervalomaximo: "4" },
+];
 
 const FormularioProtocoloMuestreo = () => {
   const [form] = Form.useForm();
@@ -66,6 +73,7 @@ const FormularioProtocoloMuestreo = () => {
   const allValues  = INSTRUMENTOS.map(i => i.value);
   const indeterminate = checkedList.length && checkedList.length < allValues.length;
   const checkAll     = checkedList.length === allValues.length;
+   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   /* helpers dentro del componente */
@@ -101,6 +109,7 @@ const FormularioProtocoloMuestreo = () => {
 /* reemplaza tu onFinish */
   const handleSubmit = async () => {
     try {
+      setLoading(true);
       // 1️⃣  valida todo el formulario
       const allValues = await form.validateFields();
 
@@ -131,6 +140,7 @@ const FormularioProtocoloMuestreo = () => {
       setTimeout(() => {
         navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
       }, 1000);
+      setLoading(false);
     }
   };
 
@@ -140,6 +150,7 @@ const enviarSeccion = async (punto, ref) => {
     /* 1️⃣  crear protocolo + intermediario sólo una vez -------- */
     if (!protocoloRef.current) {
       try {
+        setLoading(true);
         console.log("Creando protocolo e intermediario...");
         const { data: proto } = await createProtocoloMuestreo({
           aguaResidualInforme: id,
@@ -159,6 +170,8 @@ const enviarSeccion = async (punto, ref) => {
         console.error(err.response?.data || err);
         message.error("No se pudo crear el protocolo");
         return;
+      }finally{
+        setLoading(false);
       }
     }
 
@@ -382,7 +395,7 @@ const enviarSeccion = async (punto, ref) => {
           />
      </Form.Item>
 
-      <Form.Item label="Tipo de Muestreo" name="tipoMuestreo">
+      <Form.Item label="3.4 Tipo de Muestreo" name="tipoMuestreo">
         <Radio.Group>
           <Radio value={true}>Simple</Radio>
           <Radio value={false}>Compuesto</Radio>
@@ -390,31 +403,53 @@ const enviarSeccion = async (punto, ref) => {
       </Form.Item>
       
 
-      <Form.Item
-        label="3.5 Frecuencia de muestreo"
-        name="frecuenciaMuestreo"
-        rules={[{ required: true, message: "Seleccione una frecuencia" }]}
-      >
-        <Radio.Group style={{ width: "100%" }}>
-          {[
-            { value: 1, horas: "Menor que 4",         muestras: "Mínimo 2", intervalo: "N.E." },
-            { value: 2, horas: "De 4 a 8",            muestras: "4",        intervalo: "1"   },
-            { value: 3, horas: "Mayor que 8 y ≤ 12",  muestras: "4",        intervalo: "2"   },
-            { value: 4, horas: "Mayor que 12 y ≤ 18", muestras: "6",        intervalo: "2"   },
-            { value: 5, horas: "Mayor que 18 y ≤ 24", muestras: "6",        intervalo: "3"   },
-          ].map((row) => (
-            <Radio
-              key={row.value}
-              value={row.value}
-              style={{ display: "block", height: 36 }}
-            >
-              <span style={{ display: "inline-block", width: 190 }}>{row.horas}</span>
-              <span style={{ display: "inline-block", width: 180 }}>{row.muestras}</span>
-              <span style={{ display: "inline-block" }}>{row.intervalo}</span>
-            </Radio>
-          ))}
-        </Radio.Group>
-      </Form.Item>
+  <Form.Item
+    label="3.5 Frecuencia de muestreo"
+    name="frecuenciaMuestreo"
+    rules={[{ required: true, message: "Seleccione una frecuencia" }]}
+  >
+    {/* Este campo es el valor que capturará el Form */}
+    <Radio.Group style={{ display: "none" }} />
+  </Form.Item>
+
+  <Form.Item shouldUpdate>
+    {({ getFieldValue, setFieldValue }) => {
+      const currentValue = getFieldValue("frecuenciaMuestreo");
+      return (
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: "#f5f5f5", textAlign: "left" }}>
+                <th style={{ padding: "8px" }}></th>
+                <th style={{ padding: "8px" }}>Horas</th>
+                <th style={{ padding: "8px" }}>Muestras</th>
+                <th style={{ padding: "8px" }}>Intervalo mínimo</th>
+                <th style={{ padding: "8px" }}>Intervalo máximo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {opcionesFrecuencia.map((row) => (
+                <tr key={row.value} style={{ borderBottom: "1px solid #e8e8e8" }}>
+                  <td style={{ padding: "12px", textAlign: "center" }}>
+                    <Radio
+                      checked={currentValue === row.value}
+                      onChange={() => setFieldValue("frecuenciaMuestreo", row.value)}
+                    />
+                  </td>
+                  <td style={{ padding: "12px" }}>{row.horas}</td>
+                  <td style={{ padding: "12px" }}>{row.muestras}</td>
+                  <td style={{ padding: "12px" }}>{row.intervalo}</td>
+                  <td style={{ padding: "12px" }}>{row.intervalomaximo}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }}
+  </Form.Item>
+
+
 {/* 
       <Form.Item label="Modo de descarga" name="modoDescarga">
         <Radio.Group>

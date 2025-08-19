@@ -68,10 +68,12 @@ const Generarorden = () => {
       try {
         setIsLoading(true);
         const response = await getAllOrdenesTrabajoData(organizationId);
-        // console.log("Órdenes de trabajo response:", response);
-        setOrdenes(response.data);
+        console.log("Órdenes de trabajo response:", response);
+        const ordensEstadoDos=response.data.filter((orden)=> orden.estado.id===2);
+        console.log("Órdenes de trabajo con estado 2:", ordensEstadoDos);
+        setOrdenes(ordensEstadoDos);
 
-        const filtered = filterData(response.data, searchText);
+        const filtered = filterData(ordensEstadoDos, searchText);
         setFilteredData(filtered);
       } catch (error) {
         console.error("Error al cargar las órdenes de trabajo:", error);
@@ -103,7 +105,7 @@ const handleAgregar = (record) => {
     onOk: async () => {
       try {
         setLoadingId(record.orden);   // 1️⃣ spinner solo en la fila
-        console.log("Agregando croquis para la OT:", record);
+        // console.log("Agregando croquis para la OT:", record);
         /* Paso 1: crear croquis */
         // const croquis = await createCroquisUbicacion({
         //   domicilio: "data1",

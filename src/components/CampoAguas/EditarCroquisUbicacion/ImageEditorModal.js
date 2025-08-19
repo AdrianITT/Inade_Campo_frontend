@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from "react";
 import ImageEditor from "tui-image-editor";
 import "tui-image-editor/dist/tui-image-editor.css";
 import "./custom-tui-overrides.css"
-import { Modal } from "antd";
+import { Modal, Button } from "antd";
 
 const ImageEditorModal = ({ visible, imageSrc, onSave, onCancel }) => {
   const editorRef = useRef(null);
@@ -37,6 +37,7 @@ const ImageEditorModal = ({ visible, imageSrc, onSave, onCancel }) => {
           },
           menuBarPosition: "bottom",
         },
+        
         cssMaxWidth: 700,
         cssMaxHeight: 500,
         selectionStyle: {
@@ -44,9 +45,15 @@ const ImageEditorModal = ({ visible, imageSrc, onSave, onCancel }) => {
           rotatingPointOffset: 70,
         },
       });
+      console.log(
+        "Shape config:",
+        instance.current?._options?.includeUI?.shape
+      );
+      
     }
 
     return () => {
+
       if (instance.current) {
         instance.current.destroy();
         instance.current = null;
@@ -70,6 +77,7 @@ const ImageEditorModal = ({ visible, imageSrc, onSave, onCancel }) => {
       width={1050}
     >
       <div ref={editorRef} />
+
     </Modal>
   );
 };

@@ -7,8 +7,9 @@ import { Card, Col, Row, Badge, Space, Progress } from "antd";
 // import { getAllEmpresas } from "./apis/ApisServicioCliente/EmpresaApi";
 
 import {
-  ShopFilled,
-  SignatureFilled 
+  FilterOutlined,
+  SignatureFilled,
+  FileSearchOutlined 
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
@@ -125,9 +126,21 @@ const Home = () => {
             <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
               <div>
                 <Link to="/Filtros">
-                  <Card className="card-custom" title="No asignado" bordered={false}>
+                  <Card className="card-custom" title="Asignacion de id Filtros" bordered={false}>
                     <div className="icon-container">
-                      <ShopFilled />
+                      <FilterOutlined />
+                    </div>
+                  </Card>
+                </Link>
+              </div>
+            </Col>
+
+            <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
+              <div>
+                <Link to="/Custodia_Externa_en">
+                  <Card className="card-custom" title="Custodia Interna" bordered={false}>
+                    <div className="icon-container">
+                      <FileSearchOutlined />
                     </div>
                   </Card>
                 </Link>

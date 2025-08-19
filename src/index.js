@@ -25,6 +25,9 @@ import CustodiasExternas from "./components/CustodiaExterna/CustodiasExterna.jsx
 import CrearCustodiaExterna from "./components/CustodiaExterna/CrearCustodiaExterna/CrearCustida.jsx";
 import DetallesCustodiaExterna from "./components/CustodiaExterna/DetallesCE/DetallesCustodiaExterna.jsx";
 import Filtros from "./components/Filtros/Filtros.js";
+import CustodiasEntregadasPage from "./components/CustodiaInterna/CustodiaEntregadasPage.jsx";
+import EditarCustodia from "./components/CustodiaInterna/LaboratorioId/EditarCustodia.jsx";
+import NoAutorizado from "./components/FetchProtected/NoAutorizado.jsx";
 import Formularios from "./App.js";
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -32,33 +35,33 @@ const usePageTitle = () => {
 
   useEffect(() => {
     const { pathname } = location;
-    let pageTitle = "Simplaxi"; // Título por defecto
+    let pageTitle = "SimplaxiAguas"; // Título por defecto
 
     switch (pathname) {
-      case "/home":
-        pageTitle = "Inicio | Simplaxi";
+      case "/homeAguas":
+        pageTitle = "Inicio | SimplaxiAguas";
         break;
       case "/empresa":
-        pageTitle = "Empresas | Simplaxi";
+        pageTitle = "Empresas | SimplaxiAguas";
         break;
       case "/cliente":
-        pageTitle = "Clientes | Simplaxi";
+        pageTitle = "Clientes | SimplaxiAguas";
         break;
       case "/servicio":
-        pageTitle = "Servicios | Simplaxi";
+        pageTitle = "Servicios | SimplaxiAguas";
         break;
       case "/cotizar":
-        pageTitle = "Cotizar | Simplaxi";
+        pageTitle = "Cotizar | SimplaxiAguas";
         break;
       case "/usuario":
-        pageTitle = "Usuarios | Simplaxi";
+        pageTitle = "Usuarios | SimplaxiAguas";
         break;
       case "/configuracionorganizacion":
-        pageTitle = "Configuración | Simplaxi";
+        pageTitle = "Configuración | SimplaxiAguas";
         break;
       // Agrega más rutas según sea necesario
       default:
-        pageTitle = "Simplaxi";
+        pageTitle = "SimplaxiAguas";
     }
 
     document.title = pageTitle; // Cambia el título
@@ -79,9 +82,10 @@ const AppRouter = () => {
         {/* Ruta para el login sin el Layout */}
         <Route path="/" element={<Login />} />
         {/* <Route path="/RegistroUsuarios" element={<RegistroUsuarios />} />
-        <Route path="*" element={<NoAutorizado />} />
-        <Route path="/no-autorizado" element={<NoAutorizado />} /> */}
+         */}
         {/* Rutas envueltas con Layout */}
+        <Route path="*" element={<NoAutorizado />} />
+        <Route path="/no-autorizado" element={<NoAutorizado />} />
         <Route path="/" element={
             <PageWrapper>
               <Layout />
@@ -91,7 +95,7 @@ const AppRouter = () => {
           {/* <Route path="/FormularioProtocoloMuestreo" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><FormularioProtocoloMuestreo /></ProtectedRoute>} /> */}
           <Route path="/HojaCampoMuestreo/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><HojaCampoMuestreo/></ProtectedRoute>} />
           <Route path="/FormularioCroquisUbicacion/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><FormularioCroquisUbicacion/></ProtectedRoute>} />
-          <Route path="/home" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><Home/></ProtectedRoute>} />
+          <Route path="/homeAguas" element={<ProtectedRoute allowedRoles={['Laboratorio','MuestreadorOrganizacion', 'Administradororganizacion']}><Home/></ProtectedRoute>} />
           <Route path="/AguasResiduales" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><AguasResiduales/></ProtectedRoute>} />
           <Route path="/OrdenTrabajo" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><OrdenTrabajo/></ProtectedRoute>} />
           <Route path="/DetallesAguasResiduales/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><DetallesAguasResiduales/></ProtectedRoute>} />
@@ -108,12 +112,9 @@ const AppRouter = () => {
           <Route path= "/CrearCustodiaExterna" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><CrearCustodiaExterna /></ProtectedRoute>} />
           <Route path= "/CrearCustodiaExterna/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><CrearCustodiaExterna /></ProtectedRoute>} />
           <Route path= "/DetallesCustodiaExternas/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><DetallesCustodiaExterna /></ProtectedRoute>} />
-          <Route path= "/Filtros" element={<ProtectedRoute allowedRoles={['Laboratorio', 'Administradororganizacion']}><Filtros /></ProtectedRoute>} />
-          {/* <Route path="/custodiaExterna" element={<CustodiasExternas />} />
-        <Route path="/CrearCustodiaExterna" element={<CrearCustodiaExterna />} />
-        <Route path="/CrearCustodiaExterna/:id" element={<CrearCustodiaExterna />} />
-        <Route path="/DetallesCustodiaExternas/:id" element={<DetallesCustodiaExterna />} /> */}
-          {/*EditarVerificacionPh */}
+          <Route path= "/Filtros" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion', 'Administradororganizacion']}><Filtros /></ProtectedRoute>} />
+          <Route path= "/Custodia_Externa_en" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion', 'Administradororganizacion']}><CustodiasEntregadasPage /></ProtectedRoute>} />
+          <Route path= "/insert_id_laboratorio/:id" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion', 'Administradororganizacion']}><EditarCustodia /></ProtectedRoute>} />
         </Route>
       </Routes>
 

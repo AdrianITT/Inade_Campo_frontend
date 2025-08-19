@@ -18,6 +18,25 @@ export const handleSubmitConductividad = async (values, id, navigate) => {
   try {
      console.log("values: ",values)
      console.log("ids: ",id);
+     const { data: calibracionverificacion } = await createCalibracionVerificacion({
+      fechaCalibracion:  dayjs().format("YYYY-MM-DD"),
+      equipoUtilizado: values.equipoUtilizado,
+      idEquipo: values.idEquipo,
+      marcaEquipo: values.marcaEquipo,
+      modeloEquipo: values.modeloEquipo,
+      serialEquipo:values.serialEquipo,
+      aguaResidualInforme: id,
+      // calibracionConductiva: idVerificacion
+    });
+
+    const { data: verificacion } = await createVerificacionConductiva({
+      observacion: values.observacion,
+      realizo: values.realizado,
+      supervisor: values.supervisor,
+      calibracionVerificacion:calibracionverificacion.id
+      // conductividadLaboratorio: lab.id,
+      // conductividadCampo: campo.id
+    });
 
     const {data : primerMr }=await createConductividadMrAceptacion({
       horaMr: values.horaMr?.format("HH:mm"),
@@ -83,22 +102,18 @@ export const handleSubmitConductividad = async (values, id, navigate) => {
          fechaMcCaducidad: values.fechaMcCaducidad?.format("YYYY-MM-DD"),
          conductividadAceptacionMr: primerMr.id,
          conductividadAceptacionMc: primerMc.id,
+         calibracionConductiva:verificacion.id,
      });
 
      const {data: campo}=await createConductividadCampo({
        usCmCampo: values.usCmCampo,
        usCmCampoRango: values.usCmCampoRango,
        conductividadAceptacionMr: segundoMr.id,
-       conductividadAceptacionMc:segundoMc.id
+       conductividadAceptacionMc:segundoMc.id,
+       calibracionConductiva:verificacion.id,
      });
 
-     const { data: verificacion } = await createVerificacionConductiva({
-      observacion: values.observacion,
-      realizo: values.realizado,
-      supervisor: values.supervisor,
-      conductividadLaboratorio: lab.id,
-      conductividadCampo: campo.id
-    });
+     
     console.log("verificacion",verificacion);
 
     const idVerificacion = verificacion.id;
@@ -106,16 +121,7 @@ export const handleSubmitConductividad = async (values, id, navigate) => {
     console.log("values.idEquipo", values.idEquipo)
     console.log("values.equipoUtilizado", values.equipoUtilizado)
     console.log("values.equipoUtilizado", values.equipoUtilizado)
-    const { data: calibracionverificacion } = await createCalibracionVerificacion({
-      fechaCalibracion:  dayjs().format("YYYY-MM-DD"),
-      equipoUtilizado: values.equipoUtilizado,
-      idEquipo: values.idEquipo,
-      marcaEquipo: values.marcaEquipo,
-      modeloEquipo: values.modeloEquipo,
-      serialEquipo:values.serialEquipo,
-      aguaResidualInforme: id,
-      calibracionConductiva: idVerificacion
-    });
+    
     console.log("calibracionverificacion", calibracionverificacion)
 
     message.success("Verificación de conductividad guardada correctamente");

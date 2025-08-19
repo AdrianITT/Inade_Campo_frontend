@@ -32,6 +32,7 @@ const EditarCroquisUbicacion = () => {
   const navigate = useNavigate();
 
      useEffect(() => {
+      setLoading(true);
      const fetchData = async () => {
      try {
           const croquisData = await getCroquisUbicacionById(id); // 👈 trae el croquis usando el ID del informe
@@ -47,6 +48,8 @@ const EditarCroquisUbicacion = () => {
      } catch (err) {
           console.error("Error al obtener el croquis:", err);
           message.error("No se pudo cargar el croquis existente.");
+     }finally{
+      setLoading(false);
      }
      };
 
@@ -119,6 +122,7 @@ const handleChange = info => {
       okText: "Sí, enviar",
       cancelText: "Cancelar",
       onOk: async () => {
+        setLoading(true);
         try {
           const values = await form.validateFields(); // 🔍 valida los campos primero
           await onFinish(values); // 🧠 llama a la función original
@@ -126,6 +130,8 @@ const handleChange = info => {
         } catch (err) {
           message.error("Error al validar el formulario.");
           console.error(err);
+        }finally{
+          setLoading(false);
         }
       },
     });
@@ -140,6 +146,7 @@ const handleChange = info => {
   );
 
 const onFinish = async (values) => {
+  setLoading(true);
   try {
     const fd = new FormData();
     fd.append('domicilio', values.domicilioUbicacion);
@@ -153,6 +160,8 @@ const onFinish = async (values) => {
   } catch (err) {
     console.error(err);
     message.error('Error al enviar el formulario');
+  }finally{
+    setLoading(false);
   }
 };
 

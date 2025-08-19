@@ -4,6 +4,7 @@ import {
      Typography, Space, Radio, Button, Collapse, message,
      Modal
 } from "antd";
+import React, { useState} from "react";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import {createCalibracionPh,
@@ -64,6 +65,7 @@ export default function CalibracionLab() {
      const [form] = Form.useForm();
      const { id, idAguas } = useParams();
      const navigate = useNavigate();
+     const [loading, setLoading] = useState(false);
      
      /** 1.  lista de bloques en el orden deseado */
      const bloques = [
@@ -89,7 +91,7 @@ export default function CalibracionLab() {
      
      const onFinish = async (values) => {
           // console.log(values);
-     
+          setLoading(true);
           try {
           // 1. Crear todas las lecturas (24)
           const bulkLecturasPayload = [];
@@ -245,9 +247,11 @@ export default function CalibracionLab() {
           console.error(error);
           message.error("Hubo un error al guardar los datos");
           }finally{
+               
           setTimeout(() => {
                navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
                }, 1000);
+               setLoading(false);
           }
      
      }
@@ -305,13 +309,13 @@ return (
                               boxShadow: "0 2px 8px #f0f1f2"
                          }}
                     >
-                         <Row gutter={[24, 32]}>
+                         <Row gutter={[16, 24]}>
                               {fila.map((par, parIdx) => (
-                                   <Col key={parIdx} xs={24} md={12} lg={12}>
+                                   <Col key={parIdx} xs={24} sm={24} md={12} lg={12}>
                                         {/* --- los dos bloques --- */}
                                         <Row gutter={16}>
                                              {par.map(b => (
-                                                  <Col key={b.pref} xs={24} lg={12}>
+                                                  <Col key={b.pref} xs={24} sm={24} lg={12}>
                                                        <BloqueEstandar pref={b.pref} titulo={b.titulo} />
                                                   </Col>
                                              ))}
@@ -319,10 +323,11 @@ return (
                                         {/* --- radio del par --- */}
                                         <div 
                                         style={{
-                                             border: "1px solid #d9d9d9",   // color gris claro de Ant Design
+                                              border: "1px solid #d9d9d9",
                                              borderRadius: 8,
-                                             padding: 6,
-                                             backgroundColor: "#fafafaff",    // opcional para mejor contraste
+                                             padding: 12,
+                                             backgroundColor: "#fafafa",
+                                             marginTop: 16,
                                              }}
                                         >
                                         <p>Criterios de aceptación: ± 0.05 UpH del valor nominal del Estándar</p>

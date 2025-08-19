@@ -9,6 +9,8 @@ import {deleteCroquisUbicacion} from "../../../apis/ApiCampo/CroquisUbicacion";
 import {deleteHojaCampo} from "../../../apis/ApiCampo/HojaCampo";
 import {updateAguaResidualInforme} from "../../../apis/ApiCampo/AguaResidualInforme"
 import {getLlenarExcelAguas} from "../../../apis/ApiCampo/LlenarExcelAguas"
+import {deleteCalibracionVerificacion} from "../../../apis/ApiCampo/CalibracionVerificacion";
+import {deleteConductividadAceptacionmr, deleteHojaCampoEnd, deleteLecturaVerificacion } from "../../../apis/ApiCampo/Delete";
 import "./css/DAR.css"; // Asegúrate de importar el archivo CSS
 
 const { Panel } = Collapse;
@@ -33,8 +35,44 @@ const DetallesAguasResiduales = () => {
   const [IdCoquis, setIdCoquis] = useState([]); // Datos de los servicios (tabla "servicio")
   const [validacionverificacion, setValidacionVerificacion] = useState([]);
   const [loadingId, setLoadingId] = useState(null);
+  const [lecturaIds, setLecturaIds] = useState([]);
+  const [lecturaIdsAll, setLecturaIdsAll] = React.useState([]); // todos
+  const [lecturasPorPh, setLecturasPorPh] = React.useState({}); // { [phId]: number[] }
+  const [phOptions, setPhOptions] = React.useState([]); // [{value: phId, label: 'PH #n'}]
+  const [selectedPhId, setSelectedPhId] = React.useState(null);
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const DELAY_MS = 150;
   
+  const arr = (v) => (Array.isArray(v) ? v : []);
 
+  // Recolecta TODOS los IDs de lecturas desde data.calibraciones
+  const collectAllLecturaIds = (calibraciones) => {
+    const todos = arr(calibraciones).flatMap((cal) =>
+      arr(cal.ph).flatMap((p) => {
+        const L = p.lecturas || {};
+        return [...arr(L.lab1), ...arr(L.lab2), ...arr(L.campo1), ...arr(L.campo2)];
+      })
+    );
+    return Array.from(new Set(todos.filter((x) => Number.isFinite(x))));
+  };
+
+    // Junta lecturas por PH
+  const collectPerPh = (calibraciones) => {
+    const map = {};
+    const options = [];
+    arr(calibraciones).forEach((cal) => {
+      arr(cal.ph).forEach((p) => {
+        const L = p.lecturas || {};
+        const ids = Array.from(new Set([
+          ...arr(L.lab1), ...arr(L.lab2), ...arr(L.campo1), ...arr(L.campo2),
+        ].filter((x) => Number.isFinite(x))));
+        map[p.id] = ids;
+        options.push({ value: p.id, label: `pH #${p.numero ?? p.id}` });
+      });
+    });
+    return { map, options };
+  };
+  
   // Obtener el ID de la organización una sola vez
      //const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
     const fetchData = async () => {
@@ -54,12 +92,22 @@ const DetallesAguasResiduales = () => {
         setServicesData(data.calibraciones);
         setIdCoquis(data.croquis);
         setInformes(data.informe);
-        setValidacionVerificacion(data.calibraciones);
+        // 🔹 Filtramos calibraciones para dejar solo las que tienen id
+        const calibracionesFiltradas = (data.calibraciones || []).filter(c => !!c?.id);
+
+        setValidacionVerificacion(calibracionesFiltradas);
+        // setLecturaIds(collectAllLecturaIds(data.calibraciones ?? []));
+        console.log(data.calibraciones);
 
         const todosLosIntermediarios =
       (data.calibraciones || []).flatMap(c => c.intermediarios || []);
 
       setServicesData(todosLosIntermediarios);
+
+      setLecturaIdsAll(collectAllLecturaIds(data.calibraciones));
+      const { map, options } = collectPerPh(data.calibraciones);
+      setLecturasPorPh(map);
+      setPhOptions(options);
 
         // Si necesitas un "método" adicional, tendrías que mapear
         // y hacer llamadas a getMetodoById(...) como hacías antes.
@@ -75,17 +123,9 @@ const DetallesAguasResiduales = () => {
     }, [id]);
   
 
-  //   // Función para mostrar el modal de eliminación
-  // const showDeleteModal = () => {
-  //   setIsDeleteModalVisible(true);
-  // };
-
-  //     // Función para cancelar la eliminación
-  // const handleCancelDelete = () => {
-  //   setIsDeleteModalVisible(false);
-  // };
 
   const ElimnarProtocolo = async (i) => {
+    setLoadingId(true);
     try {
       await deleteProtocoloMuestreo(i);
       message.success("Hoja de campo eliminada correctamente");
@@ -93,10 +133,13 @@ const DetallesAguasResiduales = () => {
     } catch (error) {
       console.error("Error al eliminar la hoja de campo:", error);
       message.error("Error al eliminar la hoja de campo");
+    }finally{
+      setLoadingId(false); // Asegúrate de resetear el loading después de la operación
     }
   };
 
     const ElimnarCroquis = async (i) => {
+      setLoadingId(true);
     try {
       await deleteCroquisUbicacion(i);
       message.success("Hoja de campo eliminada correctamente");
@@ -104,10 +147,12 @@ const DetallesAguasResiduales = () => {
     } catch (error) {
       console.error("Error al eliminar la hoja de campo:", error);
       message.error("Error al eliminar la hoja de campo");
+    }finally{
+      setLoadingId(false); // Asegúrate de resetear el loading después de la operación
     }
   };
 
-  const confirmarEliminacionIntermediario = (id) => {
+  const confirmarEliminacionIntermediario = (interId, protocoloId, hojaId) => {
   Modal.confirm({
     title: "¿Estás seguro que deseas eliminar este intermediario?",
     content: "Esta acción no se puede deshacer.",
@@ -115,33 +160,117 @@ const DetallesAguasResiduales = () => {
     okType: "danger",
     cancelText: "Cancelar",
     onOk: () => {
-      EliminateIntermediary(id);
+      EliminateIntermediary(interId,protocoloId, hojaId);
     },
   });
 };
 
-  const EliminateIntermediary= async (i) => {
+  const EliminateIntermediary= async (interId, protocoloId, hojaId) => {
+    setLoadingId(true);
     try {
-      await deleteIntermediario(i);
+      if(protocoloId){await deleteProtocoloMuestreo(protocoloId);}
+      if(hojaId){await deleteHojaCampoEnd(hojaId);}
+      if(interId){await deleteIntermediario(interId);}
       message.success("Intermediario eliminado correctamente");
       fetchData(); // Recargar los datos después de eliminar
     } catch (error) {
       console.error("Error al eliminar el intermediario:", error);
       message.error("Error al eliminar el intermediario");
+    }finally{
+      setLoadingId(false); // Asegúrate de resetear el loading después de la operación
     }
   };
 
   const EliminarHojaCampo = async (i) => {
+    setLoadingId(true);
     try {
-      await deleteHojaCampo(i);
+      await deleteHojaCampoEnd(i);
       message.success("Hoja de campo eliminada correctamente");
       fetchData(); // Recargar los datos después de eliminar
     } catch (error) {
       console.error("Error al eliminar la hoja de campo:", error);
       message.error("Error al eliminar la hoja de campo");
+    }finally{
+      setLoadingId(false); // Asegúrate de resetear el loading después de la operación
     }
   };
 
+  const EliminarCalibracionVerificacion=async(i)=>{
+    try{
+      await deleteCalibracionVerificacion(i);
+      fetchData();
+    }catch(error){
+      message.error("error al eliminar");
+      console.log("error al eliminar: ", error);
+    }
+  }
+
+  const getLecturaIdsFromPh = (ph) => {
+  if (!ph) return [];
+  const L = ph.lecturas || {};
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  const ids = [
+    ...arr(L.lab1),
+    ...arr(L.lab2),
+    ...arr(L.campo1),
+    ...arr(L.campo2),
+  ].filter((x) => Number.isFinite(x));
+  // únicos
+  return Array.from(new Set(ids));
+};
+
+  const confirmarEliminacionLectura = (ph) => {
+    const ids = getLecturaIdsFromPh(ph);
+  // if (!selectedPhId) {
+  //     message.info("Selecciona un pH primero.");
+  //     return;
+  //   }
+    // const ids = lecturasPorPh[selectedPhId] || [];
+    if (ids.length === 0) {
+      message.info("Ese pH no tiene lecturas para eliminar.");
+      return;
+    }
+
+    Modal.confirm({
+      title: `¿Eliminar ${ids.length} lecturas del pH #${selectedPhId}?`,
+      content: "Esta acción no se puede deshacer.",
+      okText: "Sí, eliminar",
+      okType: "danger",
+      cancelText: "Cancelar",
+      async onOk() {
+        console.log("Eliminar lecturas con IDs:", ids);
+        const okIds = [];
+        const failIds = [];
+        for (const lid of ids) {
+          setLoadingId(true);
+          try {
+            await deleteLecturaVerificacion(lid);
+            okIds.push(lid);
+          } catch (e) {
+            failIds.push(lid);
+          }
+          await sleep(DELAY_MS);
+        }
+
+        if (failIds.length === 0) {
+          message.success(`Se eliminaron ${okIds.length} lecturas del pH seleccionado.`);
+        } else if (okIds.length > 0) {
+          message.warning(`Parcial: OK ${okIds.length}, Fallos ${failIds.length}.`);
+        } else {
+          message.error("No se pudieron eliminar las lecturas.");
+        }
+
+        // Actualiza estados: quita las eliminadas del PH y del total
+        setLecturasPorPh((prev) => ({ ...prev, [selectedPhId]: (prev[selectedPhId] || []).filter((x) => !okIds.includes(x)) }));
+        setLecturaIdsAll((prev) => prev.filter((x) => !okIds.includes(x)));
+        fetchData();
+        setLoadingId(false); // Asegúrate de resetear el loading después de la operación
+      },
+    });
+  };
+
+    
+    
   const menu = (
     <Menu>
       
@@ -152,6 +281,7 @@ const DetallesAguasResiduales = () => {
           </Button>
         </Link>
       </Menu.Item>
+      {!IdCoquis.comentario && (
 
       <Menu.Item key="1" icon={<FileTextTwoTone />}>
         <Link to={`/FormularioCroquisUbicacion/${id}`}>
@@ -160,6 +290,7 @@ const DetallesAguasResiduales = () => {
           </Button>
       </Link>
       </Menu.Item>
+      )}
 
       {informes?.estatusid===2 &&(
       <Menu.Item key="3" icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
@@ -303,21 +434,21 @@ const DetallesAguasResiduales = () => {
 
         <h2 className="concepts-title">Calibración y Verificación</h2>
     <Collapse accordion>
-    {validacionverificacion.map((item) => (
+    {validacionverificacion?.filter(Boolean)?.map((item) => (
       <Panel
       key ={validacionverificacion.id}
       header={
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <Text strong>Calibración y Verificación de Conductividad ID: {item.numero}</Text>
             <Space>
-                <Button size="small"  danger icon={<DeleteOutlined />}onClick={()=>ElimnarCroquis(item.id)}>
+                {/* <Button size="small"  danger icon={<DeleteOutlined />}onClick={()=>EliminarCalibracionVerificacion(item.id)}>
                   Eliminar
-                </Button>
+                </Button> */}
             </Space>
           </div>
         }
         >
-        {item.id && (
+        {item?.id && (
         <div>
           <Descriptions size="small" bordered column={1}>
             <Descriptions.Item label="Equipo utilizado">{item.equipoUtilizado}</Descriptions.Item>
@@ -363,7 +494,7 @@ const DetallesAguasResiduales = () => {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span>Ph ID: {ph.numero}</span>
               <Space>
-                <Button size="small" danger icon={<DeleteOutlined />} onClick={()=> confirmarEliminacionIntermediario(ph.id)}>
+                <Button size="small" danger icon={<DeleteOutlined />} onClick={()=> confirmarEliminacionLectura(ph)}>
                   Eliminar
                 </Button>
                 {/* onClick={() => handleEliminarIntermediario(item.id)} */}
@@ -416,7 +547,7 @@ const DetallesAguasResiduales = () => {
                 <Button size="small" >Crear Hoja de campo</Button>
                 </Link>
               )}
-                <Button size="small" danger icon={<DeleteOutlined />} onClick={()=> confirmarEliminacionIntermediario(type.id)}>
+                <Button size="small" danger icon={<DeleteOutlined />} onClick={()=> confirmarEliminacionIntermediario(type.id,type.protocoloMuestreo.id, type.hojaCampo.id)}>
                   Eliminar
                 </Button>
                 {/* onClick={() => handleEliminarIntermediario(item.id)} */}

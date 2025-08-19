@@ -1,0 +1,15 @@
+/* Reduce densidad y asegura que los popups no salgan del panel */
+.bitacora-descriptions .ant-descriptions-item-label {
+  white-space: normal;        /* permite salto de línea en labels largos */
+}
+@media (max-width: 575.98px) {
+  .bitacora-descriptions .ant-descriptions-item-label {
+    min-width: 0 !important;  /* deja que se adapte al ancho del móvil */
+  }
+  .bitacora-descriptions .ant-select,
+  .bitacora-descriptions .ant-input,
+  .bitacora-descriptions .ant-input-number,
+  .bitacora-descriptions .ant-picker {
+    width: 100%;
+  }
+}

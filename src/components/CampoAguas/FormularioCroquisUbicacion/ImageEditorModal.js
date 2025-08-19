@@ -18,12 +18,17 @@ const ImageEditorModal = ({ visible, imageSrc, onSave, onCancel }) => {
           },
           theme: {},
           menu: ["crop", "flip", "rotate", "draw", "shape", "text", "filter"],
-          initMenu: "",
+          initMenu: "shape",
           uiSize: {
             width: "1000px",
             height: "700px",
           },
           menuBarPosition: "bottom",
+          shape: {
+            // opciones disponibles: 'rect', 'circle', 'triangle', 'arrow', 'star', etc.
+            shapes: ['rect', 'circle', 'triangle', 'arrow'],
+            defaultShape: 'arrow', // opcional: para que inicie en "arrow"
+          },
         },
         cssMaxWidth: 700,
         cssMaxHeight: 500,

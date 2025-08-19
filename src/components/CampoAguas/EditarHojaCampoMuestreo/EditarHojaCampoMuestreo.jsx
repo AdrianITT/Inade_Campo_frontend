@@ -10,7 +10,8 @@ import {
   Col,
   Divider,
   Radio, 
-  message
+  message, 
+  Spin
 } from "antd";
 import dayjs from 'dayjs';
 import {
@@ -41,6 +42,7 @@ const EditarHojaCampoMuestreo = ({ initialValues = {}, onBack, onNext }) => {
   const navigate = useNavigate();
   const intermediarioRef = useRef(null);
   const [registrosEliminados, setRegistrosEliminados] = useState([]);
+  const [loading, setLoading] = useState(true);
 
 
   const REFERENCIA = [
@@ -120,6 +122,8 @@ const cargarDatos = async () => {
     console.log("Valores aplicados al form:", form.getFieldsValue());
   } catch (error) {
     console.error("Error al cargar datos del backend:", error);
+  }finally{
+    setLoading(false);
   }
 };
 useEffect(() => {
@@ -135,6 +139,7 @@ const onFinish = (values) => {
 };
 
 const handleSave = async (values) => {
+  setLoading(true);
   const aceptar = await confirmSave(values);
   if (!aceptar) return;
   let hojaCampoId;
@@ -186,6 +191,7 @@ const handleSave = async (values) => {
     message.error("No se pudo guardar la hoja de campo");
   }finally {
     message.success("Hoja de campo guardada correctamente");
+    setLoading(false);
       setTimeout(() => {
         navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
       }, 1000);
@@ -220,6 +226,8 @@ const handleSave = async (values) => {
 
 
   return (
+    <Spin spinning={loading} tip="Cargando..." >
+      <div style={{ padding: "24px 20px" }}>
     <Form
     form={form}
     layout="vertical"
@@ -255,30 +263,30 @@ const handleSave = async (values) => {
                 <Form.Item name={[name, "tiempoId"]} hidden preserve={true}><Input /></Form.Item>
                 <Form.Item name={[name, "volumenId"]} hidden preserve={true}><Input/></Form.Item>
                 <h4>Registro {index + 1}</h4>
-                <Row gutter={16}>
+                <Row gutter={[24,24]}>
                   {/* <Col span={6}><Form.Item {...restField} name={[name, "numero"]} label="Número de muestra"><InputNumber min={1} style={{ width: "100%" }} /></Form.Item></Col> */}
-                  <Col span={6}><Form.Item {...restField} name={[name, "hora"]} label="Hora"><TimePicker format="HH:mm" style={{ width: "100%" }} /></Form.Item></Col>
+                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "hora"]} label="Hora"><TimePicker format="HH:mm" style={{ width: "100%" }} /></Form.Item></Col>
                 </Row>
 
-                <Row gutter={16}>
-                  <Col span={8}><TripleInput name={name} label="ph" step={0.01} index={index} /></Col>
-                  <Col span={8}><TripleInput name={name} label="temperatura" step={0.1} index={index} /></Col>
-                  <Col span={8}><TripleInput name={name} label="conductividad" step={1} index={index} /></Col>
+                <Row gutter={[24,24]}>
+                  <Col xs={24} sm={12} md={8}><TripleInput name={name} label="ph" step={0.01} index={index} /></Col>
+                  <Col xs={24} sm={12} md={8}><TripleInput name={name} label="temperatura" step={0.1} index={index} /></Col>
+                  <Col xs={24} sm={12} md={8}><TripleInput name={name} label="conductividad" step={1} index={index} /></Col>
                 </Row>
-                <Row gutter={16}>
-                  <Col span={8}><TripleInput name={name} label="temperaturaAmbiente" step={0.1} index={index} /></Col>
-                  <Col span={8}><TripleInput name={name} label="tiempo" step={1} index={index} /></Col>
-                  <Col span={8}><TripleInput name={name} label="volumen" step={1} index={index} /></Col>
+                <Row gutter={[24,24]}>
+                  <Col xs={24} sm={12} md={8}><TripleInput name={name} label="temperaturaAmbiente" step={0.1} index={index} /></Col>
+                  <Col xs={24} sm={12} md={8}><TripleInput name={name} label="tiempo" step={1} index={index} /></Col>
+                  <Col xs={24} sm={12} md={8}><TripleInput name={name} label="volumen" step={1} index={index} /></Col>
                 </Row>
                 {/* <Row gutter={16}>
                   <Col span={8}><TripleInput name={name} label="qi" step={1} index={index} /></Col>
                 </Row> */}
 
                 <Divider orientation="left">Otras observaciones</Divider>
-                <Row gutter={16}>
-                  <Col span={8}><Form.Item {...restField} name={[name, "color"]} label="Color"><Input /></Form.Item></Col>
-                  <Col span={8}><Form.Item {...restField} name={[name, "olor"]} label="Olor"><Input /></Form.Item></Col>
-                  <Col span={8}><Form.Item {...restField} name={[name, "materiaFlotante"]} label="Materia Flotante"><Checkbox.Group options={["AUSENTE", "PRESENTE"]} /></Form.Item></Col>
+                <Row gutter={[24,24]}>
+                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "color"]} label="Color"><Input /></Form.Item></Col>
+                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "olor"]} label="Olor"><Input /></Form.Item></Col>
+                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "materiaFlotante"]} label="Materia Flotante"><Checkbox.Group options={["AUSENTE", "PRESENTE"]} /></Form.Item></Col>
                 </Row>
 
                 <Row gutter={16}>
@@ -350,6 +358,8 @@ const handleSave = async (values) => {
         </Button>
       </Form.Item>
     </Form>
+    </div>
+    </Spin>
   );
 };
 

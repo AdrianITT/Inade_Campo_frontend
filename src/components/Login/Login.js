@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Form, Input, Button, Alert, Card, Spin } from "antd";
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from "react-router-dom";
-import Login_Api from "../../apis/ApiCampo/LoginApi"; // Asegúrate de que la ruta sea correcta
-// import logo from "../../../public/logo192.png";
+// import logo from "../../../public/SimplaxiMuestreo.png";
+import Login_Api from "../../apis/ApiCampo/LoginApi"; // Asegúrate de que la ruta sea correcta. ../../../public/SimplaxiMuestreo.png
 import "./Login.css";
 
 const Login = () => {
@@ -35,7 +35,7 @@ const Login = () => {
       if (rol === "Administrador") {
         navigate("/Homeadmin");
       } else {
-        navigate("/home");
+        navigate("/homeAguas");
       }
     } catch (error) {
       setError("Correo o contraseña incorrectos.");
@@ -49,9 +49,9 @@ const Login = () => {
     <div className="center-card">
       <Card className="login-card">
         {/* Contenedor del logo */}
-        {/* <div className="login-logo">
-          <img src={logo} alt="Simplaxi Logo" />
-        </div> */}
+        <div className="login-logo">
+          <img src="/SimplaxiMuestreo.png" alt="Simplaxi Logo" />
+        </div>
 
         <h1>Iniciar Sesión</h1>
 

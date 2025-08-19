@@ -7,3 +7,17 @@ export const updateSegundoPuntoLaboratorio =(data,id)=> Api_Host.post(`/campo/se
 export const updatePrimerPuntoCampo = (data,id)=> Api_Host.post(`/campo/primerpuntocampo${id}/`,data);
 export const updateSegundoPuntoCampo =(data,id)=> Api_Host.post(`/campo/segundopuntocampo${id}/`,data);
 export const updateLecturaVerificacion =(data,id)=> Api_Host.post(`/campo/lecturaverificacion${id}/`,data);
+
+         data.append({
+               'nombrePila': r.nombrePila,
+               'apPaterno': r.apPaterno,
+               'apMaterno': r.apMaterno,
+               'correo': r.correo,
+               'telefono': r.telefono,
+               'organizacion': r.organizacion.nombre,
+               'user': {
+                    'id': r.user.id,
+                    'username': r.user.username,
+                    'email': r.user.email,
+               }
+          })

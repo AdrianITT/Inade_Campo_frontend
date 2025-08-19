@@ -1,20 +1,26 @@
 import React, { useEffect, useState } from "react";
 import {useParams,useNavigate } from "react-router-dom";
 //import { DownloadOutlined } from '@ant-design/icons';
-import { Button,Descriptions, Card, Tag, Dropdown, Menu, Modal, Result } from 'antd';
-import {CheckCircleTwoTone, FileExcelTwoTone, CaretDownOutlined, MailTwoTone } from "@ant-design/icons";
+import { Button,Descriptions, Card, Tag, Dropdown, Menu, Modal, Result, message } from 'antd';
+import {CheckCircleTwoTone, FileExcelTwoTone, CaretDownOutlined, MailTwoTone, DatabaseFilled } from "@ant-design/icons";
 //import {Link} from "react-router-dom";
 //import { useParams, Link, useNavigate } from "react-router-dom";
 import './DetallesCustodiaExterna.css';
-import { getCustodiaExternaById } from "../../../apis/ApiCustodiaExterna/ApiCustodiaExtern";
+import { getCustodiaExternaById, updateOneCustodiaExterna } from "../../../apis/ApiCustodiaExterna/ApiCustodiaExtern";
 import { getAllPrioridad } from '../../../apis/ApiCustodiaExterna/ApiPrioridad';
 import { getCustodiaExternaDataById } from '../../../apis/ApiCustodiaExterna/ApiCustodiaExternaData';
+import {createRegistroCustodia} from '../../../apis/ApiCustodiaExterna/ApiCustodiaN'
+import  ModalEntregaRecibe  from './ModalEntregaRecibe'
+import { getPDFCustodiaExterna} from '../../../apis/ApiCustodiaExterna/ApiPdfCustodiaExterna';
 
 export default function CadenaCustodiaExterna() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [custodiaExternas, setCustodiaExterna] = useState(null);
   const [custodiaExternasData, setCustodiaExternaData] = useState(null);
   const [prioridades, setPrioridades] = useState([]);
+  const [reloadTrigger, setReloadTrigger] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
   const { id } = useParams(); // Cambia esto por el ID real que necesites
   const navigate = useNavigate();
   //const estado = 1; // Cambia esto por el estado real que necesites
@@ -26,7 +32,7 @@ export default function CadenaCustodiaExterna() {
   };
   
 
-  
+  const handleShowModal = () => setVisible(true);
   // 1. Cargar los datos de la custodia externa por ID
   useEffect(() => {
     if (!id) return; // Evita llamar si no hay ID
@@ -49,42 +55,150 @@ export default function CadenaCustodiaExterna() {
       setCustodiaExternaData(res.data);
     })
     
-  }, [id]);
+  }, [id, reloadTrigger]);
   //const { id } = useParams();
 
   const showModal = () => {
     setIsModalOpen(true);
   };
 
-  const handleOk = () => {
-    setIsModalOpen(false);
+  const handleOk = async () => {
+    try{
+      const data=await updateOneCustodiaExterna(custodiaExternasData.custodiaExterna.id,{"estado":2});
+      console.log("data: ",data);
+      
+      setReloadTrigger(prev => prev + 1);
+      setIsModalOpen(false);
+    }catch(error){
+      console.error("Error al actualizar el estado de Custodia externa: ", error);
+      message.error("No se pudo actualizar el estado.");
+    }
   };
+
+  // Recibe el form para validar y guardar
+  const handleSave = async (form) => {
+    try {
+      const datasform=await form.validateFields();
+      setSaving(true);
+      const v = form.getFieldsValue();   // v = valores del formulario
+      console.log("📦 Datos del formulario:", v);
+    const payload = {
+      custodiaExterna: custodiaExternasData.custodiaExterna.id,
+
+      // --- Entrega ---
+      entregadoPor : v.entregaNombre || "",
+      fechaEntrega : v.entregaFecha  ? v.entregaFecha.format("YYYY-MM-DD") : "",
+      horaEntrega  : v.entregaHora   ? v.entregaHora.format("HH:mm:ss")    : "",
+
+      // --- Recibe ---
+      recibidoPor     : v.recibeNombre || "",
+      fechaEecepcion  : v.recibeFecha  ? v.recibeFecha.format("YYYY-MM-DD") : "",
+      horaRecepcion   : v.recibeHora   ? v.recibeHora.format("HH:mm:ss")    : "",
+    };
+
+    console.log("📤 payload", payload);
+      const datarc=await createRegistroCustodia(payload);
+      const data=await updateOneCustodiaExterna(custodiaExternasData.custodiaExterna.id,{"estado":3});
+      console.log("📦 Datos del formulario:", v);
+      console.log("📦 Datos del formulario temperatura:", v.temperatura);
+      const dateC=await updateOneCustodiaExterna(custodiaExternasData.custodiaExterna.id,{"temperatura":v.temperatura});
+      console.log("datarc: ",dateC);
+      console.log("data: ",data);
+      setVisible(false);
+      setReloadTrigger(prev => prev + 1);
+      /* …llamada a API… */
+      message.success("Datos guardados");
+      setIsModalOpen(false);
+    }catch(error)
+    {
+      console.log("error: ",error)
+      message.error("erroe al crear o actualizar", error)
+    } 
+    finally {
+      setSaving(false);
+    }
+  };
+
+    const Pdfdownload= async(idCustodia)=>{
+      try{
+        // await getPDFCustodiaExterna(idCutodia);
+
+        // 🔽 Descargar Excel automáticamente
+        const { data, headers } = await getPDFCustodiaExterna(idCustodia);
+        const cd = headers["content-disposition"] || "";
+        const match = cd.match(/filename="?([^"]+)"?/);
+        const fileName = match ? match[1] : `custodia_externa_${custodiaExternasData.ordenDeTrabajo.codigo}.xlsx`;
+
+        // Crea Blob y URL temporal
+        const blob = new Blob([data], {
+          type:
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        const url = window.URL.createObjectURL(blob);
+
+        // Programa la descarga
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        
+      }catch(error){
+        console.log("error:", error);
+        message.error("error al descargar pdf");
+      }
+    }
+  // const handleEntregar = async () => {
+  //   try{
+  //     const data=await updateOneCustodiaExterna(custodiaExternasData.custodiaExterna.id,{"estado":3});
+  //     console.log("data: ",data);
+  //     setIsModalOpen(false);
+  //     setReloadTrigger(prev => prev + 1);
+  //   }catch(error){
+  //     console.error("Error al actualizar el estado de Custodia externa: ", error);
+  //     message.error("No se pudo actualizar el estado.");
+  //   }
+  // };
 
   const handleCancel = () => {
     setIsModalOpen(false);
   };
+
+
   
 
    const menu = (
       <Menu>
+        {custodiaExternasData?.custodiaExterna?.estado?.id === 1 &&(
         <Menu.Item key="1" icon={<CheckCircleTwoTone twoToneColor="#52c41a"/>} onClick={showModal}>
-          Actualizar estado
+          Marcar como Completado
         </Menu.Item>
-        <Menu.Item key="2" icon={<FileExcelTwoTone />} >
+
+        )}
+        {custodiaExternasData?.custodiaExterna?.estado?.id === 2 &&(
+          <Menu.Item key="4" icon={<CheckCircleTwoTone twoToneColor="#52c41a"/>}  onClick={handleShowModal}>
+          Entregar
+        </Menu.Item>
+        )}
+        <Menu.Item key="2" icon={<FileExcelTwoTone />}  onClick={()=>Pdfdownload(custodiaExternas.id)}>
           descargar Excel
         </Menu.Item>{/*"/crearCustodiaExterna" to={`/crearCustodiaExterna/${id}`}*/}
+      {custodiaExternasData?.custodiaExterna?.estado?.id === 1 &&(
         <Menu.Item key="3" icon={<FileExcelTwoTone />} onClick={() => navigate(`/crearCustodiaExterna/${custodiaExternas.id}`)}>
           Editar o continuar con CE
         </Menu.Item>
-        <Menu.Item key="4" icon={<MailTwoTone />} >
+      )}
+        {/* <Menu.Item key="4" icon={<MailTwoTone />} >
           Editar o continuar con CE
-        </Menu.Item>
+        </Menu.Item> */}
       </Menu>
     );
   return (
   <div className="contenedor-principal">
     <h2>
-      Detalles Cadena <span className="font-bold">de Custodia Externa</span>
+      Detalles Cadena <span className="font-bold">de Custodia Externa {custodiaExternasData?.ordenDeTrabajo?.codigo}</span>
     </h2>
     {custodiaExternasData &&(
       <div>
@@ -189,6 +303,13 @@ export default function CadenaCustodiaExterna() {
           title="Esta seguro de cambiar el estado de la cadena de custodia?"
           />
       </Modal>
+      
+      <ModalEntregaRecibe
+        visible={visible}
+        onOk={handleSave}
+        onCancel={() => setVisible(false)}
+        loading={saving}
+      />
   </div>
 
   );

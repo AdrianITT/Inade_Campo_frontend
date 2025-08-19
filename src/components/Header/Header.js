@@ -20,30 +20,38 @@ const items = [
 //       </Link>
 //     ),
 //   },
-//   {
-//     key: 'cliente',
-//     label: (
-//       <Link to="/cliente" rel="noopener noreferrer">
-//         Cliente
-//       </Link>
-//     ),
-//   },
-//   {
-//     key: 'servicio',
-//     label: (
-//       <Link to="/servicio" rel="noopener noreferrer">
-//         Servicios
-//       </Link>
-//     ),
-//   },
-//   {
-//     key: 'cotizar',
-//     label: (
-//       <Link to="/cotizar" rel="noopener noreferrer">
-//         Cotizar
-//       </Link>
-//     ),
-//   },
+  {
+    key: 'custodiaExterna',
+    label: (
+      <Link to="/custodiaExterna" rel="noopener noreferrer">
+        Custodia Externa
+      </Link>
+    ),
+  },
+  {
+    key: 'AguasResiduales',
+    label: (
+      <Link to="/AguasResiduales" rel="noopener noreferrer">
+        AguasResiduales
+      </Link>
+    ),
+  },
+    {
+    key: 'Filtros',
+    label: (
+      <Link to="/Filtros" rel="noopener noreferrer">
+        Filtros
+      </Link>
+    ),
+  },
+    {
+    key: 'CustodiaInterna',
+    label: (
+      <Link to="/Custodia_Externa_en" rel="noopener noreferrer">
+        Custodia Interna
+      </Link>
+    ),
+  },
 //   {
 //     key: 'mas',
 //     label: 'Más',
@@ -181,7 +189,7 @@ const Header = () => {
 
   return (
     <div className="header-container">
-      <Link to="/home">
+      <Link to="/homeAguas">
         <div className="header-logo">
           {logoOrganizacion && logoOrganizacion.logo ? (
             <img alt="Logo de la Organización" src={logoOrganizacion.logo} style={{ height: '40px', marginRight: '8px' }} />

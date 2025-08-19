@@ -217,6 +217,7 @@ const handleSave = async (values) => {
 
 
   return (
+    <div style={{ padding: "24px 16px" }}>
     <Form
     form={form}
     layout="vertical"
@@ -252,34 +253,34 @@ const handleSave = async (values) => {
                 <Form.Item name={[name, "tiempoId"]} hidden><Input /></Form.Item>
                 <Form.Item name={[name, "volumenId"]} hidden><Input  /></Form.Item>
                 <h4>Registro {index + 1}</h4>
-                <Row gutter={16}>
+                <Row gutter={[24,24]}>
                   {/* <Col span={6}><Form.Item {...restField} name={[name, "numero"]} label="Número de muestra"><InputNumber min={1} style={{ width: "100%" }} /></Form.Item></Col> */}
-                  <Col span={6}><Form.Item {...restField} name={[name, "hora"]} label="Hora"><TimePicker format="HH:mm" style={{ width: "100%" }} /></Form.Item></Col>
+                  <Col xs={24} sm={12} md={6}><Form.Item {...restField} name={[name, "hora"]} label="Hora"><TimePicker format="HH:mm" style={{ width: "100%" }} /></Form.Item></Col>
                 </Row>
 
-                <Row gutter={16}>
-                  <Col span={8}><TripleInput name={name} label="ph" step={0.01} index={index} /></Col>
-                  <Col span={8}><TripleInput name={name} label="temperatura" step={0.1} index={index} /></Col>
-                  <Col span={8}><TripleInput name={name} label="conductividad" step={1} index={index} /></Col>
+                <Row gutter={[24,24]}>
+                  <Col xs={24} sm={12} md={8}><TripleInput name={name} label="ph" step={0.01} index={index} /></Col>
+                  <Col xs={24} sm={12} md={8}><TripleInput name={name} label="temperatura" step={0.1} index={index} /></Col>
+                  <Col xs={24} sm={12} md={8}><TripleInput name={name} label="conductividad" step={1} index={index} /></Col>
                 </Row>
-                <Row gutter={16}>
-                  <Col span={8}><TripleInput name={name} label="temperaturaAmbiente" step={0.1} index={index} /></Col>
-                  <Col span={8}><TripleInput name={name} label="tiempo" step={1} index={index} /></Col>
-                  <Col span={8}><TripleInput name={name} label="volumen" step={1} index={index} /></Col>
+                <Row gutter={[12,12]}>
+                  <Col xs={24} sm={12} md={8}><TripleInput name={name} label="temperaturaAmbiente" step={0.1} index={index} /></Col>
+                  <Col xs={24} sm={12} md={8}><TripleInput name={name} label="tiempo" step={1} index={index} /></Col>
+                  <Col xs={24} sm={12} md={8}><TripleInput name={name} label="volumen" step={1} index={index} /></Col>
                 </Row>
                 {/* <Row gutter={16}>
                   <Col span={8}><TripleInput name={name} label="qi" step={1} index={index} /></Col>
                 </Row> */}
 
                 <Divider orientation="left">Otras observaciones</Divider>
-                <Row gutter={16}>
-                  <Col span={8}><Form.Item {...restField} name={[name, "color"]} label="Color"><Input /></Form.Item></Col>
-                  <Col span={8}><Form.Item {...restField} name={[name, "olor"]} label="Olor"><Input /></Form.Item></Col>
-                  <Col span={8}><Form.Item {...restField} name={[name, "materiaFlotante"]} label="Materia Flotante"><Checkbox.Group options={["AUSENTE", "PRESENTE"]} /></Form.Item></Col>
+                <Row gutter={[12,12]}>
+                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "color"]} label="Color"><Input /></Form.Item></Col>
+                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "olor"]} label="Olor"><Input /></Form.Item></Col>
+                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "materiaFlotante"]} label="Materia Flotante"><Checkbox.Group options={["AUSENTE", "PRESENTE"]} /></Form.Item></Col>
                 </Row>
 
-                <Row gutter={16}>
-                  <Col span={8}><Form.Item
+                <Row gutter={[12,12]}>
+                  <Col xs={24} sm={12} md={8}><Form.Item
                     {...restField}
                     name={[name, "condiciones"]}
                     label="Clima"
@@ -287,8 +288,8 @@ const handleSave = async (values) => {
                   >
                     <Radio.Group options={CONDICION_CLIMA} />
                   </Form.Item></Col>
-                  <Col span={8}><Form.Item {...restField} name={[name, "solidos"]} label="¿Sólidos?"><Radio.Group options={["Sí", "No"]} /></Form.Item></Col>
-                  <Col span={8}><Form.Item {...restField} name={[name, "lluvia"]} label="¿Lluvia?"><Radio.Group options={["Sí", "No"]} /></Form.Item></Col>
+                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "solidos"]} label="¿Sólidos?"><Radio.Group options={["Sí", "No"]} /></Form.Item></Col>
+                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "lluvia"]} label="¿Lluvia?"><Radio.Group options={["Sí", "No"]} /></Form.Item></Col>
                 </Row>
 
                 <Row justify="end">
@@ -324,6 +325,7 @@ const handleSave = async (values) => {
         </Button>
       </Form.Item>
     </Form>
+    </div>
   );
 };
 
