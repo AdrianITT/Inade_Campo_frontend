@@ -29,6 +29,7 @@ import CustodiasEntregadasPage from "./components/CustodiaInterna/CustodiaEntreg
 import EditarCustodia from "./components/CustodiaInterna/LaboratorioId/EditarCustodia.jsx";
 import NoAutorizado from "./components/FetchProtected/NoAutorizado.jsx";
 import Formularios from "./App.js";
+// import ARPage from "./components/CampoAguas/AguasResiduales/NoEnUso/ARPage.jsx";
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
   const location = useLocation();
@@ -112,9 +113,11 @@ const AppRouter = () => {
           <Route path= "/CrearCustodiaExterna" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><CrearCustodiaExterna /></ProtectedRoute>} />
           <Route path= "/CrearCustodiaExterna/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><CrearCustodiaExterna /></ProtectedRoute>} />
           <Route path= "/DetallesCustodiaExternas/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><DetallesCustodiaExterna /></ProtectedRoute>} />
-          <Route path= "/Filtros" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion', 'Administradororganizacion']}><Filtros /></ProtectedRoute>} />
+          <Route path= "/Filtros" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion']}><Filtros /></ProtectedRoute>} />
           <Route path= "/Custodia_Externa_en" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion', 'Administradororganizacion']}><CustodiasEntregadasPage /></ProtectedRoute>} />
           <Route path= "/insert_id_laboratorio/:id" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion', 'Administradororganizacion']}><EditarCustodia /></ProtectedRoute>} />
+          {/* <Route path= "/ar_page" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion', 'Administradororganizacion']}><ARPage/></ProtectedRoute>} /> */}
+          {/* ARPage  */}
         </Route>
       </Routes>
 

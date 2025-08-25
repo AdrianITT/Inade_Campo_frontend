@@ -1,15 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Table, Typography, message, Space, Button, Modal,
-  Checkbox, Radio, Tabs, Tag, Grid, Tooltip, Card
+  Checkbox, Radio, Tabs, Tag, Grid, Tooltip, Card,
+  Dropdown
 } from "antd";
 import { Link } from "react-router-dom";
-import { ReloadOutlined, FileExcelOutlined } from "@ant-design/icons";
+import {  MoreOutlined, ReloadOutlined, FileExcelOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
   getAllCustodiaExternaEntregados,
   getAllCustodiaExternaFinalizados,
   updateOneCustodiaExterna,
+  fetchCustodiasEntregadas,
+  fetchCustodiasFinalizados
 } from "../../apis/ApiCustodiaExterna/ApiCustodiaExtern";
 import { getDataDisposicionFinal } from "../../apis/ApiCustodiaExterna/ApiDisposicionFinal";
 import { getllenar_excel_custodia_interna } from "../../apis/ApiCustodiaExterna/ApiCustodiaInterna";
@@ -27,6 +30,22 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
   const [cFinalizados, setCFinalizados] = useState([]);
   const [disposiciones, setDisposiciones] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [ordering, setOrdering] = useState(); // p.ej. "codigo" | "-empresa"
+
+
+    // Finalizadas (server-side)
+  const [totalFinal, setTotalFinal] = useState(0);
+  const [currentPageFinal, setCurrentPageFinal] = useState(1);
+  const [pageSizeFinal, setPageSizeFinal] = useState(10);
+  const [orderingFinal, setOrderingFinal] = useState(); // p.ej. "codigo" | "-empresa"
+
+  // loaders por pestaña
+  const [loadingEnt, setLoadingEnt] = useState(false);
+  const [loadingFin, setLoadingFin] = useState(false);
 
   const [finishOpen, setFinishOpen] = useState(false);
   const [finishSubmitting, setFinishSubmitting] = useState(false);
@@ -52,34 +71,72 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
     return found?.descripcion ?? "";
   };
 
-  const load = async () => {
+  const loadEntregadas = async () => {
     try {
-      setLoading(true);
-      const [entregadasRes, finalizadosRes, disposRes] = await Promise.all([
-        getAllCustodiaExternaEntregados(organizacionId),
-        getAllCustodiaExternaFinalizados(organizacionId),
-        getDataDisposicionFinal(),
-      ]);
+      setLoadingEnt(true);
+      const entregadasData = await fetchCustodiasEntregadas({
+        q: "", // añade búsqueda si la tienes
+        page: currentPage,
+        limit: pageSize,
+        organizacion_id: organizacionId,
+        ordering,
+      });
+      setRows(Array.isArray(entregadasData?.results) ? entregadasData.results : []);
+      setTotal(Number(entregadasData?.count ?? 0));
+    } catch (e) {
+      console.error("Error cargando entregadas:", e);
+      message.error(e.message || "No se pudieron cargar las entregadas");
+    } finally {
+      setLoadingEnt(false);
+    }
+  };
+ 
+  const loadFinalizadas = async () => {
+    try {
+      setLoadingFin(true);
+      const finalData = await fetchCustodiasFinalizados({
+        q: "", // añade búsqueda si aplica
+        page: currentPageFinal,
+        limit: pageSizeFinal,
+        organizacion_id: organizacionId,
+        ordering: orderingFinal,
+      });
+      const items = Array.isArray(finalData?.results) ? finalData.results : [];
+      setCFinalizados(items);
+      setTotalFinal(Number(finalData?.count ?? items.length));
+    } catch (e) {
+      console.error("Error cargando finalizadas:", e);
+      message.error(e.message || "No se pudieron cargar las finalizadas");
+    } finally {
+      setLoadingFin(false);
+    }
+  };
+ 
+  const loadDisposiciones = async () => {
+    try {
+      const disposRes = await getDataDisposicionFinal();
       const listaDisps = Array.isArray(disposRes?.data) ? disposRes.data
                         : Array.isArray(disposRes) ? disposRes : [];
       setDisposiciones(listaDisps);
-      console.log("Disposiciones:", listaDisps);
-      setRows(entregadasRes?.data || []);
-      console.log("Custodias entregadas:", entregadasRes?.data);
-      setCFinalizados(finalizadosRes?.data || []);
-      console.log("Custodias finalizadas:", finalizadosRes?.data);
     } catch (e) {
-      console.error("Error cargando custodias:", e);
-      message.error(e.message || "No se pudieron cargar las custodias");
-    } finally {
-      setLoading(false);
+      console.error("Error cargando disposiciones:", e);
     }
   };
 
+  // Disposiciones: una vez al montar (o cuando cambie la organización)
   useEffect(() => {
-    if (organizacionId) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (organizacionId) loadDisposiciones();
   }, [organizacionId]);
+ 
+  // Entregadas: depende de page/size/ordering
+  useEffect(() => {
+    if (organizacionId) loadEntregadas();
+  }, [organizacionId, currentPage, pageSize, ordering]);
+ 
+  // Finalizadas: depende de page/size/ordering propios
+  useEffect(() => {
+    if (organizacionId) loadFinalizadas();
+  }, [organizacionId, currentPageFinal, pageSizeFinal, orderingFinal]);
 
   const openFinishModal = (custodiaId, record) => {
     setCurrentCustodiaId(custodiaId);
@@ -116,7 +173,9 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
       }
       message.success("Disposición final registrada.");
       closeFinishModal();
-      load();
+      loadEntregadas();
+      loadFinalizadas();
+      loadDisposiciones();
     } catch (e) {
       console.error("Error enviando disposición final:", e);
       message.error(e.response?.data?.detail || "No se pudo registrar la disposición final.");
@@ -153,12 +212,32 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
     }
   };
 
+  const handleTableChange = (pagination, _filters, sorter) => {
+    const { current, pageSize: ps } = pagination;
+    setCurrentPage(current);
+    setPageSize(ps);
+    const colKey = sorter?.columnKey ?? sorter?.field;
+    const ord = sorter?.order; // "ascend" | "descend" | undefined
+    setOrdering(colKey && ord ? (ord === "ascend" ? colKey : `-${colKey}`) : undefined);
+  };
+
+  const handleTableChangeFinal = (pagination, _filters, sorter) => {
+  const { current, pageSize: ps } = pagination;
+  setCurrentPageFinal(current);
+  setPageSizeFinal(ps);
+  const colKey = sorter?.columnKey ?? sorter?.field;
+  const ord = sorter?.order;
+  setOrderingFinal(colKey && ord ? (ord === "ascend" ? colKey : `-${colKey}`) : undefined);
+};
+
+
   // --- Columnas base (sin fixed aquí) ---
   const baseColumns = useMemo(() => [
     {
       title: "Código OT",
       dataIndex: ["ordenTrabajo", "codigo"],
       key: "codigo",
+      sorter:true,
       width: isMobile ? undefined : 140,
       ellipsis: true,
       render: (val) => val ? <Tooltip title={val}>{val}</Tooltip> : "—",
@@ -167,6 +246,7 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
       title: "Fecha final",
       dataIndex: ["custodiaExterna", "fechaFinal"],
       key: "fechaFinal",
+      sorter: true,
       width: isMobile ? undefined : 130,
       // render: (v) => v ? dayjs(v).format("YYYY-MM-DD") : "—",
       responsive: ["md"], // oculta en xs/sm
@@ -175,6 +255,7 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
       title: "Empresa",
       dataIndex: ["empresa", "nombre"],
       key: "empresa",
+      sorter: true,
       width: isMobile ? undefined : 240,
       ellipsis: true,
       render: (v) => v ? <Tooltip title={v}>{v}</Tooltip> : "—",
@@ -183,6 +264,7 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
     {
       title: "Prioridad",
       key: "prioridad",
+      sorter:true,
       width: isMobile ? undefined : 160,
       render: (_, r) => {
         const cod = r?.prioridad?.codigo ?? "";
@@ -199,6 +281,7 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
       title: "Estado",
       dataIndex: ["estado", "descripcion"],
       key: "estado",
+      sorter: true,
       width: isMobile ? undefined : 160,
       render: (_, r) => (
         <Tag color={colorEstado(r)} style={{ marginInlineEnd: 0 }}>
@@ -208,45 +291,70 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
     },
   ], [isMobile]);
 
-  const accionesEntregadas = useMemo(() => ({
+  const accionesEntregadas = useMemo(
+  () => ({
     title: "Acciones",
     key: "actions",
-    width: isMobile ? undefined : 260,
+    width: isMobile ? undefined : 220,
     render: (_, record) => {
       const id = record?.custodiaExterna?.id ?? record?.id;
+
+      const menuItems = [
+        {
+          key: "finalizar",
+          label: "Finalizar",
+          disabled: !id,
+        },
+        {
+          key: "excel",
+          icon: <FileExcelOutlined />,
+          // texto corto en móvil
+          label: isMobile ? "Excel" : "Descargar Excel",
+          disabled: !id || downloadingId === id,
+        },
+      ];
+
+      const onMenuClick = ({ key }) => {
+        if (!id) return;
+        if (key === "finalizar") {
+          openFinishModal(id, record);
+        } else if (key === "excel") {
+          downloadExcel(id, record?.ordenTrabajo?.codigo);
+        }
+      };
+
       return (
-        <Space
-          wrap
-          size="small"
+        <div
           style={{
-            width: "100%",
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(auto-fill, minmax(120px, 1fr))",
+            display: "flex",
             gap: 8,
+            alignItems: "center",
+            width: "100%",
           }}
         >
           <Link to={`/insert_id_laboratorio/${id}`}>
-            <Button block={isMobile} size="small" type="primary" disabled={!id}>
+            <Button
+              size="small"
+              type="primary"
+              disabled={!id}
+              {...(isMobile ? { block: true } : {})}
+            >
               Ingresar ID Laboratorio
             </Button>
           </Link>
-          <Button block={isMobile} size="small" onClick={() => openFinishModal(id, record)} disabled={!id}>
-            Finalizar
-          </Button>
-          <Button
-            block={isMobile}
-            icon={!isMobile ? <FileExcelOutlined /> : null}
-            size="small"
-            loading={downloadingId === id}
-            onClick={() => downloadExcel(id, record?.ordenTrabajo?.codigo)}
-            disabled={!id}
+
+          <Dropdown
+            trigger={["click"]}
+            menu={{ items: menuItems, onClick: onMenuClick }}
           >
-            {isMobile ? "Excel" : "Descargar Excel"}
-          </Button>
-        </Space>
+            <Button size="small" icon={<MoreOutlined />} />
+          </Dropdown>
+        </div>
       );
     },
-  }), [isMobile, downloadingId]);
+  }),
+  [isMobile, downloadingId]
+);
 
   const dispFinalColumn = useMemo(() => ({
     title: "Disposición final",
@@ -336,7 +444,7 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
         <Title level={isMobile ? 5 : 4} style={{ margin: 0 }}>
           Custodias externas — Entregadas
         </Title>
-        <Button onClick={load} icon={<ReloadOutlined />} loading={loading} size={isMobile ? "small" : "middle"}>
+        <Button onClick={() => { loadEntregadas(); loadFinalizadas(); }} icon={<ReloadOutlined />} loading={loading} size={isMobile ? "small" : "middle"}>
           Actualizar
         </Button>
       </Space>
@@ -349,17 +457,22 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
           tabBarGutter={isMobile ? 8 : 16}
           size={isMobile ? "small" : "middle"}
         >
-          <TabPane tab={`Entregadas (${rows.length})`} key="entregadas">
+          <TabPane tab={`Entregadas (${total})`} key="entregadas">
             <div style={{ width: "100%", overflowX: "auto" }}>
               <Table
                 rowKey={(r) => r?.custodiaExterna?.id ?? r?.id ?? Math.random()}
                 dataSource={rows}
                 columns={entregadasCols}
-                loading={loading}
+                loading={loadingEnt}
+                onChange={handleTableChange}
                 pagination={{
-                  pageSize: isMobile ? 8 : 10,
+                  current: currentPage,
+                  pageSize,
+                  total,
                   showSizeChanger: !isMobile,
+                  pageSizeOptions: [5, 10, 20, 50, 100],
                   simple: isMobile,
+                  showTotal: !isMobile ? (t, r) => `${r[0]}–${r[1]} de ${t} registros` : undefined,
                 }}
                 size={isMobile ? "small" : "middle"}
                 bordered={!isMobile}
@@ -373,17 +486,21 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
             </div>
           </TabPane>
 
-          <TabPane tab={`Finalizadas (${cFinalizados.length})`} key="finalizadas">
+          <TabPane tab={`Finalizadas (${totalFinal})`} key="finalizadas">
             <div style={{ width: "100%", overflowX: "auto" }}>
               <Table
                 rowKey={(r) => r?.custodiaExterna?.id ?? r?.id ?? Math.random()}
                 dataSource={cFinalizados}
-                columns={finalizadosCols}
-                loading={loading}
+                loading={loadingFin}
+                onChange={handleTableChangeFinal}
                 pagination={{
-                  pageSize: isMobile ? 8 : 10,
+                  current: currentPageFinal,
+                  pageSize: pageSizeFinal,
+                  total: totalFinal,
                   showSizeChanger: !isMobile,
+                  pageSizeOptions: [5, 10, 20, 50, 100],
                   simple: isMobile,
+                  showTotal: !isMobile ? (t, r) => `${r[0]}–${r[1]} de ${t} registros` : undefined,
                 }}
                 size={isMobile ? "small" : "middle"}
                 bordered={!isMobile}

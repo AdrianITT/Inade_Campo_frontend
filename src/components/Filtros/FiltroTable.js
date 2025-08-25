@@ -2,7 +2,7 @@
 import React from "react";
 import { Table, Button } from "antd";
 
-const FiltroTable = ({ filtros, onEdit }) => {
+const FiltroTable = ({ filtros, onEdit , total, page, pageSize, onPageChange}) => {
   const columns = [
     {
       title: "Código",
@@ -25,7 +25,13 @@ const FiltroTable = ({ filtros, onEdit }) => {
     },
   ];
 
-  return <Table columns={columns} dataSource={filtros} rowKey="id" />;
+  return <Table columns={columns} dataSource={filtros} rowKey="id" pagination={{
+    current: page,
+    pageSize,
+    total,
+    onChange: onPageChange,
+    showSizeChanger: false,
+  }} />;
 };
 
 export default FiltroTable;

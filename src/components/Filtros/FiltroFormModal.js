@@ -38,8 +38,15 @@ const FiltroFormModal = ({ visible, onCancel, onOk, initialValues }) => {
         <Form.Item
           name="descripcion"
           label="Descripción"
-          rules={[{ required: true, message: "La descripción es obligatoria" }]}
+          initialValue="Sin descripción"
         >
+          <Input />
+        </Form.Item>
+                <Form.Item
+          name="estado"
+          label="estado"
+          initialValue={6}
+          hidden>
           <Input />
         </Form.Item>
       </Form>

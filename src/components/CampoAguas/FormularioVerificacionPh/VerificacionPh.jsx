@@ -2,8 +2,9 @@
 import {
      Card, Row, Col, Form, Input, DatePicker, TimePicker,
      Typography, Space, Radio, Button, Collapse, message,
-     Modal
+     Modal, Tag, Alert
 } from "antd";
+import { ExperimentOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import React, { useState} from "react";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
@@ -36,13 +37,13 @@ function BloqueEstandar({ pref, titulo }) {
           >
           <Space direction="vertical" size={4} style={{ width: "100%" }}>
                <Title level={5} style={{ margin: 0 }}>{titulo}</Title>
-               <Form.Item label="pH" name={`ph${pref}`} {...cfg}><Input {...itemProps} /></Form.Item>
-               <Form.Item label="Hora" name={`hora${pref}`} {...cfg}>
+               <Form.Item label="pH:" name={`ph${pref}`} {...cfg}><Input {...itemProps} /></Form.Item>
+               <Form.Item label="Hora:" name={`hora${pref}`} {...cfg}>
                     <TimePicker format="HH:mm" style={{ width: "100%" }} {...itemProps} />
                </Form.Item>
-               <Form.Item label="Marca" name={`marca${pref}`} {...cfg}><Input {...itemProps} /></Form.Item>
-               <Form.Item label="Lote" name={`lote${pref}`} {...cfg}><Input {...itemProps} /></Form.Item>
-               <Form.Item label="Caducidad" name={`caducidad${pref}`} {...cfg}>
+               <Form.Item label="Marca:" name={`marca${pref}`} {...cfg}><Input {...itemProps} /></Form.Item>
+               <Form.Item label="Lote:" name={`lote${pref}`} {...cfg}><Input {...itemProps} /></Form.Item>
+               <Form.Item label="Caducidad:" name={`caducidad${pref}`} {...cfg}>
                     <DatePicker format="YYYY-MM-DD" style={{ width: "100%" }} {...itemProps} />
                </Form.Item>
                {[1, 2, 3].map(i => (
@@ -287,29 +288,111 @@ return (
           >
                {paresEnFila.map((fila, filaIdx) => (
                     <Panel
-                         header={
-                              <><Title level={4} style={{ marginBottom: 0, color: "#1890ff" }}>
-                                   {filaIdx === 0
-                                        ? "Calibración y Verificación en laboratorio"
-                                        : "Calibración y Verificación en campo"}
-                              </Title>
-                               <p style={{ margin: 0, fontSize: "14px", color: "#555" }}>
-                                   {filaIdx === 0
-                                        ? "Nota: Se debe calibrar a dos puntos, ejemplo: 7.00 - 4.00 o 7.00 - 10.00 ya calibrado el equipo a dos puntos se deben realizar la comprobacion"
-                                        : "Nota: Antes de realizar la Calibración / Verificación se debe utilizar la tira indicandora de PH para estimar el valor de PH de la muestra y poder seleccionar el rango a Calibrar / Verificar"}
-                              </p>
-                              </>
-                         }
-                         key={filaIdx}
-                         style={{
-                              background: "#fff",
-                              borderRadius: 8,
-                              marginBottom: 16,
-                              border: "1px solid #e6e6e6",
-                              boxShadow: "0 2px 8px #f0f1f2"
-                         }}
+               header={
+               <div style={{ 
+               padding: '20px 24px',
+               background: '#ffffff',
+               boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+               borderRadius: '12px 12px 0 0',
+               border: '1px solid #f0f0f0',
+               borderBottom: 'none'
+               }}>
+               <Title level={4} style={{ 
+                    margin: '0 0 16px 0', 
+                    color: '#1890ff',
+                    fontSize: '18px',
+                    fontWeight: 600,
+                    letterSpacing: '-0.02em'
+               }}>
+                    {filaIdx === 0
+                    ? "🔬 Calibración y Verificación en laboratorio"
+                    : "🌱 Calibración y Verificación en campo"}
+               </Title>
+               
+               <div style={{
+                    padding: '16px 20px',
+                    backgroundColor: '#f6ffed',
+                    border: '1px solid #b7eb8f',
+                    borderRadius: '8px',
+                    position: 'relative'
+               }}>
+                    <div style={{
+                    position: 'absolute',
+                    left: '20px',
+                    top: '16px',
+                    width: '4px',
+                    height: '20px',
+                    backgroundColor: '#52c41a',
+                    borderRadius: '2px'
+                    }}></div>
+                    <p style={{ 
+                    margin: 0, 
+                    paddingLeft: '20px',
+                    fontSize: '13px', 
+                    color: '#389e0d',
+                    lineHeight: '1.6',
+                    fontWeight: 500
+                    }}>
+                    <strong style={{ color: '#237804' }}>💡 Nota importante:</strong><br/>
+                    {filaIdx === 0
+                         ? "Se debe calibrar a dos puntos, ejemplo: 7.00 - 4.00 o 7.00 - 10.00 ya calibrado el equipo a dos puntos se deben realizar la comprobación"
+                         : "Antes de realizar la Calibración / Verificación se debe utilizar la tira indicadora de PH para estimar el valor de PH de la muestra y poder seleccionar el rango a Calibrar / Verificar"}
+                    </p>
+               </div>
+               </div>
+               }
                     >
                          <Row gutter={[16, 24]}>
+                              {/* Solo en el segundo punto de campo */}
+                              {filaIdx === 1 && (
+                                   <Col span={24} >
+                                   <div style={{
+                                             padding: '12px 16px',
+                                             border: '1px solid #f0f0f0',
+                                             borderRadius: 8,
+                                             background: '#fff',
+                                        }}
+                                        >
+                                        <Space
+                                             align="center"
+                                             size={16}
+                                             wrap
+                                             style={{ width: '100%', justifyContent: 'center' }}  // ⬅️ CENTRA
+                                        >
+                                             <Form.Item
+                                                  label="¿Se utilizó la tira pH?"
+                                                  name="tiraPhUtilizada"
+                                                  style={{ margin: "16px 0 8px" }}
+                                             >
+                                                  <Radio.Group size="small">
+                                                       <Radio value={true}>Sí</Radio>
+                                                       <Radio value={false}>No</Radio>
+                                                  </Radio.Group>
+                                             </Form.Item>
+                                             <Form.Item
+                                                  label="Rango a calibrar"
+                                                  style={{ margin: "8px 0 24px" }}
+                                             >
+                                                  <Input.Group compact>
+                                                       <Form.Item
+                                                            name="rangoMin"
+                                                            noStyle
+                                                       >
+                                                            <Input style={{ width: 120 }} placeholder="Mínimo" />
+                                                       </Form.Item>
+                                                       <span style={{ margin: "0 8px" }}>a</span>
+                                                       <Form.Item
+                                                            name="rangoMax"
+                                                            noStyle
+                                                       >
+                                                            <Input style={{ width: 120 }} placeholder="Máximo" />
+                                                       </Form.Item>
+                                                  </Input.Group>
+                                             </Form.Item>
+                                        </Space>
+                                   </div>
+                                   </Col>
+                              )}
                               {fila.map((par, parIdx) => (
                                    <Col key={parIdx} xs={24} sm={24} md={12} lg={12}>
                                         {/* --- los dos bloques --- */}
@@ -322,16 +405,70 @@ return (
                                         </Row>
                                         {/* --- radio del par --- */}
                                         <div 
-                                        style={{
-                                              border: "1px solid #d9d9d9",
-                                             borderRadius: 8,
+                                             style={{
+                                             border: "1px dashed #d9d9d9",
+                                             borderRadius: 10,
                                              padding: 12,
-                                             backgroundColor: "#fafafa",
-                                             marginTop: 16,
+                                             backgroundColor: "#fcfcfc",
+                                             marginTop: 12,
                                              }}
-                                        >
-                                        <p>Criterios de aceptación: ± 0.05 UpH del valor nominal del Estándar</p>
-                                        <p>Criterios de aceptación: ± 0.03 UpH entre lecturas independientes</p>
+                                                                                     >
+                                             <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                                                  <div style={{
+                                                  background: '#f9f9f9',
+                                                  borderRadius: '8px',
+                                                  padding: '12px',
+                                                  border: '1px solid #e8e8e8'
+                                                  }}>
+                                                  <div style={{
+                                                       fontSize: '13px',
+                                                       fontWeight: 600,
+                                                       color: '#595959',
+                                                       marginBottom: '8px',
+                                                       display: 'flex',
+                                                       alignItems: 'center',
+                                                       gap: '6px'
+                                                  }}>
+                                                       📋 Criterios de Aceptación
+                                                  </div>
+                                                  
+                                                  <Space direction="vertical" size={6} style={{ width: "100%" }}>
+                                                       <div style={{
+                                                       padding: '8px 12px',
+                                                       background: '#fff0f6',
+                                                       border: '1px solid #ffadd6',
+                                                       borderRadius: '6px',
+                                                       fontSize: '12px',
+                                                       lineHeight: '1.4'
+                                                       }}>
+                                                       <span style={{ fontWeight: 600, color: '#c41d7f' }}>Criterio de aceptación:</span> ± 0.05 UpH del valor nominal del Estándar
+                                                       </div>
+                                                       
+                                                       <div style={{
+                                                       padding: '8px 12px',
+                                                       background: '#fff2f0',
+                                                       border: '1px solid #ffccc7',
+                                                       borderRadius: '6px',
+                                                       fontSize: '12px',
+                                                       lineHeight: '1.4'
+                                                       }}>
+                                                       <span style={{ fontWeight: 600, color: '#cf1322' }}>Criterio de aceptación:</span> ± 0.03 UpH entre lecturas independientes
+                                                       </div>
+                                                  </Space>
+                                                  </div>
+                                                  
+                                                  <Alert
+                                                  type="info"
+                                                  showIcon
+                                                  message="Verificación importante"
+                                                  description="Confirma que todas las lecturas cumplan con las tolerancias antes de proceder."
+                                                  style={{
+                                                       fontSize: '13px',
+                                                       borderRadius: '8px'
+                                                  }}
+                                                  />
+
+
                                         <Form.Item
                                              label="¿Aceptado?"
                                              name={`aceptacionPar${filaIdx * 2 + parIdx + 1}`}
@@ -342,9 +479,10 @@ return (
                                                   <Radio value={false}>No</Radio>
                                              </Radio.Group>
                                         </Form.Item>
+                                        </Space>
                                         </div>
                                         {/* Solo en el segundo punto de campo */}
-                                        {filaIdx === 1 && parIdx === 1 && (
+                                        {/* {filaIdx === 1 && parIdx === 1 && (
                                              <>
                                                   <Form.Item
                                                        label="¿Se utilizó la tira pH?"
@@ -377,7 +515,7 @@ return (
                                                        </Input.Group>
                                                   </Form.Item>
                                              </>
-                                        )}
+                                        )} */}
                                    </Col>
                               ))}
                          </Row>

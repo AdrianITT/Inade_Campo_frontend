@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,  useMemo, useRef, useCallback } from 'react';
 import {
   Form,
   Input,
@@ -37,6 +37,7 @@ import { getReceptorById , getAllReceptor} from '../../../apis/ApisServicioClien
 //servicio cliente
 import { getAlldataordentrabajo } from '../../../apis/ApisServicioCliente/DataordentrabajoApi';
 import { getAllOrdenesTrabajo,getOrdenTrabajoById } from '../../../apis/ApisServicioCliente/OrdenTrabajoApi';
+import { updateFiltro, getAllFiltroById } from '../../../apis/ApiCustodiaExterna/ApiFiltro';
 
 const { Title } = Typography;
 const { Panel } = Collapse;
@@ -68,6 +69,10 @@ const CrearCustodiaExterna = () => {
   const [receptor, setReceptor] = useState(null);
   const [receptores, setReceptores] = useState([]);
   const [loading, setLoading] = useState(false);
+  const isBig = useMemo(() => (Filtros?.length || 0) > 300, [Filtros]);
+
+  const [remoteOpts, setRemoteOpts] = useState([]);
+  const searchRef = useRef({ timer: null, lastQuery: "" });
 
   useEffect(() => {
     // ❌ 1) Sal de inmediato si aún no tienes los datos mínimos
@@ -288,7 +293,39 @@ const CrearCustodiaExterna = () => {
       .catch(err => console.error("Error al obtener matrices:", err));
   }, []);
   
-  
+    const fetchFiltros = async (q = "") => {
+      setLoading(true);
+      try {
+        const { data } = await getAllFiltroById(q);
+        setRemoteOpts(
+          data.map((d) => ({
+            label: d.codigo, // lo que se ve en el dropdown
+            value: d.id,
+          }))
+        );
+      } catch (err) {
+        console.error("Error cargando filtros:", err);
+        setRemoteOpts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const debouncedSearch = useCallback((q) => {
+      if (searchRef.current.timer) clearTimeout(searchRef.current.timer);
+      searchRef.current.timer = setTimeout(() => {
+        if (searchRef.current.lastQuery !== q) {
+          searchRef.current.lastQuery = q;
+          fetchFiltros(q);
+        }
+      }, 300);
+    }, [])
+
+    const handleDropdownVisibleChange = (open) => {
+      if (open && remoteOpts.length === 0 && !loading) {
+        fetchFiltros("");
+      }
+    };
   
 
   const handleAddBitacora = () => {
@@ -364,14 +401,14 @@ const CrearCustodiaExterna = () => {
           console.log("update")
           await updateMuestra(bitacora.id, muestraPayload);
           muestraId = bitacora.id;
-      
+          await updateFiltro(bitacora.filtro, {estado:5});
           // ❌ No relaciones preservadores de nuevo
         } else {
           console.log("create")
           // ✅ Crea nueva muestra
           const res = await createMuestra(muestraPayload);
           muestraId = res.data.id;
-      
+          await updateFiltro(bitacora.filtro, {estado:5});
           // ✅ Solo si es nueva, relaciona preservadores múltiples
           if (Array.isArray(bitacora.preservador)) {
             for (const preservador of bitacora.preservador) {
@@ -440,14 +477,44 @@ const CrearCustodiaExterna = () => {
 
         {/* ID FILTRO */}
         <Col span={8}>
-          <Form.Item label="Filtro" name={['bitacoras', index, 'filtro']}>
-          <Select placeholder="Selecciona Filtro">
-            {Filtros.map((item) => (
-              <Option key={item.id} value={item.id}>
-                {item.id} - {item.codigo}
-              </Option>
-            ))}
-          </Select>
+        {/* // Si son pocos filtros => carga todos local */}
+
+          <Form.Item label="Filtro" name={["bitacoras", index, "filtro"]}>
+            
+          {!isBig ? (
+            <Select
+              placeholder="Selecciona Filtro"
+              showSearch
+              allowClear
+              virtual
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option?.children?.toString()?.toLowerCase().includes(input.toLowerCase())
+              }
+              filterSort={(a, b) =>
+                a.children.toString().localeCompare(b.children.toString(), "es", {
+                  sensitivity: "base",
+                })
+              }
+            >
+              {Filtros.map((item) => (
+                <Select.Option key={item.id} value={item.id}>
+                  {item.codigo}
+                </Select.Option>
+              ))}
+            </Select>
+      ) : (
+        <Select
+            showSearch
+            allowClear
+            placeholder="Selecciona Filtro"
+            filterOption={false}
+            onSearch={debouncedSearch}
+            onDropdownVisibleChange={handleDropdownVisibleChange}
+            options={remoteOpts}
+            notFoundContent={loading ? <Spin size="small" /> : null}
+          />
+        )}
           </Form.Item>
         </Col>
         

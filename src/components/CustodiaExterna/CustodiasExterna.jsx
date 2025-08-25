@@ -2,111 +2,86 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Table, Button, Typography, Row, Col, Input, Tag, Tooltip, Card, Space, Grid } from "antd";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
-import { getAllCustodiaExterna } from "../../apis/ApiCustodiaExterna/ApiCustodiaExtern";
-
+import { fetchCustodias } from "../../apis/ApiCustodiaExterna/ApiCustodiaExtern"; // <-- usa tu función
 const { Title } = Typography;
 const { Search } = Input;
 const { useBreakpoint }= Grid;
 
+// Helpers de color
 const colorPrioridad = (codigo) => {
-  // Ajusta a tus códigos reales: A/B/C o 1/2/3, etc.
-  const map = {
-    A: "red",
-    B: "orange",
-    C: "gold",
-    1: "red",
-    2: "orange",
-    3: "gold",
-  };
+  const map = { A: "red", B: "orange", C: "gold", 1: "red", 2: "orange", 3: "gold" };
   return map[codigo] || "blue";
 };
-
 const colorEstado = (estado) => {
-  // Puedes mapear por id o descripción
   const id = estado?.id;
-  const desc = (estado?.descripcion || "").toLowerCase();
-
+  const desc = String(estado?.descripcion ?? "").toLowerCase();
   if (id === 1 || desc.includes("proceso")) return "processing";
   if (id === 2 || desc.includes("entreg")) return "geekblue";
   if (id === 3 || desc.includes("complet")) return "green";
+  if (id === 4 || desc.includes("final")) return "cyan";
   return "default";
 };
 
+// pequeño hook de debounce
+function useDebounced(value, delay=400){
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return v;
+}
+
 const CustodiasExterna = () => {
-  const [dataSource, setDataSource] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [searchText, setSearchText] = useState("");
   const screens = useBreakpoint();
   const isMobile = !screens.md;
 
+  // estado UI
+  const [searchText, setSearchText] = useState("");
+  const q = useDebounced(searchText, 400);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [ordering, setOrdering] = useState(undefined); // ej: "codigo", "-empresa", etc.
+
+  // datos remotos
+  const [rows, setRows] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const organizacion_id = Number(localStorage.getItem("organizacion_id") || 0) || undefined;
+
+  // cargar del servidor cuando cambie q, página, límite u orden
   useEffect(() => {
-    const load = async () => {
+    let mounted = true;
+    (async () => {
       try {
         setLoading(true);
-        const res = await getAllCustodiaExterna();
-        setDataSource(Array.isArray(res?.data) ? res.data : []);
+        const data = await fetchCustodias({
+          q, page: currentPage, limit: pageSize, organizacion_id, ordering
+        });
+        if (!mounted) return;
+        setRows(Array.isArray(data?.results) ? data.results : []);
+        setTotal(Number(data?.count ?? 0));
       } catch (e) {
-        console.error("Error al obtener datos:", e);
+        if (mounted) {
+          console.error("Error al obtener custodias:", e);
+          setRows([]); setTotal(0);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
-    };
-    load();
-  }, []);
+    })();
+    return () => { mounted = false; };
+  }, [q, currentPage, pageSize, ordering, organizacion_id]);
 
-  // Utilidad: valores únicos para filtros dinámicos
-  const getUniqueValues = (data, path) => {
-    const values = data
-      .map((item) => path.reduce((acc, curr) => (acc ? acc[curr] : undefined), item))
-      .filter((v) => v != null);
-    return [...new Set(values)];
-  };
-
-  // Filtros dinámicos
-  const fechaFinalFilters = useMemo(
-    () => getUniqueValues(dataSource, ["custodiaExterna", "fechaFinal"]).map((v) => ({ text: v, value: v })),
-    [dataSource]
-  );
-  const codigoOTFilters = useMemo(
-    () => getUniqueValues(dataSource, ["ordenTrabajo", "codigo"]).map((v) => ({ text: v, value: v })),
-    [dataSource]
-  );
-  const empresaFilters = useMemo(
-    () => getUniqueValues(dataSource, ["empresa", "nombre"]).map((v) => ({ text: v, value: v })),
-    [dataSource]
-  );
-  const prioridadFilters = useMemo(
-    () => getUniqueValues(dataSource, ["prioridad", "codigo"]).map((v) => ({ text: v, value: v })),
-    [dataSource]
-  );
-  const estadoFilters = useMemo(
-    () => getUniqueValues(dataSource, ["estado", "descripcion"]).map((v) => ({ text: v, value: v })),
-    [dataSource]
-  );
-
-  // Búsqueda global sencilla (cliente)
-  const filteredBySearch = useMemo(() => {
-    const q = searchText.trim().toLowerCase();
-    if (!q) return dataSource;
-    return dataSource.filter((r) => {
-      const ot = r?.ordenTrabajo?.codigo || "";
-      const emp = r?.empresa?.nombre || "";
-      const fecha = r?.custodiaExterna?.fechaFinal || "";
-      const prio = `${r?.prioridad?.codigo || ""}-${r?.prioridad?.descripcion || ""}`;
-      const est = r?.estado?.descripcion || "";
-      return [ot, emp, fecha, prio, est].some((x) => String(x).toLowerCase().includes(q));
-    });
-  }, [dataSource, searchText]);
-
+  // columnas (ojo con column.key → lo usamos para 'ordering')
   const baseCols = useMemo(() => ([
       {
         title: "Código OT",
         dataIndex: ["ordenTrabajo", "codigo"],
-        key: "codigoOT",
-        filters: codigoOTFilters,
-        filterSearch: true,
-        onFilter: (v, r) => r?.ordenTrabajo?.codigo === v,
-        sorter: (a,b) => (a?.ordenTrabajo?.codigo || "").localeCompare(b?.ordenTrabajo?.codigo || ""),
+        key: "codigo",             // 👈 clave que mapeas en el backend (ORDER_MAP)
+        sorter: true,              // server-side
         ellipsis: true,
         width: 140,
         render: (val) => val ? <Tooltip title={val}><span>{val}</span></Tooltip> : "—",
@@ -114,11 +89,8 @@ const CustodiasExterna = () => {
       {
         title: "Empresa",
         dataIndex: ["empresa", "nombre"],
-        key: "empresa",
-        filters: empresaFilters,
-        filterSearch: true,
-        onFilter: (v,r) => r?.empresa?.nombre === v,
-        sorter: (a,b) => (a?.empresa?.nombre || "").localeCompare(b?.empresa?.nombre || ""),
+        key: "empresa",            // 👈
+        sorter: true,              // server-side
         ellipsis: true,
         width: 220,
         render: (val) => val ? <Tooltip title={val}>{val}</Tooltip> : "—",
@@ -127,22 +99,17 @@ const CustodiasExterna = () => {
       {
         title: "Fecha Final",
         dataIndex: ["custodiaExterna", "fechaFinal"],
-        key: "fechaFinal",
-        filters: fechaFinalFilters,
-        filterSearch: true,
-        onFilter: (v,r) => r?.custodiaExterna?.fechaFinal === v,
-        sorter: (a,b) => new Date(a?.custodiaExterna?.fechaFinal || 0) - new Date(b?.custodiaExterna?.fechaFinal || 0),
+        key: "fechaFinal",         // 👈
+        sorter: true,              // server-side
         render: (val) => val ? dayjs(val).format("YYYY-MM-DD") : "—",
         width: 140,
         responsive: ["md", "lg", "xl"],
       },
       {
         title: "Prioridad",
-        key: "prioridad",
-        filters: prioridadFilters,
-        filterSearch: true,
-        onFilter: (v,r) => r?.prioridad?.codigo === v,
-        sorter: (a,b) => String(a?.prioridad?.codigo || "").localeCompare(String(b?.prioridad?.codigo || "")),
+        key: "prioridad",          // 👈
+        dataIndex: ["prioridad", "codigo"], // para que sorter.field sea algo
+        sorter: true,              // server-side
         render: (_, r) => {
           const { codigo, descripcion } = r?.prioridad || {};
           return <Tag color={colorPrioridad(codigo)} style={{ marginInlineEnd: 0 }}>
@@ -154,12 +121,9 @@ const CustodiasExterna = () => {
       },
       {
         title: "Estado",
+        key: "estado",             // 👈
         dataIndex: ["estado", "descripcion"],
-        key: "estado",
-        filters: estadoFilters,
-        filterSearch: true,
-        onFilter: (v,r) => r?.estado?.descripcion === v,
-        sorter: (a,b) => (a?.estado?.descripcion || "").localeCompare(b?.estado?.descripcion || ""),
+        sorter: true,              // server-side
         render: (_, r) => <Tag color={colorEstado(r?.estado)} style={{ marginInlineEnd: 0 }}>
           {r?.estado?.descripcion || "—"}
         </Tag>,
@@ -175,39 +139,50 @@ const CustodiasExterna = () => {
           </Link>
         ),
       },
-    ]), [codigoOTFilters, empresaFilters, fechaFinalFilters, prioridadFilters, estadoFilters]);
-    //pantalla Movil
-    const columns = useMemo(() => {
+    ]), []);
+
+  const columns = useMemo(() => {
     if (isMobile) {
-      const keep = new Set(["codigoOT", "estado", "action", "empresa"]); // deja 2–3 columnas clave
+      const keep = new Set(["codigo", "empresa", "estado", "action"]);
       return baseCols
         .filter(c => keep.has(c.key))
-        .map(c => ({ ...c, fixed: undefined, width: undefined })); // suelta anchos/fijos
+        .map(c => ({ ...c, fixed: undefined, width: undefined }));
     }
     return baseCols.map(c => {
-      if (c.key === "codigoOT") return { ...c, fixed: "left" };
+      if (c.key === "codigo") return { ...c, fixed: "left" };
       if (c.key === "action") return { ...c, fixed: "right" };
       return c;
     });
   }, [baseCols, isMobile]);
 
+  // onChange de AntD: paginación + orden
+  const handleTableChange = (pagination, filters, sorter) => {
+    const { current, pageSize: ps } = pagination;
+    setCurrentPage(current);
+    setPageSize(ps);
+
+    // ordenar: usamos columnKey que mapeamos al backend (ORDER_MAP)
+    const colKey = sorter?.columnKey ?? sorter?.field; // column.key configurado arriba
+    const ord = sorter?.order; // 'ascend' | 'descend' | undefined
+    if (colKey && ord) {
+      setOrdering(ord === "ascend" ? colKey : `-${colKey}`);
+    } else {
+      setOrdering(undefined);
+    }
+  };
+
   return (
     <div style={{ padding: 16 }}>
-      <Card
-        bordered={false}
-        style={{ maxWidth: 1200, margin: "0 auto" }}
-        bodyStyle={{ padding: 16 }}
-      >
+      <Card bordered={false} style={{ maxWidth: 1200, margin: "0 auto" }} bodyStyle={{ padding: 16 }}>
         <Row justify="space-between" align="middle" style={{ marginBottom: 12 }}>
-          <Col>
-            <Title level={3} style={{ margin: 0 }}>Custodias Externas</Title>
-          </Col>
+          <Col><Title level={3} style={{ margin: 0 }}>Custodias Externas</Title></Col>
           <Col>
             <Space>
               <Search
                 allowClear
                 placeholder="Buscar (OT, empresa, estado, etc.)"
-                onChange={(e) => setSearchText(e.target.value)}
+                value={searchText}
+                onChange={(e) => { setSearchText(e.target.value); setCurrentPage(1); }}
                 style={{ width: 280 }}
               />
               <Link to="/crearCustodiaExterna">
@@ -218,26 +193,25 @@ const CustodiasExterna = () => {
         </Row>
 
         <Table
-          dataSource={filteredBySearch}
+          dataSource={rows}
           columns={columns}
           loading={loading}
-          rowKey={(record) => record?.custodiaExterna?.id}
+          rowKey={(r, i) => r?.custodiaExterna?.id ?? `row-${i}`}
           size={isMobile ? "small" : "middle"}
           bordered={!isMobile}
-          sticky={!isMobile}                          
+          sticky={!isMobile}
+          onChange={handleTableChange}                // 👈 importante
           pagination={{
-            defaultPageSize: 10,
+            current: currentPage,                     // 👈 controlado
+            pageSize,
+            total,                                    // 👈 viene del servidor
             showSizeChanger: !isMobile,
-            pageSizeOptions: [5, 10, 20, 50],
-            simple: isMobile,                
+            pageSizeOptions: [5, 10, 20, 50, 100],
+            simple: isMobile,
+            showTotal: !isMobile ? (t, r) => `${r[0]}–${r[1]} de ${t} registros` : undefined,
           }}
-          scroll={{
-            x: isMobile ? "max-content" : 1000,        // móvil deja fluir
-            y: isMobile ? undefined : 520,
-          }}
-          locale={{
-            emptyText: loading ? "Cargando..." : "No hay datos",
-          }}
+          scroll={{ x: isMobile ? "max-content" : 1000, y: isMobile ? undefined : 520 }}
+          locale={{ emptyText: loading ? "Cargando..." : "No hay datos" }}
         />
       </Card>
     </div>
