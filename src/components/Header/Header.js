@@ -141,6 +141,7 @@ const Header = () => {
       const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
       try {
         const response = await getOrganizacionById(organizationId);
+        console.log("logo responce: ", response);
         setLogoOrganizacion(response.data);
       } catch (error) {
         console.error("Error al obtener la organización:", error);

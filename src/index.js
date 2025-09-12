@@ -25,6 +25,8 @@ import CustodiasExternas from "./components/CustodiaExterna/CustodiasExterna.jsx
 import CrearCustodiaExterna from "./components/CustodiaExterna/CrearCustodiaExterna/CrearCustida.jsx";
 import DetallesCustodiaExterna from "./components/CustodiaExterna/DetallesCE/DetallesCustodiaExterna.jsx";
 import Filtros from "./components/Filtros/Filtros.js";
+import Usuario from "./components/Userjs/Usuario.js";
+import EditarUsuario from "./components/Userjs/EditarUsuario.js";
 import CustodiasEntregadasPage from "./components/CustodiaInterna/CustodiaEntregadasPage.jsx";
 import EditarCustodia from "./components/CustodiaInterna/LaboratorioId/EditarCustodia.jsx";
 import NoAutorizado from "./components/FetchProtected/NoAutorizado.jsx";
@@ -94,28 +96,30 @@ const AppRouter = () => {
           }
         >
           {/* <Route path="/FormularioProtocoloMuestreo" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><FormularioProtocoloMuestreo /></ProtectedRoute>} /> */}
-          <Route path="/HojaCampoMuestreo/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><HojaCampoMuestreo/></ProtectedRoute>} />
-          <Route path="/FormularioCroquisUbicacion/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><FormularioCroquisUbicacion/></ProtectedRoute>} />
-          <Route path="/homeAguas" element={<ProtectedRoute allowedRoles={['Laboratorio','MuestreadorOrganizacion', 'Administradororganizacion']}><Home/></ProtectedRoute>} />
-          <Route path="/AguasResiduales" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><AguasResiduales/></ProtectedRoute>} />
-          <Route path="/OrdenTrabajo" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><OrdenTrabajo/></ProtectedRoute>} />
-          <Route path="/DetallesAguasResiduales/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><DetallesAguasResiduales/></ProtectedRoute>} />
-          <Route path="/Formularios/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><Formularios/></ProtectedRoute>} />
-          <Route path="/FormularioProtocoloMuestreo/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><FormularioProtocoloMuestreo /></ProtectedRoute>} />
-          <Route path="/EditarFormularioProtocoloMuestreo/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><EditarFormularioProtocoloMuestreo /></ProtectedRoute>} />
-          <Route path="/EditarHojaCampoMuestreo/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><EditarHojaCampoMuestreo /></ProtectedRoute>} />
-          <Route path="/EditarCroquisUbicacion/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><EditarCroquisUbicacion /></ProtectedRoute>} />
-          <Route path= "/FormularioConductividad/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><FromularioConductividad /></ProtectedRoute>} />
-          <Route path= "/EditarConductividad/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><EditarConductividad /></ProtectedRoute>} />
+          <Route path="/HojaCampoMuestreo/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><HojaCampoMuestreo/></ProtectedRoute>} />
+          <Route path="/FormularioCroquisUbicacion/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><FormularioCroquisUbicacion/></ProtectedRoute>} />
+          <Route path="/homeAguas" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion','MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion', 'AdministradorLaboratorioOrganizacion']}><Home/></ProtectedRoute>} />
+          <Route path="/AguasResiduales" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><AguasResiduales/></ProtectedRoute>} />
+          <Route path="/OrdenTrabajo" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><OrdenTrabajo/></ProtectedRoute>} />
+          <Route path="/DetallesAguasResiduales/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><DetallesAguasResiduales/></ProtectedRoute>} />
+          <Route path="/Formularios/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><Formularios/></ProtectedRoute>} />
+          <Route path="/FormularioProtocoloMuestreo/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><FormularioProtocoloMuestreo /></ProtectedRoute>} />
+          <Route path="/EditarFormularioProtocoloMuestreo/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><EditarFormularioProtocoloMuestreo /></ProtectedRoute>} />
+          <Route path="/EditarHojaCampoMuestreo/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><EditarHojaCampoMuestreo /></ProtectedRoute>} />
+          <Route path="/EditarCroquisUbicacion/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><EditarCroquisUbicacion /></ProtectedRoute>} />
+          <Route path= "/FormularioConductividad/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><FromularioConductividad /></ProtectedRoute>} />
+          <Route path= "/EditarConductividad/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><EditarConductividad /></ProtectedRoute>} />
           <Route path= "/FormularioVerificacionPh/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><FormularioVerificacionPh /></ProtectedRoute>} />
-          <Route path= "/EditarVerificacionPh/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><EditarVerificacionPh /></ProtectedRoute>} />
-          <Route path= "/custodiaExterna" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><CustodiasExternas /></ProtectedRoute>} />
-          <Route path= "/CrearCustodiaExterna" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><CrearCustodiaExterna /></ProtectedRoute>} />
-          <Route path= "/CrearCustodiaExterna/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><CrearCustodiaExterna /></ProtectedRoute>} />
-          <Route path= "/DetallesCustodiaExternas/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion']}><DetallesCustodiaExterna /></ProtectedRoute>} />
+          <Route path= "/EditarVerificacionPh/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><EditarVerificacionPh /></ProtectedRoute>} />
+          <Route path= "/custodiaExterna" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><CustodiasExternas /></ProtectedRoute>} />
+          <Route path= "/CrearCustodiaExterna" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><CrearCustodiaExterna /></ProtectedRoute>} />
+          <Route path= "/CrearCustodiaExterna/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><CrearCustodiaExterna /></ProtectedRoute>} />
+          <Route path= "/DetallesCustodiaExternas/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><DetallesCustodiaExterna /></ProtectedRoute>} />
           <Route path= "/Filtros" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion']}><Filtros /></ProtectedRoute>} />
-          <Route path= "/Custodia_Externa_en" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion', 'Administradororganizacion']}><CustodiasEntregadasPage /></ProtectedRoute>} />
-          <Route path= "/insert_id_laboratorio/:id" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion', 'Administradororganizacion']}><EditarCustodia /></ProtectedRoute>} />
+          <Route path= "/Custodia_Externa_en" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion','LaboratorioOrganizacion', 'Administradororganizacion']}><CustodiasEntregadasPage /></ProtectedRoute>} />
+          <Route path= "/insert_id_laboratorio/:id" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion','LaboratorioOrganizacion', 'Administradororganizacion']}><EditarCustodia /></ProtectedRoute>} />
+          <Route path= "/usuario" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><Usuario /></ProtectedRoute>} />
+          <Route path= "/EditarUsuario/:id" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><EditarUsuario /></ProtectedRoute>} />
           {/* <Route path= "/ar_page" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion', 'Administradororganizacion']}><ARPage/></ProtectedRoute>} /> */}
           {/* ARPage  */}
         </Route>

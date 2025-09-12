@@ -9,7 +9,8 @@ import { Card, Col, Row, Badge, Space, Progress } from "antd";
 import {
   FilterOutlined,
   SignatureFilled,
-  FileSearchOutlined 
+  FileSearchOutlined,
+  UsergroupAddOutlined
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
@@ -141,6 +142,18 @@ const Home = () => {
                   <Card className="card-custom" title="Custodia Interna" bordered={false}>
                     <div className="icon-container">
                       <FileSearchOutlined />
+                    </div>
+                  </Card>
+                </Link>
+              </div>
+            </Col>
+
+            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+              <div>
+                <Link to="/usuario">
+                  <Card className="card-custom" title="Usuarios" bordered={false}>
+                    <div className="icon-container">
+                      <UsergroupAddOutlined />
                     </div>
                   </Card>
                 </Link>

@@ -1,0 +1,27 @@
+.table-center {
+     padding: 5px;
+     margin: auto;
+     max-width: 1300px;
+     background-color: #fff;
+     border-radius: 8px;
+     box-shadow: 0px 4px 6px rgba(250, 250, 250, 0.1);
+   }
+   
+   .content-center {
+     text-align: center;
+   }
+   
+   .button-ends {
+     display: flex;
+     justify-content: flex-end;
+     align-items: center;
+     padding: 20px;
+     margin-right: 10px;
+     max-width: 1300px;
+     margin: auto; 
+   }
+   
+   .fila-incompleta {
+     background-color: #fff3cd !important;
+   }
+   

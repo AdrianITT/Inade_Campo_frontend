@@ -384,7 +384,7 @@ const CrearCustodiaExterna = () => {
           numeroContenedor: bitacora.numeroContenedor || "1",
           origenMuestra: bitacora.origenMuestra,
           idLaboratorio: "",
-          filtro: bitacora.filtro,
+          filtro: bitacora.filtro || null,
           matriz: bitacora.matriz,
           contenedor: bitacora.contenedor,
           parametro: bitacora.parametro,
@@ -401,14 +401,24 @@ const CrearCustodiaExterna = () => {
           console.log("update")
           await updateMuestra(bitacora.id, muestraPayload);
           muestraId = bitacora.id;
-          await updateFiltro(bitacora.filtro, {estado:5});
+          const filtroId = typeof bitacora?.filtro === "object"
+            ? bitacora?.filtro?.id
+            : bitacora?.filtro;
+          console.log("11filtroId: ", filtroId)
+          if (filtroId != null && filtroId !== "") {
+            await updateFiltro(filtroId, { estado: 5 });
+          }
           // ❌ No relaciones preservadores de nuevo
         } else {
           console.log("create")
           // ✅ Crea nueva muestra
           const res = await createMuestra(muestraPayload);
           muestraId = res.data.id;
-          await updateFiltro(bitacora.filtro, {estado:5});
+          console.log("bitacora.filtro: ", bitacora.filtro)
+          if (bitacora.filtro != null && bitacora.filtro !== "") {
+            await updateFiltro(bitacora.filtro, {estado:5});
+
+          }
           // ✅ Solo si es nueva, relaciona preservadores múltiples
           if (Array.isArray(bitacora.preservador)) {
             for (const preservador of bitacora.preservador) {
@@ -867,7 +877,7 @@ const CrearCustodiaExterna = () => {
 
                <Form.Item>
                 <Button type="dashed" onClick={handleAddBitacora} block>
-                + Agregar punto de muestreo
+                + Agregar punto Identificacion de Campo
                 </Button>
                </Form.Item>
 

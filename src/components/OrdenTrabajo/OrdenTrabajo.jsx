@@ -68,9 +68,9 @@ const Generarorden = () => {
       try {
         setIsLoading(true);
         const response = await getAllOrdenesTrabajoData(organizationId);
-        console.log("Órdenes de trabajo response:", response);
+        // console.log("Órdenes de trabajo response:", response);
         const ordensEstadoDos=response.data.filter((orden)=> orden.estado.id===2);
-        console.log("Órdenes de trabajo con estado 2:", ordensEstadoDos);
+        // console.log("Órdenes de trabajo con estado 2:", ordensEstadoDos);
         setOrdenes(ordensEstadoDos);
 
         const filtered = filterData(ordensEstadoDos, searchText);
@@ -118,7 +118,7 @@ const handleAgregar = (record) => {
           estado: 2
           // ⚠️  agrega aquí los demás campos obligatorios de tu modelo
         });
-        console.log(data);
+        // console.log(data);
         message.success("Croquis ligado correctamente 🎉");
         // navigate("/AguasResiduales");
         navigate(`/DetallesAguasResiduales/${data.data.id}`);
