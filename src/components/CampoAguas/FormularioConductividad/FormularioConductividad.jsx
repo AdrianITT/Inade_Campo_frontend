@@ -1,7 +1,9 @@
-import React from "react";
+import React,{useState, useEffect} from "react";
 import { Form, Input, DatePicker, Divider, Typography, Row, Col, TimePicker, Radio, Button, Collapse, Modal } from "antd";
 import { handleSubmitConductividad } from "./handleSubmitConductividad";
 import { useParams, useNavigate } from "react-router-dom";
+import { useBeforeUnload} from "../../hooks/DetectTabClosure";
+import { useBlocker } from "react-router-dom";
 
 const { Title } = Typography;
 
@@ -10,6 +12,20 @@ const FormularioConductividad = () => {
      const { id } = useParams();
      const {Panel} =Collapse;
      const navigate = useNavigate();
+     const [isDirty, setIsDirty] = useState(false);
+     useBeforeUnload(isDirty);
+
+     function useNavigationPrompt(when) {
+       const blocker = useBlocker(when);
+       useEffect(() => {
+         if (blocker.state === "blocked") {
+           const confirm = window.confirm("¿Deseas salir sin guardar los cambios?");
+           if (confirm) blocker.proceed();
+           else blocker.reset();
+         }
+       }, [blocker]);
+     }
+     useNavigationPrompt(isDirty);
 
      const confirmarEnvio = (values, id) => {
        Modal.confirm({
@@ -17,7 +33,9 @@ const FormularioConductividad = () => {
          content: "Verifica que toda la información esté completa antes de continuar.",
          okText: "Sí, enviar",
          cancelText: "Cancelar",
-         onOk: () => handleSubmitConductividad(values, id, navigate),  // llama a la función real de envío
+         onOk: () => {handleSubmitConductividad(values, id, navigate);
+          setIsDirty(false);
+         },  // llama a la función real de envío
        });
        };
 
@@ -36,7 +54,7 @@ const FormularioConductividad = () => {
     boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
      }}
      >
-    <Form layout="vertical" onFinish={(values) => confirmarEnvio(values, id)}>
+    <Form layout="vertical" onValuesChange={()=> setIsDirty(true)} onFinish={(values) => confirmarEnvio(values, id)}>
       <Title level={4}>Calibración y Verificación de Equipo en Laboratorio y Campo</Title>
 
       {/* Datos generales */}

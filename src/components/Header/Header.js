@@ -5,6 +5,7 @@ import { Link, useLocation } from "react-router-dom";
 import Logout_Api from '../../apis/ApiCampo/LougoutApi';
 import './Header.css';
 import { getOrganizacionById } from '../../apis/ApiCampo/OrganizacionApi';
+// import AutoLogoutTimer from '../AutoLogout/AutoLogoutTimer';
 
 // Definición de los items del menú
 const items = [
@@ -214,6 +215,7 @@ const Header = () => {
           items={items}
         />
       </Drawer>
+        
     </div>
   );
 };

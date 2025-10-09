@@ -3,7 +3,10 @@ import { Api_Host } from "../Api";
 export const getAllOrdenesTrabajo = () => Api_Host.get('/ordentrabajo/');
 export const createOrdenTrabajo = (data) => Api_Host.post('/ordentrabajo/', data);
 export const getOrdenTrabajoById = (id) => Api_Host.get(`/ordentrabajo/${id}/`);
-export const PDFOrdenTrabajo = (id) => Api_Host.get(`/ordentrabajo/${id}/pdf`);
+export const PDFOrdenTrabajo = (id) => {
+     return Api_Host.get(`/ordentrabajo/${id}/pdf`,
+          { responseType: 'blob' });
+};
 export const deleteOrdenTrabajo = (id) => Api_Host.delete(`/ordentrabajo/${id}/`);
 
 export const updateOrdenTrabajo = (id,data) => Api_Host.patch(`/ordentrabajo/${id}/`, data);

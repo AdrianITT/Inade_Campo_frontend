@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Table, Input, Button, Spin, message, Modal } from "antd";
+import { Table, Input, Button, Spin, message, Modal, Space } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import "./css/Generarorden.css";
-import { getAllOrdenesTrabajoData } from "../../apis/ApiCampo/OrdenTrabajo";
+import { getAllOrdenesTrabajoData, PDFOrdenTrabajo } from "../../apis/ApiCampo/OrdenTrabajo";
+import { Api_Host } from "../../apis/Api";
 import { createCroquisUbicacion } from "../../apis/ApiCampo/CroquisUbicacion";
 import { createAguaResidualInforme } from "../../apis/ApiCampo/AguaResidualInforme";
 // import { cifrarId } from "../secretKey/SecretKey";
@@ -40,6 +41,32 @@ const obtenerEstadoConExpiracion = () => {
     return null;
   }
 };
+
+//Descarga de PDF
+  const handleDownloadPDF = async (id, codigo) => {
+    try {
+      const response = await PDFOrdenTrabajo(id);
+
+      if (response.status !== 200) {
+        throw new Error("No se pudo descargar el PDF");
+      }
+  
+      const url = window.URL.createObjectURL(response.data);
+  
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `orden_trabajo_${codigo}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+  
+      window.URL.revokeObjectURL(url);
+      message.success("PDF descargado correctamente");
+    } catch (error) {
+      console.error("Error al descargar el PDF:", error);
+      message.error("Hubo un error al descargar el PDF");
+    }
+  };
 
 
 const Generarorden = () => {
@@ -223,13 +250,25 @@ const handleAgregar = (record) => {
         title: "Opciones",
         key: "opciones",
         render: (_, record) => (
+          <Space>
           <Button
             type="primary"
+            
             onClick={() => handleAgregar(record)}
             loading={loadingId === record.orden}
           >
             Agregar
           </Button>
+          <Button
+            color="green"
+            variant="solid"
+            onClick={() => handleDownloadPDF(record.orden, record.codigo)}
+            loading={loadingId === record.orden}
+          >
+            PDF
+          </Button>
+          </Space>
+          
         ),
       },
     ],

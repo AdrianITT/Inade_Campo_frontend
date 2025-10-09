@@ -1,9 +1,11 @@
 import React, {useEffect, useState} from "react";
 import { Form, Input, DatePicker, Divider, Typography, Row, Col, TimePicker, Radio, message, Collapse, Button } from "antd";
-import { useParams, useNavigate  } from "react-router-dom";
+import { useParams, useNavigate} from "react-router-dom";
 import dayjs from "dayjs";
 import {conductividadInfoData} from "../../../apis/ApiCampo/VerificacionConductividad"
 import { useActualizarConductividad } from "./useConductividadForm";
+import { useBeforeUnload, useNavigationPrompt, useFormNavigationGuard} from "../../hooks/DetectTabClosure";
+import { useBlocker } from "react-router-dom";
 const { Title } = Typography;
 
 function isoToDayjs(dateStr) {
@@ -17,6 +19,13 @@ const EditarConductividad = () => {
   const save= useActualizarConductividad(id);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [isDirty, setIsDirty] = useState(false);
+
+  useBeforeUnload(isDirty);
+ 
+  useNavigationPrompt(isDirty);
+
+  // useFormNavigationGuard(isDirty);
 
     const onFinish = async (values) => {
       try {
@@ -27,6 +36,7 @@ const EditarConductividad = () => {
         message.error("Error al actualizar");
       }finally {
         message.success("Todos los puntos guardados ✅");
+        setIsDirty(false);
         setTimeout(() => {
           navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
         }, 1000);
@@ -149,7 +159,7 @@ const EditarConductividad = () => {
     boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
      }}
      >
-    <Form form={form} layout="vertical" onFinish={onFinish}>
+    <Form form={form} layout="vertical" onFinish={onFinish} onValuesChange={()=> setIsDirty(true)}>
       <Title level={4}>Calibración y Verificación de Equipo en Laboratorio y Campo</Title>
       <Form.Item name="verifId"     hidden><Input /></Form.Item>
       <Form.Item name="conducid"    hidden><Input/></Form.Item>
