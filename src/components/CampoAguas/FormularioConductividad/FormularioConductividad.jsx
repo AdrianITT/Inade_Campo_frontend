@@ -2,7 +2,7 @@ import React,{useState, useEffect} from "react";
 import { Form, Input, DatePicker, Divider, Typography, Row, Col, TimePicker, Radio, Button, Collapse, Modal } from "antd";
 import { handleSubmitConductividad } from "./handleSubmitConductividad";
 import { useParams, useNavigate } from "react-router-dom";
-import { useBeforeUnload} from "../../hooks/DetectTabClosure";
+import { useBeforeUnload, useNavigationPrompt} from "../../hooks/DetectTabClosure";
 import { useBlocker } from "react-router-dom";
 
 const { Title } = Typography;
@@ -15,16 +15,6 @@ const FormularioConductividad = () => {
      const [isDirty, setIsDirty] = useState(false);
      useBeforeUnload(isDirty);
 
-     function useNavigationPrompt(when) {
-       const blocker = useBlocker(when);
-       useEffect(() => {
-         if (blocker.state === "blocked") {
-           const confirm = window.confirm("¿Deseas salir sin guardar los cambios?");
-           if (confirm) blocker.proceed();
-           else blocker.reset();
-         }
-       }, [blocker]);
-     }
      useNavigationPrompt(isDirty);
 
      const confirmarEnvio = (values, id) => {

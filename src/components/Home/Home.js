@@ -99,6 +99,7 @@ const Home = () => {
         <br />
         <Space size ={0}>
           <Row gutter={[0, 0]} justify="center">
+            {/* Aguas Residuales */}
             <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
               <div>
                 <Link to="/AguasResiduales">
@@ -110,6 +111,8 @@ const Home = () => {
                 </Link>
               </div>
             </Col>
+
+            {/* Custodias Externas */}
             <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
               <div>
                 <Link to="/custodiaExterna">
@@ -124,6 +127,8 @@ const Home = () => {
                 </Link>
               </div>
             </Col>
+
+            {/* Filtros */}
             <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
               <div>
                 <Link to="/Filtros">
@@ -136,6 +141,7 @@ const Home = () => {
               </div>
             </Col>
 
+            {/* Custodia Interna */}
             <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
               <div>
                 <Link to="/Custodia_Externa_en">
@@ -148,6 +154,7 @@ const Home = () => {
               </div>
             </Col>
 
+            {/* Usuarios */}
             <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/usuario">
@@ -159,6 +166,20 @@ const Home = () => {
                 </Link>
               </div>
             </Col>
+
+            {/* Próximamente */}
+            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+              <div>
+                <Link>
+                  <Card className="card-custom" title="Próximamente" bordered={false}>
+                    <div className="icon-container">
+                      <Badge status="processing" />
+                    </div>
+                  </Card>
+                </Link>
+              </div>
+            </Col>
+
           </Row>
         </Space>
       </div>

@@ -9,3 +9,7 @@ export const updateCroquisUbicacion = (id,data) => Api_Host.patch(`/campo/croqui
 export const getCroquisUbicacionById = (id) => Api_Host.get(`/campo/croquisubicacion/${id}/`);
 
 export const deleteCroquisUbicacion = (id) => Api_Host.delete(`/campo/croquisubicacion/${id}/`);
+
+export const getExcelCroquis = (id) => Api_Host.get(`/campo/llenar_procesar_croquis/${id}/`, {
+  responseType: "blob", // ⬅️ esto es obligatorio
+});

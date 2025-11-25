@@ -8,15 +8,18 @@ const FiltroTable = ({ filtros, onEdit , total, page, pageSize, onPageChange}) =
       title: "Código",
       dataIndex: "codigo",
       key: "codigo",
+      width: 100,
     },
     {
       title: "Descripción",
       dataIndex: "descripcion",
       key: "descripcion",
+      width: 100,
     },
     {
       title: "Acciones",
       key: "acciones",
+      width: 100,
       render: (_, record) => (
         <Button type="link" onClick={() => onEdit(record)}>
           Editar
@@ -25,7 +28,7 @@ const FiltroTable = ({ filtros, onEdit , total, page, pageSize, onPageChange}) =
     },
   ];
 
-  return <Table columns={columns} dataSource={filtros} rowKey="id" pagination={{
+  return <Table size="small" bordered={true} columns={columns} dataSource={filtros} rowKey="id" pagination={{
     current: page,
     pageSize,
     total,

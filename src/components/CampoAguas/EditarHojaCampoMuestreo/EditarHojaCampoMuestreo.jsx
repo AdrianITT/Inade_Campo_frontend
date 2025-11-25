@@ -33,6 +33,7 @@ import {
 import { saveHojaCampo } from "./hojaCampoService";
 import { useParams, useNavigate } from "react-router-dom";
 import { TextInput } from "@react-pdf/renderer";
+import { useBeforeUnload, useNavigationPrompt} from "../../hooks/DetectTabClosure";
 
 
 const EditarHojaCampoMuestreo = ({ initialValues = {}, onBack, onNext }) => {
@@ -43,7 +44,11 @@ const EditarHojaCampoMuestreo = ({ initialValues = {}, onBack, onNext }) => {
   const intermediarioRef = useRef(null);
   const [registrosEliminados, setRegistrosEliminados] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isDirty, setIsDirty] = useState(false);
 
+  useBeforeUnload(isDirty);
+ 
+  useNavigationPrompt(isDirty);
 
   const REFERENCIA = [
   { label: "NMX-AA-003-1980",       value: "NMX-AA-003-1980" },
@@ -192,6 +197,7 @@ const handleSave = async (values) => {
   }finally {
     message.success("Hoja de campo guardada correctamente");
     setLoading(false);
+    setIsDirty(false);
       setTimeout(() => {
         navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
       }, 1000);
@@ -232,6 +238,7 @@ const handleSave = async (values) => {
     form={form}
     layout="vertical"
     onFinish={handleSave}
+    onValuesChange={()=> setIsDirty(true)}
     style={{ maxWidth: 1100, margin: "0 auto" }}
     >
       <Col span={24}>

@@ -1,5 +1,5 @@
 import { useEffect, useContext, useRef } from "react";
-import { UNSAFE_NavigationContext, useLocation } from "react-router-dom";
+import { UNSAFE_NavigationContext, useLocation, useBlocker } from "react-router-dom";
 
 export function useBeforeUnload(shouldWarn) {
      useEffect(() => {
@@ -23,6 +23,22 @@ export function useNavigationPrompt(when, message = "¿Deseas salir sin guardar 
      const navigator = useContext(UNSAFE_NavigationContext).navigator;
      const location = useLocation();
      const lastPath = useRef(location.pathname);
+
+const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      when && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      const confirmLeave = window.confirm(message);
+      if (confirmLeave) {
+        blocker.proceed();
+      } else {
+        blocker.reset();
+      }
+    }
+  }, [blocker, message]);
 
     useEffect(() => {
       if (!when) return;
@@ -48,26 +64,32 @@ export function useNavigationPrompt(when, message = "¿Deseas salir sin guardar 
         return message;
       };
 
-      window.addEventListener("beforeunload", handleBeforeUnload);
+      // window.addEventListener("beforeunload", handleBeforeUnload);
 
      // Intercepta las flechas del navegador (popstate)
-    const handlePopState = (e) => {
-      const confirmLeave = window.confirm(message);
-      if (!confirmLeave) {
-        // Forzar mantener la ruta actual
-        window.history.pushState(null, "", window.location.href);
-      } else {
-        // 🔸 Permitir ir atrás y actualizar el registro
-        lastPath.current = window.location.pathname;
-      }
-    };
-    window.addEventListener("popstate", handlePopState);
+    // const handlePopState = (e) => {
+    //   // Bloquear la navegación inmediatamente
+    //   window.history.pushState(null, "", location.pathname);
+      
+    //   // Mostrar confirmación
+    //   const confirmLeave = window.confirm(message);
+      
+    //   if (confirmLeave) {
+    //     // Si confirma, permitir la navegación hacia atrás
+    //     window.history.back();
+    //   }
+    //   // Si cancela, ya estamos en la ruta correcta (la actual)
+    // };
+    // window.history.pushState(null, "", location.pathname);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    // window.addEventListener("popstate", handlePopState);
+    
 
       return () => {
           navigator.push = push;
           navigator.replace = replace;
           window.removeEventListener("beforeunload", handleBeforeUnload);
-          window.removeEventListener("popstate", handlePopState);
+          // window.removeEventListener("popstate", handlePopState);
       };
     }, [when, navigator, message]);
 

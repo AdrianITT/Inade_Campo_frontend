@@ -22,6 +22,7 @@ import {
 import {getProtocoloCompleto} from "../../../apis/ApiCampo/EditProtocoloMuestreo"
 import { sendDataProtocolSections } from "./sendDataProtocolSections";
 import { useParams, useNavigate } from "react-router-dom";
+import { useBeforeUnload, useNavigationPrompt} from "../../hooks/DetectTabClosure";
 const { Panel } = Collapse;
 
 const tratamientoOpciones = [
@@ -81,6 +82,11 @@ const EditarFormularioProtocoloMuestreo = () => {
   const checkAll     = checkedList.length === allValues.length;
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [isDirty, setIsDirty] = useState(false);
+
+  useBeforeUnload(isDirty);
+  
+  useNavigationPrompt(isDirty);
 
   useEffect(() => {
   const fetchData = async () => {
@@ -201,6 +207,7 @@ const EditarFormularioProtocoloMuestreo = () => {
       }
     }finally {
       message.success("Todos los puntos guardados ✅");
+      setIsDirty(false);
       setTimeout(() => {
         navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
       }, 1000);
@@ -250,6 +257,7 @@ const enviarSeccion = async (punto, ref) => {
     <Form
       layout="vertical"
       form={form}
+      onValuesChange={()=> setIsDirty(true)}
       // onFinish={handleSubmit}
       style={{ maxWidth: 800, margin: "0 auto" }}
     >

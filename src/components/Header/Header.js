@@ -1,222 +1,156 @@
-import React, { useState, useEffect } from 'react';
-import { AppstoreOutlined } from '@ant-design/icons';
-import { Menu, Button, Drawer } from 'antd';
-import { Link, useLocation } from "react-router-dom";
-import Logout_Api from '../../apis/ApiCampo/LougoutApi';
-import './Header.css';
-import { getOrganizacionById } from '../../apis/ApiCampo/OrganizacionApi';
-// import AutoLogoutTimer from '../AutoLogout/AutoLogoutTimer';
+// src/components/Header/Header.js
+import React, { useState, useEffect, useMemo } from "react";
+import { Menu, Button, Drawer } from "antd";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import Logout_Api from "../../apis/ApiCampo/LougoutApi";
+import { getOrganizacionById } from "../../apis/ApiCampo/OrganizacionApi";
+import "./Header.css";
 
-// Definición de los items del menú
-const items = [
-//   {
-//     key: 'home',
-//     label: (<Link to="/home" rel="noopener noreferrer">Home</Link>),
-//   },
-//   {
-//     key: 'empresa',
-//     label: (
-//       <Link to="/empresa" rel="noopener noreferrer">
-//         Empresa
-//       </Link>
-//     ),
-//   },
-  {
-    key: 'custodiaExterna',
-    label: (
-      <Link to="/custodiaExterna" rel="noopener noreferrer">
-        Custodia Externa
-      </Link>
-    ),
-  },
-  {
-    key: 'AguasResiduales',
-    label: (
-      <Link to="/AguasResiduales" rel="noopener noreferrer">
-        AguasResiduales
-      </Link>
-    ),
-  },
-    {
-    key: 'Filtros',
-    label: (
-      <Link to="/Filtros" rel="noopener noreferrer">
-        Filtros
-      </Link>
-    ),
-  },
-    {
-    key: 'CustodiaInterna',
-    label: (
-      <Link to="/Custodia_Externa_en" rel="noopener noreferrer">
-        Custodia Interna
-      </Link>
-    ),
-  },
-//   {
-//     key: 'mas',
-//     label: 'Más',
-//     icon: <AppstoreOutlined />,
-//     children: [
-//       {
-//         key: 'generar_orden',
-//         label: (
-//           <Link to="/generar_orden" rel="noopener noreferrer">
-//             Generar Orden de Trabajo
-//           </Link>
-//         ),
-//       },
-//       {
-//         key: 'usuario',
-//         label: (
-//           <Link to="/usuario" rel="noopener noreferrer">
-//             Usuarios
-//           </Link>
-//         ),
-//       },
-//       {
-//         key: 'configuracion',
-//         label: (
-//           <Link to="/configuracionorganizacion" rel="noopener noreferrer">
-//             Configuración de la organización
-//           </Link>
-//         ),
-//       },
-//       {
-//         key: 'facturas',
-//         label: (
-//           <Link to="/factura" rel="noopener noreferrer">
-//             Facturas
-//           </Link>
-//         ),
-//       },
-//       {
-//         key: 'Pre-Cotizaciones',
-//         label: (
-//           <Link to="/PreCotizacion" rel="noopener noreferrer">
-//             Pre-Cotizaciones
-//           </Link>
-//         ),
-//       },
-//     ],
-//   },
-  {
-    key: 'logout',
-    label: (
-      <div className="logout-button">
-        <Button
-          onClick={async () => {
-            try {
-              await Logout_Api.post("", {}, {
-                headers: {
-                  Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-              });
-              // Limpiar localStorage
-              localStorage.removeItem('token');
-              localStorage.removeItem('user_id');
-              localStorage.removeItem('username');
-              localStorage.removeItem('rol');
-              localStorage.removeItem('organizacion');
-              localStorage.removeItem('organizacion_id');
-              //localStorage.clear();
-              // Redirige al usuario a la página principal
-              window.location.href = '/';
-            } catch (error) {
-              console.error('Error al cerrar sesión:', error);
-            }
-          }}
-        >
-          Cerrar sesión
-        </Button>
-      </div>
-    ),
-  },
+const MENU_ITEMS = [
+  { key: "custodiaExterna", path: "/custodiaExterna", label: "Custodia Externa" },
+  { key: "AguasResiduales", path: "/AguasResiduales", label: "Aguas Residuales" },
+  { key: "Filtros", path: "/Filtros", label: "Filtros" },
+  { key: "CustodiaInterna", path: "/Custodia_Externa_en", label: "Custodia Interna" },
 ];
 
 const Header = () => {
-  // Obtener el logo de la organización
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [logoOrganizacion, setLogoOrganizacion] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [openKeys, setOpenKeys] = useState([]);
+
+  const organizacionLocal = localStorage.getItem("organizacion");
+
+  // ---------- LOGOUT ----------
+  const handleLogout = async () => {
+    try {
+      await Logout_Api.post(
+        "",
+        {},
+        {
+          headers: {
+            Authorization: `Token ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      [
+        "token",
+        "user_id",
+        "username",
+        "rol",
+        "organizacion",
+        "organizacion_id",
+      ].forEach((k) => localStorage.removeItem(k));
+
+      navigate("/");
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
+
+  // ---------- LOGO ORG ----------
   useEffect(() => {
     const fetchLogoOrganizacion = async () => {
-      const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
+      const organizationId = Number(localStorage.getItem("organizacion_id"));
+      if (!organizationId) return;
+
       try {
-        const response = await getOrganizacionById(organizationId);
-        console.log("logo responce: ", response);
-        setLogoOrganizacion(response.data);
+        const { data } = await getOrganizacionById(organizationId);
+        setLogoOrganizacion(data);
       } catch (error) {
         console.error("Error al obtener la organización:", error);
       }
     };
+
     fetchLogoOrganizacion();
   }, []);
 
-  // Control del Drawer para el menú en dispositivos móviles
-  const [open, setOpen] = useState(false);
-  const showDrawer = () => setOpen(true);
-  const onClose = () => setOpen(false);
+  // ---------- RUTA SELECCIONADA ----------
+  const selectedKey = useMemo(() => {
+    const item = MENU_ITEMS.find((it) =>
+      location.pathname.startsWith(it.path)
+    );
+    return item?.key ?? "";
+  }, [location.pathname]);
 
-  // Utilizar useLocation para determinar la ruta activa y seleccionar la clave correspondiente
-  const location = useLocation();
-  const getDefaultSelectedKey = () => {
-    // Recorre los items (y sub-items) para encontrar coincidencias con la ruta actual
-    for (const item of items) {
-      // Si el item tiene un label con Link, comprueba la propiedad "to"
-      if (item.label && typeof item.label === 'object' && item.label.props && item.label.props.to) {
-        if (location.pathname.startsWith(item.label.props.to)) {
-          return item.key;
-        }
-      }
-      // Si tiene hijos, comprueba cada uno
-      if (item.children) {
-        for (const child of item.children) {
-          if (child.label && child.label.props && child.label.props.to) {
-            if (location.pathname.startsWith(child.label.props.to)) {
-              return child.key;
-            }
-          }
-        }
-      }
-    }
-    return '';
-  };
-
-  const defaultSelectedKey = getDefaultSelectedKey();
-
-  // Control de las claves abiertas para submenús
-  const [openKeys, setOpenKeys] = useState([]);
-  const onOpenChange = (keys) => {
-    setOpenKeys(keys);
-  };
+  // Construimos items para el componente Menu de antd
+  const menuItemsForAntd = [
+    ...MENU_ITEMS.map((item) => ({
+      key: item.key,
+      label: (
+        <Link to={item.path} rel="noopener noreferrer">
+          {item.label}
+        </Link>
+      ),
+    })),
+    {
+      key: "logout",
+      label: (
+        <div className="logout-button">
+          <Button danger type="primary" onClick={handleLogout}>
+            Cerrar sesión
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div className="header-container">
-      <Link to="/homeAguas">
-        <div className="header-logo">
-          {logoOrganizacion && logoOrganizacion.logo ? (
-            <img alt="Logo de la Organización" src={logoOrganizacion.logo} style={{ height: '40px', marginRight: '8px' }} />
-          ) : (
-            <img alt="LOGO" style={{ height: '40px', marginRight: '8px' }} />
-          )}
-        </div>
+    <header className="header-container">
+      {/* Logo */}
+      <Link to="/homeAguas" className="header-logo">
+        {logoOrganizacion?.logo ? (
+          <img
+            alt="Logo de la Organización"
+            src={logoOrganizacion.logo}
+            className="header-logo-img"
+          />
+        ) : (
+          <img
+            alt="LOGO"
+            className="header-logo-img"
+          />
+        )}
       </Link>
+
+      {/* Título */}
+      <div className="Title-Header">
+        <h2>{organizacionLocal || "Mi Organización"}</h2>
+      </div>
+
+      {/* MENÚ DESKTOP */}
+      <Menu
+        mode="horizontal"
+        selectedKeys={[selectedKey]}
+        items={menuItemsForAntd}
+        className="header-menu-desktop"
+      />
+
+      {/* Botón menú (solo móvil) */}
       <div className="header-button">
-        <Button type="primary" onClick={showDrawer}>
-          Menu
+        <Button type="primary" onClick={() => setDrawerOpen(true)}>
+          Menú
         </Button>
       </div>
-      <Drawer title="Menu" onClose={onClose} open={open}>
+
+      {/* MENÚ MÓVIL (Drawer) */}
+      <Drawer
+        title="Menú"
+        onClose={() => setDrawerOpen(false)}
+        open={drawerOpen}
+      >
         <Menu
           mode="inline"
-          selectedKeys={[defaultSelectedKey]}
+          selectedKeys={[selectedKey]}
           openKeys={openKeys}
-          onOpenChange={onOpenChange}
-          style={{ width: 256 }}
-          items={items}
+          onOpenChange={setOpenKeys}
+          items={menuItemsForAntd}
         />
       </Drawer>
-        
-    </div>
+    </header>
   );
 };
 

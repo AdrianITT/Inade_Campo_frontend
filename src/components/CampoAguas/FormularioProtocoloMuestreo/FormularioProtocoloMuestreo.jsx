@@ -20,6 +20,7 @@ import {
 } from "../../../apis/ApiCampo/FormmularioInforme";
 import { sendProtocolSections } from "./sendProtocolSections";
 import { useParams, useNavigate } from "react-router-dom";
+import { useBeforeUnload, useNavigationPrompt} from "../../hooks/DetectTabClosure";
 const { Panel } = Collapse;
 
 const tratamientoOpciones = [
@@ -73,7 +74,8 @@ const FormularioProtocoloMuestreo = () => {
   const allValues  = INSTRUMENTOS.map(i => i.value);
   const indeterminate = checkedList.length && checkedList.length < allValues.length;
   const checkAll     = checkedList.length === allValues.length;
-   const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const navigate = useNavigate();
 
   /* helpers dentro del componente */
@@ -137,6 +139,7 @@ const FormularioProtocoloMuestreo = () => {
       }
     }finally {
       message.success("Todos los puntos guardados ✅");
+      setIsDirty(false);
       setTimeout(() => {
         navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
       }, 1000);
@@ -200,6 +203,7 @@ const enviarSeccion = async (punto, ref) => {
       layout="vertical"
       form={form}
       onFinish={handleSubmit}
+      onValuesChange={()=> setIsDirty(true)}
       style={{ maxWidth: 800, margin: "0 auto" }}
     >
       <Collapse 

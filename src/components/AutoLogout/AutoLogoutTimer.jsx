@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logout_Api from "../../apis/ApiCampo/LougoutApi";
 
-const AutoLogoutTimer = ({ timeout = 60 * 60 * 1000 }) => { // 5 min por defecto
+const AutoLogoutTimer = ({ timeout = 60 * 60 * 1000 }) => { // 1 hora por defecto
   const navigate = useNavigate();
   const [remaining, setRemaining] = useState(timeout);
-  const timerRef = useRef(null);
-  const intervalRef = useRef(null);
+  const lastActiveRef = useRef(Date.now());
+  const checkIntervalRef = useRef(null);
 
   // 🔒 Cerrar sesión automática
   const handleLogout = async () => {
@@ -21,7 +21,7 @@ const AutoLogoutTimer = ({ timeout = 60 * 60 * 1000 }) => { // 5 min por defecto
         "",
         {},
         {
-          headers: { Authorization: `Token ${token}` }, // o 'Bearer' si usas JWT
+          headers: { Authorization: `Token ${token}` },
         }
       );
     } catch (error) {
@@ -34,38 +34,36 @@ const AutoLogoutTimer = ({ timeout = 60 * 60 * 1000 }) => { // 5 min por defecto
     }
   };
 
-  // 🧠 Reinicia el contador e intervalo cuando el usuario interactúa
+  // 🧠 Reinicia el temporizador al detectar actividad
   const resetTimer = () => {
-    setRemaining(timeout);
-    clearTimeout(timerRef.current);
-    clearInterval(intervalRef.current);
-
-    // Cada segundo reducimos el contador
-    intervalRef.current = setInterval(() => {
-      setRemaining((prev) => prev - 1000);
-    }, 1000);
-
-    // Programamos el cierre de sesión al expirar
-    timerRef.current = setTimeout(() => {
-      clearInterval(intervalRef.current);
-      handleLogout();
-    }, timeout);
+    lastActiveRef.current = Date.now();
   };
 
   useEffect(() => {
-    const events = ["mousemove", "keydown", "click", "scroll"];
+    // Eventos que cuentan como "actividad"
+    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
     events.forEach((event) => window.addEventListener(event, resetTimer));
 
-    resetTimer(); // inicia el contador
+    // Cada segundo verifica cuánto tiempo ha pasado desde la última actividad
+    checkIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - lastActiveRef.current;
+      const newRemaining = timeout - elapsed;
+
+      setRemaining(newRemaining);
+
+      if (newRemaining <= 0) {
+        clearInterval(checkIntervalRef.current);
+        handleLogout();
+      }
+    }, 1000);
 
     return () => {
       events.forEach((event) => window.removeEventListener(event, resetTimer));
-      clearTimeout(timerRef.current);
-      clearInterval(intervalRef.current);
+      clearInterval(checkIntervalRef.current);
     };
-  }, []);
+  }, [timeout]);
 
-  // 🕒 Convierte milisegundos en formato mm:ss
+  // 🕒 Convierte milisegundos a formato mm:ss
   const formatTime = (ms) => {
     const totalSeconds = Math.max(0, Math.floor(ms / 1000));
     const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");

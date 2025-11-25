@@ -16,8 +16,10 @@ updatePrimerPuntoCampo,
 updateSegundoPuntoCampo,
 updateLecturaVerificacion,
 verificacionPhData } from "../../../apis/ApiCampo/VerificacionPhApi"
+import { useBeforeUnload, useNavigationPrompt} from "../../hooks/DetectTabClosure";
 const { Title } = Typography;
 const { Panel } = Collapse;
+
 
 
 
@@ -76,6 +78,11 @@ export default function EditarCalibracionLab() {
      const [idMap, setIdMap] = useState({});
      const [loading, setLoading] = useState(false);
      const navigate = useNavigate();
+     const [isDirty, setIsDirty] = useState(false);
+
+     useBeforeUnload(isDirty);
+     
+     useNavigationPrompt(isDirty);
 
      /* ---------- helper ---------- */
      const getIds = (d) => {
@@ -339,6 +346,7 @@ export default function EditarCalibracionLab() {
                message.error("Hubo un error al guardar los datos");
           } finally {
                setLoading(false);
+               setIsDirty(false);
                setTimeout(() => {
                     navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
                }, 1000);
@@ -372,6 +380,7 @@ return (
           form={form}
           layout="vertical"
           onFinish={confirmarEnvio}
+          onValuesChange={()=> setIsDirty(true)}
           scrollToFirstError
      >
      {Object.keys(idMap).map((name) => (

@@ -16,6 +16,7 @@ import { getCroquisUbicacionById, updateCroquisUbicacion } from "../../../apis/A
 import { ControlOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import ImageEditorModal from "./ImageEditorModal";
 import { useParams, useNavigate } from "react-router-dom";
+import { useBeforeUnload, useNavigationPrompt} from "../../hooks/DetectTabClosure";
 
 const { Panel } = Collapse;
 
@@ -30,6 +31,9 @@ const EditarCroquisUbicacion = () => {
   const [tempImage, setTempImage] = useState(null); // imagen sin editar
   const [fileObj, setFileObj] = useState(null);
   const navigate = useNavigate();
+  const [isDirty, setIsDirty] = useState(false);
+  useBeforeUnload(isDirty);
+  useNavigationPrompt(isDirty);
 
      useEffect(() => {
       setLoading(true);
@@ -162,6 +166,7 @@ const onFinish = async (values) => {
     message.error('Error al enviar el formulario');
   }finally{
     setLoading(false);
+    setIsDirty(false);
   }
 };
 
@@ -203,6 +208,7 @@ const onFinish = async (values) => {
       layout="vertical"
       form={form}
       // onFinish={onFinish}
+      onValuesChange={()=> setIsDirty(true)}
       style={{ maxWidth: 800, margin: "0 auto" }}
     >
       <Collapse 

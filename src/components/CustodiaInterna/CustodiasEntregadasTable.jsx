@@ -491,6 +491,7 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
               <Table
                 rowKey={(r) => r?.custodiaExterna?.id ?? r?.id ?? Math.random()}
                 dataSource={cFinalizados}
+                columns={finalizadosCols}
                 loading={loadingFin}
                 onChange={handleTableChangeFinal}
                 pagination={{

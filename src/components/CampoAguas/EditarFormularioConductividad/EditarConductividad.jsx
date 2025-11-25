@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from "react";
-import { Form, Input, DatePicker, Divider, Typography, Row, Col, TimePicker, Radio, message, Collapse, Button } from "antd";
+import { Form, Input, DatePicker, Divider, Typography, Row, Col, TimePicker, Radio, message, Collapse, Button, Spin } from "antd";
 import { useParams, useNavigate} from "react-router-dom";
 import dayjs from "dayjs";
 import {conductividadInfoData} from "../../../apis/ApiCampo/VerificacionConductividad"
 import { useActualizarConductividad } from "./useConductividadForm";
-import { useBeforeUnload, useNavigationPrompt, useFormNavigationGuard} from "../../hooks/DetectTabClosure";
-import { useBlocker } from "react-router-dom";
+import { useBeforeUnload, useNavigationPrompt} from "../../hooks/DetectTabClosure";
+
 const { Title } = Typography;
 
 function isoToDayjs(dateStr) {
@@ -28,6 +28,7 @@ const EditarConductividad = () => {
   // useFormNavigationGuard(isDirty);
 
     const onFinish = async (values) => {
+      setLoading(true);
       try {
         await save(values);
         message.success("Datos actualizados");
@@ -36,6 +37,7 @@ const EditarConductividad = () => {
         message.error("Error al actualizar");
       }finally {
         message.success("Todos los puntos guardados ✅");
+        setLoading(false);
         setIsDirty(false);
         setTimeout(() => {
           navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
@@ -46,6 +48,7 @@ const EditarConductividad = () => {
   /* 1️⃣  traer datos al montar */
   useEffect(() => {
     async function cargar() {
+      setLoading(true);
       try {
         const { data } = await conductividadInfoData(id);
         console.log("data: ",data)
@@ -138,6 +141,8 @@ const EditarConductividad = () => {
       } catch (err) {
         message.error("No se pudieron cargar los datos");
         console.error(err);
+      }finally {
+        setLoading(false);
       }
     }
     cargar();
@@ -159,6 +164,12 @@ const EditarConductividad = () => {
     boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
      }}
      >
+      {loading ?(
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 200 }}>
+                     <Spin tip="Cargando datos..." />
+                </div>
+           ):(
+
     <Form form={form} layout="vertical" onFinish={onFinish} onValuesChange={()=> setIsDirty(true)}>
       <Title level={4}>Calibración y Verificación de Equipo en Laboratorio y Campo</Title>
       <Form.Item name="verifId"     hidden><Input /></Form.Item>
@@ -310,6 +321,7 @@ const EditarConductividad = () => {
         <Button type="primary" htmlType="submit">Guardar Verificación y salir</Button>
       </Form.Item>
     </Form>
+           )}
     </div>
   );
 };

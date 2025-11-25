@@ -17,6 +17,7 @@ createPrimerPuntoCampo,
 createSegundoPuntoCampo,
 createLecturaVerificacion,
 createLecturaVerificacionBulk} from "../../../apis/ApiCampo/VerificacionPhApi"
+import { useBeforeUnload, useNavigationPrompt} from "../../hooks/DetectTabClosure";
 const { Title } = Typography;
 const { Panel } = Collapse;
 
@@ -67,6 +68,10 @@ export default function CalibracionLab() {
      const { id, idAguas } = useParams();
      const navigate = useNavigate();
      const [loading, setLoading] = useState(false);
+     const [isDirty, setIsDirty] = useState(false);
+     useBeforeUnload(isDirty);
+     
+     useNavigationPrompt(isDirty);
      
      /** 1.  lista de bloques en el orden deseado */
      const bloques = [
@@ -248,7 +253,7 @@ export default function CalibracionLab() {
           console.error(error);
           message.error("Hubo un error al guardar los datos");
           }finally{
-               
+                 setIsDirty(false);
           setTimeout(() => {
                navigate(`/DetallesAguasResiduales/${idAguas}`); // regresar a la página anterior
                }, 1000);
@@ -278,6 +283,7 @@ return (
           form={form}
           layout="vertical"
           onFinish={confirmarEnvio}
+          onValuesChange={()=> setIsDirty(true)}
           scrollToFirstError
      >
           <Collapse

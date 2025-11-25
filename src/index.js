@@ -1,6 +1,10 @@
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider, Outlet
+} from "react-router-dom";
 import "./index.css";
 import reportWebVitals from "./reportWebVitals";
 import Login from "./components/Login/Login";
@@ -129,10 +133,371 @@ const AppRouter = () => {
   );
 };
 
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <>
+    <VerificarExpiracionLocalStorage />
+    <Outlet/>
+    </>,
+    children: [
+      { index: true, element: <Login /> },
+      { path: "no-autorizado", element: <NoAutorizado /> },
+      {
+        element: (
+          <PageWrapper>
+            <Layout />
+          </PageWrapper>
+        ),
+        children: [
+          {
+            path: "HojaCampoMuestreo/:id/:idAguas",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <HojaCampoMuestreo />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "FormularioCroquisUbicacion/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <FormularioCroquisUbicacion />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "homeAguas",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "LaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                  "AdministradorLaboratorioOrganizacion",
+                ]}
+              >
+                <Home />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "AguasResiduales",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <AguasResiduales />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "OrdenTrabajo",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <OrdenTrabajo />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "DetallesAguasResiduales/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <DetallesAguasResiduales />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "Formularios/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <Formularios />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "FormularioProtocoloMuestreo/:id/:idAguas",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <FormularioProtocoloMuestreo />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "EditarFormularioProtocoloMuestreo/:id/:idAguas",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <EditarFormularioProtocoloMuestreo />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "EditarHojaCampoMuestreo/:id/:idAguas",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <EditarHojaCampoMuestreo />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "EditarCroquisUbicacion/:id/:idAguas",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <EditarCroquisUbicacion />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "FormularioConductividad/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <FromularioConductividad />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "EditarConductividad/:id/:idAguas",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <EditarConductividad />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "FormularioVerificacionPh/:id/:idAguas",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                ]}
+              >
+                <FormularioVerificacionPh />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "EditarVerificacionPh/:id/:idAguas",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <EditarVerificacionPh />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "custodiaExterna",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <CustodiasExternas />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "CrearCustodiaExterna",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <CrearCustodiaExterna />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "CrearCustodiaExterna/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <CrearCustodiaExterna />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "DetallesCustodiaExternas/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <DetallesCustodiaExterna />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "Filtros",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                ]}
+              >
+                <Filtros />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "Custodia_Externa_en",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "LaboratorioOrganizacion",
+                  "Administradororganizacion",
+                ]}
+              >
+                <CustodiasEntregadasPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "insert_id_laboratorio/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "LaboratorioOrganizacion",
+                  "Administradororganizacion",
+                ]}
+              >
+                <EditarCustodia />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "usuario",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <Usuario />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "EditarUsuario/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <EditarUsuario />
+              </ProtectedRoute>
+            ),
+          },
+        ],
+      },
+      { path: "*", element: <NoAutorizado /> },
+    ],
+  },
+]);
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <AppRouter />
+    {/* <AppRouter /> */}
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 

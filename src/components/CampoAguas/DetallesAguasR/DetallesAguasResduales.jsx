@@ -4,12 +4,12 @@ import { Table, Button, Card, Dropdown, Menu, message, Modal, Collapse, Space, T
 import { RightCircleTwoTone, FileTextTwoTone, FilePdfTwoTone, MailTwoTone, DeleteOutlined, EditTwoTone,EditOutlined, FileAddOutlined, CheckCircleTwoTone } from "@ant-design/icons";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {getDetallesAguaResidualInforme, } from "../../../apis/ApiCampo/DetallesAguasResiduales";
-import {createIntermediario, deleteProtocoloMuestreo, deleteIntermediario} from "../../../apis/ApiCampo/FormmularioInforme";
-import {deleteCroquisUbicacion} from "../../../apis/ApiCampo/CroquisUbicacion";
-import {deleteHojaCampo} from "../../../apis/ApiCampo/HojaCampo";
+import {createIntermediario, deleteProtocoloMuestreo, deleteIntermediario, getexcelprotocolo} from "../../../apis/ApiCampo/FormmularioInforme";
+import {deleteCroquisUbicacion, getExcelCroquis} from "../../../apis/ApiCampo/CroquisUbicacion";
+import {deleteHojaCampo, getexcelhojacampo} from "../../../apis/ApiCampo/HojaCampo";
 import {updateAguaResidualInforme} from "../../../apis/ApiCampo/AguaResidualInforme"
 import {getLlenarExcelAguas} from "../../../apis/ApiCampo/LlenarExcelAguas"
-import {deleteCalibracionVerificacion} from "../../../apis/ApiCampo/CalibracionVerificacion";
+import {deleteCalibracionVerificacion, getexcelcalibracionverificacion, getexcelcalibracionverificacionph} from "../../../apis/ApiCampo/CalibracionVerificacion";
 import {deleteConductividadAceptacionmr, deleteHojaCampoEnd, deleteLecturaVerificacion } from "../../../apis/ApiCampo/Delete";
 import "./css/DAR.css"; // Asegúrate de importar el archivo CSS
 
@@ -269,6 +269,92 @@ const DetallesAguasResiduales = () => {
     });
   };
 
+const downloadpdfconductividad= async()=>{
+  try{
+    const response = await getexcelcalibracionverificacion(id);
+    const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `calibracion_verificacion_aguas_residuales_${id}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }catch(error){
+    message.error("Error al descargar el xlsx");
+    console.error("Error al descargar el xlsx:", error); }
+}
+
+const downloadExcelph= async()=>{
+  try{
+    const response = await getexcelcalibracionverificacionph(id);
+    const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `calibracion_verificacion_ph_aguas_residuales_${id}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }catch(error){
+    message.error("Error al descargar el xlsx");
+    console.error("Error al descargar el xlsx:", error); }
+}
+
+const downloadpdfcroquis= async()=>{
+  try{
+    const response = await getExcelCroquis(id);
+    const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `croquis_${id}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }catch(error){
+    message.error("Error al descargar el xlsx");
+    console.error("Error al descargar el xlsx:", error); }
+}
+
+const downloadExcelProtocolo= async()=>{
+  try{
+    const response = await getexcelprotocolo(id);
+    const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `protocolo_${id}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }catch(error){
+    message.error("Error al descargar el xlsx");
+    console.error("Error al descargar el xlsx:", error); 
+  }
+}
+
+const downloadExcelHojaCampo= async()=>{
+  try{
+    const response = await getexcelhojacampo(id);
+    const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Hoja_Campo_${id}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }catch(error){
+    message.error("Error al descargar el xlsx");
+    console.error("Error al descargar el xlsx:", error); 
+  }
+}
     
     
   const menu = (
@@ -400,6 +486,7 @@ const DetallesAguasResiduales = () => {
                 <Button danger size="small" icon={<DeleteOutlined />} onClick={() => ElimnarCroquis(IdCoquis.id)}>
                   Eliminar
                 </Button>
+                
             </Space>
           </div>
         }
@@ -417,6 +504,10 @@ const DetallesAguasResiduales = () => {
                 Editar Croquis
               </Button>
               </Link>
+              <Button size="small" icon={<FileAddOutlined />}
+                  onClick={()=>downloadpdfcroquis()} >
+                    Descargar Excel 
+                </Button>
               {/* <Button size="small" danger>
                 Eliminar Croquis
               </Button> */}
@@ -481,7 +572,12 @@ const DetallesAguasResiduales = () => {
               console.error(err);
             }
           }}
-          >Crear Intermediario</Button></Space>
+          >Crear Intermediario</Button>
+
+            <Button size="small" icon={<FileAddOutlined />}
+            onClick={()=>downloadpdfconductividad()} >Descargar Excel </Button>
+
+          </Space>
         </div>
         )}
 
@@ -497,7 +593,7 @@ const DetallesAguasResiduales = () => {
                 <Button size="small" danger icon={<DeleteOutlined />} onClick={()=> confirmarEliminacionLectura(ph)}>
                   Eliminar
                 </Button>
-                {/* onClick={() => handleEliminarIntermediario(item.id)} */}
+                
               </Space>
             </div>
           }
@@ -520,6 +616,8 @@ const DetallesAguasResiduales = () => {
                 Continuar/Editar Verificacion de Ph
               </Button>
               </Link>
+              <Button size="small" icon={<FileAddOutlined />}
+                  onClick={()=>downloadExcelph()} >Descargar Excel </Button>
             </Space>
           </div>
         )}
@@ -573,6 +671,8 @@ const DetallesAguasResiduales = () => {
               <Button size="small" danger onClick={()=>ElimnarProtocolo(type.protocoloMuestreo.id)}>
                 Eliminar Protocolo
               </Button>
+              <Button size="small" icon={<FileAddOutlined />}
+                  onClick={()=>downloadExcelProtocolo()} >Descargar Excel </Button>
             </Space>
           </div>
         )}
@@ -592,6 +692,8 @@ const DetallesAguasResiduales = () => {
               <Button size="small" danger  onClick={()=> EliminarHojaCampo(type.hojaCampo.id)}>
                 Eliminar Hoja de Campo
               </Button>
+              <Button size="small" icon={<FileAddOutlined />}
+              onClick={()=>downloadExcelHojaCampo()} >Descargar Excel </Button>
             </Space>
           </div>
           )}

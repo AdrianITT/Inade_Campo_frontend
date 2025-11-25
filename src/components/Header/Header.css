@@ -1,31 +1,97 @@
 .header-container {
   display: flex;
-  justify-content: space-between; /* Separa los elementos a los lados opuestos */
-  align-items: center; /* Alinea verticalmente en el centro */
-  padding: 20px; /* Espaciado alrededor del contenedor */
-  background-color: #f8f9fa; /* Color de fondo opcional */
-}
-
-@media(max-width: 375px){
-  .header-container{
-    flex-direction: column; /* Asegura que el header se apile en pantallas pequeñas */
-    align-items: flex-start;
-  }
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: #f8f9fa;
+  gap: 12px;
 }
 
 .header-logo {
   display: flex;
-  align-items: center; /* Asegura que el logo esté centrado verticalmente */
+  align-items: center;
+  text-decoration: none;
 }
 
+.header-logo-img {
+  height: 40px;
+  margin-right: 8px;
+}
+
+.Title-Header {
+  flex: 1;
+  font-family: "Gill Sans", sans-serif;
+  color: #008bd9;
+}
+
+.Title-Header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+/* Menú horizontal desktop */
+.header-menu-desktop {
+  border-bottom: none !important; /* para que no dibuje la línea del menú */
+}
+
+/* Botón menú (por defecto oculto en desktop) */
 .header-button {
-  display: flex;
-  justify-content: flex-end; /* Mantiene el botón alineado a la derecha */
-  align-items: center; /* Alinea verticalmente en el centro */
+  display: none;
 }
 
+/* Logout dentro del menú */
 .logout-button {
-  margin-top: auto; /* Empuja este elemento hacia la parte inferior */
-  text-align:auto; /* Opcional, para centrar el texto */
-  
+  text-align: center;
+}
+
+/* --------- BREAKPOINTS --------- */
+
+/* Tablets y desktop */
+@media (min-width: 768px) {
+  .header-container {
+    flex-direction: row;
+  }
+
+  .header-menu-desktop {
+    display: flex;
+  }
+
+  .header-button {
+    display: none; /* ocultar botón "Menú" */
+  }
+}
+
+/* Móviles */
+@media (max-width: 767px) {
+  .header-container {
+    flex-direction: row;
+  }
+
+  .Title-Header h2 {
+    font-size: 1rem;
+  }
+
+  /* En móvil NO mostramos el menú horizontal */
+  .header-menu-desktop {
+    display: none;
+  }
+
+  /* Sí mostramos el botón para abrir el Drawer */
+  .header-button {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+}
+
+/* Móviles muy pequeños (opcional) */
+@media (max-width: 480px) {
+  .header-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-button {
+    align-self: flex-end;
+  }
 }

@@ -16,6 +16,8 @@ import { createCroquisUbicacion } from "../../../apis/ApiCampo/CroquisUbicacion"
 import { updateAguaResidualInforme } from "../../../apis/ApiCampo/AguaResidualInforme";
 import { ControlOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import ImageEditorModal from "./ImageEditorModal";
+import { useBeforeUnload, useNavigationPrompt} from "../../hooks/DetectTabClosure";
+
 import { useParams, useNavigate } from "react-router-dom";
 
 const { Panel } = Collapse;
@@ -31,6 +33,9 @@ const FormularioCroquisUbicacion = () => {
   const [tempImage, setTempImage] = useState(null); // imagen sin editar
   const [fileObj, setFileObj] = useState(null);
   const navigate = useNavigate();
+  const [isDirty, setIsDirty] = useState(false);
+  useBeforeUnload(isDirty);
+  useNavigationPrompt(isDirty);
 
 
   // Para convertir la imagen en base64 (opcional si quieres mostrarla en vista previa)
@@ -113,6 +118,7 @@ const handleChange = info => {
           const values = await form.validateFields(); // 🔍 valida los campos primero
           await onFinish(values); // 🧠 llama a la función original
           navigate(`/DetallesAguasResiduales/${id}`); // 🚀 redirige
+          setIsDirty(false);
         } catch (err) {
           message.error("Error al validar el formulario.");
           console.error(err);
@@ -180,6 +186,7 @@ const onFinish = async (values) => {
     <Form
       layout="vertical"
       form={form}
+      onValuesChange={()=> setIsDirty(true)}
       style={{ maxWidth: 800, margin: "0 auto" }}
     >
       <Collapse 

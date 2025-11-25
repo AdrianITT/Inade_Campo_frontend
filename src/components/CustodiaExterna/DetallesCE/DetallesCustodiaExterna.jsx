@@ -200,7 +200,7 @@ export default function CadenaCustodiaExterna() {
     <h2>
       Detalles Cadena <span className="font-bold">de Custodia Externa {custodiaExternasData?.ordenDeTrabajo?.codigo}</span>
     </h2>
-    {custodiaExternasData &&(
+    {custodiaExternasData && (
       <div>
     {/* Contenedor alineado con el Card */}
     <div className="fila-etiqueta-boton borde-card">
