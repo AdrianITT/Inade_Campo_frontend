@@ -11,7 +11,8 @@ import {
   Divider,
   Radio, 
   message, 
-  Spin
+  Spin,
+  AutoComplete,
 } from "antd";
 import dayjs from 'dayjs';
 import {
@@ -116,7 +117,7 @@ const cargarDatos = async () => {
 
         color: m.color,
         olor: m.olor,
-        materiaFlotante: m.materiaFlotante ? ["PRESENTE"] : ["AUSENTE"],
+        materiaFlotante: m.materiaFlotante ? "PRESENTE" : "AUSENTE",
         solidos: m.solido ? "Sí" : "No",
         lluvia: m.lluvia ? "Sí" : "No",
         condiciones: m.condicion,
@@ -291,9 +292,33 @@ const handleSave = async (values) => {
 
                 <Divider orientation="left">Otras observaciones</Divider>
                 <Row gutter={[24,24]}>
-                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "color"]} label="Color"><Input /></Form.Item></Col>
-                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "olor"]} label="Olor"><Input /></Form.Item></Col>
-                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "materiaFlotante"]} label="Materia Flotante"><Checkbox.Group options={["AUSENTE", "PRESENTE"]} /></Form.Item></Col>
+                  <Col xs={24} sm={12} md={8}>
+                  <Form.Item {...restField} name={[name, "color"]} label="Color">
+                    {/* <Input /> */}
+                    <AutoComplete
+                      options={[
+                        { value: 'Incoloro' },
+                        { value: 'Amarillo' },
+                        { value: 'Marrón' },
+                        { value: 'Verde' },
+                        { value: 'Rojo' },
+                        { value: 'Negro' },
+                      ]}
+                      />
+                  </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={12} md={8}>
+                  <Form.Item {...restField} name={[name, "olor"]} label="Olor">
+                    {/* <Input /> */}
+                    <AutoComplete
+                      options={[
+                        {value: 'Inodoro'},
+                        {value: 'Desagradable'},
+                        {value: 'Fetido'}
+                      ]}/>
+                  </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={12} md={8}><Form.Item {...restField} name={[name, "materiaFlotante"]} label="Materia Flotante"><Radio.Group options={["AUSENTE", "PRESENTE"]} /></Form.Item></Col>
                 </Row>
 
                 <Row gutter={16}>

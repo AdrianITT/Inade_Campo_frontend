@@ -8,7 +8,7 @@ import AutoLogoutTimer from "../AutoLogout/AutoLogoutTimer";
 const Layout = () => {
   return (
     <div id="layout-container">
-      <AutoLogoutTimer timeout={60 * 60 * 1000} />
+      <AutoLogoutTimer timeout={480 * 60 * 1000} />
       <Header />
       <main id="main-content">
         <Outlet /> {/* Renderiza las rutas hijas aquí */}

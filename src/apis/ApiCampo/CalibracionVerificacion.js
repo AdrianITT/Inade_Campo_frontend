@@ -3,10 +3,10 @@ export const createCalibracionVerificacion = (data) => Api_Host.post('/campo/cal
 
 export const deleteCalibracionVerificacion = (id) => Api_Host.delete(`/campo/calibracionverificacion/${id}/`);
 
-export const getexcelcalibracionverificacion = (id) => Api_Host.get(`/campo/llenar_excel_aguas_calibracion_verificacion_c/${id}/`, {
+export const getexcelcalibracionverificacion = (id, idTwo) => Api_Host.get(`/campo/llenar_excel_aguas_calibracion_verificacion_c/${id}/${idTwo}/`, {
     responseType: "blob", // ⬅️ esto es obligatorio
   });
 
-export const getexcelcalibracionverificacionph = (id) => Api_Host.get(`/campo/llenar_calibracion_verificacion_ph/${id}/`, {
+export const getexcelcalibracionverificacionph = (id, idTwo) => Api_Host.get(`/campo/llenar_calibracion_verificacion_ph/${id}/${idTwo}/`, {
   responseType: "blob", // ⬅️ esto es obligatorio
 });

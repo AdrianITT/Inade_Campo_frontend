@@ -292,6 +292,21 @@ const CrearCustodiaExterna = () => {
       .then(res => setFiltros(res.data))
       .catch(err => console.error("Error al obtener matrices:", err));
   }, []);
+  useEffect(() => {
+  // Si no hay orden seleccionada o aún no han llegado los datos, no hacemos nada
+  if (!ordenSeleccionada || !dataOrdenTrabajo) return;
+
+  const cliente = dataOrdenTrabajo.cliente || {};
+
+  form.setFieldsValue({
+    contacto: cliente.nombreCompleto || "",
+    correoDelContacto: cliente.correo || "",
+    celularDelContacto: cliente.telefono || "",
+    // si quieres, puedes prellenar puesto/cargo también:
+    // puestoCargoContacto: cliente.puesto || "",
+  });
+}, [ordenSeleccionada, dataOrdenTrabajo, form]);
+
   
     const fetchFiltros = async (q = "") => {
       setLoading(true);
@@ -792,12 +807,16 @@ const CrearCustodiaExterna = () => {
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                <Form.Item label="E-mail:" name="correoDelContacto">
+                <Form.Item label="E-mail:" 
+                  name="correoDelContacto"
+                  >
                       <Input />
                     </Form.Item>
                   </Col>
                   <Col span={8}>
-                <Form.Item label="TelCel:" name="celularDelContacto">
+                <Form.Item label="Teléfono:" 
+                  name="celularDelContacto"
+                  >
                       <Input />
                     </Form.Item>
                   </Col>

@@ -12,7 +12,9 @@ import {
   Col,
   TimePicker,
   Collapse,
-  message, Modal
+  message, 
+  Modal,
+  Alert
 } from "antd";
 import {
      createProtocoloMuestreo,
@@ -21,6 +23,7 @@ import {
 import { sendProtocolSections } from "./sendProtocolSections";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBeforeUnload, useNavigationPrompt} from "../../hooks/DetectTabClosure";
+import { SelectAllCheckboxGroup } from "./Select-all";
 const { Panel } = Collapse;
 
 const tratamientoOpciones = [
@@ -55,6 +58,21 @@ const opcionesFrecuencia = [
   { value: 3, horas: "Mayor que 8 y ≤ 12", muestras: "4", intervalo: "2", intervalomaximo: "3" },
   { value: 4, horas: "Mayor que 12 y ≤ 18", muestras: "6", intervalo: "2", intervalomaximo: "3" },
   { value: 5, horas: "Mayor que 18 y ≤ 24", muestras: "6", intervalo: "3", intervalomaximo: "4" },
+];
+
+const RECIPIENTES = [
+  { label: "Recipientes de plástico", value: 1 },
+  { label: "Frascos de vidrio", value: 2 },
+];
+
+const REACTIVOS = [
+  { label: "Hielo", value: 1 },
+  { label: "H2SO4", value: 2 },
+  { label: "HCI", value: 3 },
+  { label: "HNO3 SUPRAPURO", value: 4 },
+  { label: "K2Cr2O7 5%", value: 5 },
+  { label: "NaOH", value: 6 },
+  { label: "HNO3 1:1", value: 7 },
 ];
 
 const FormularioProtocoloMuestreo = () => {
@@ -205,6 +223,10 @@ const enviarSeccion = async (punto, ref) => {
       onFinish={handleSubmit}
       onValuesChange={()=> setIsDirty(true)}
       style={{ maxWidth: 800, margin: "0 auto" }}
+      initialValues={{
+        inicial:"identificar el punto de muestreo, tomar las muestras simples, midiendo entre cada toma p4, temp, cond, mF, concerva 94 c, elbar hoja de campo",
+        final:"Firma cadena de custodia por el cliente hacer el calculo para la muestra compuesta, separar los analiyos y preservar entregar a laboratorio para el analisis"
+      }}
     >
       <Collapse 
       activeKey={activePanelKey}
@@ -239,6 +261,12 @@ const enviarSeccion = async (punto, ref) => {
       <Form.Item label="Nombre de la Empresa" name="nombreEmpresa">
         <Input placeholder="Nombre de la empresa" />
       </Form.Item> */}
+      <Alert
+        message="Warning"
+        description="Si quieres que se muestre la dirección que colocó Ventas, déjalo vacío; en caso contrario, llena los campos."
+        type="warning"
+        showIcon
+      />
 
       <Form.Item label="Domicilio / Ubicación Física" name="domicilioUbicacion">
         <Input.TextArea placeholder="Dirección del sitio" rows={2} />
@@ -279,22 +307,24 @@ const enviarSeccion = async (punto, ref) => {
         <Input placeholder="Ejemplo: descarga directa, pozo, etc." />
       </Form.Item>
 
-      <Form.Item label="¿Cuántas horas al día descarga el proceso?" name="horasDescargaP2">
-        <Input style={{ width: "100%" }} />
-      </Form.Item>
-
       <Form.Item label="Tratamiento Antes de la Descarga" name="tratamientoAntesDescarga">
         <Checkbox.Group options={tratamientoOpciones} />
       </Form.Item>
 
      <Form.Item noStyle shouldUpdate={(prev, curr) => prev.tratamientoAntesDescarga !== curr.tratamientoAntesDescarga}>
-        {({ getFieldValue }) =>
-          getFieldValue("tratamientoAntesDescarga")=== 7 ? (
-            <Form.Item name="tratamientoAntesDescargaOtro" label="Otro Tratamiento (especifique)">
+        {({ getFieldValue }) => {
+          const value = getFieldValue("tratamientoAntesDescarga") || [];
+
+          // si el valor de la opción "Otros" es 7:
+          return value.includes(7) ? (
+            <Form.Item
+              name="tratamientoAntesDescargaOtro"
+              label="Otro Tratamiento (especifique)"
+            >
               <Input placeholder="Describa otro tratamiento si aplica" />
             </Form.Item>
-          ) : null
-        }
+          ) : null;
+        }}
       </Form.Item>
       
       <Form.Item label="Horas al día que opera el proceso" name="horasOpera">
@@ -377,15 +407,16 @@ const enviarSeccion = async (punto, ref) => {
 
       </Form.Item>
 
-     <Form.Item label="3.3 Reactivo utilizado" name="recipiente">
+     {/* <Form.Item label="3.3 Reactivo utilizado" name="recipiente">
           <Checkbox.Group
           options={[
                { label: "Recipientes de plástico", value: 1 },
                { label: "Frascos de vidrio", value: 2 },
           ]}
           />
-     </Form.Item>
-     <Form.Item label="3.3 Reactivo utilizado" name="reactivoUtilizado">
+     </Form.Item> */}
+     {/* Editar */}
+     {/* <Form.Item label="3.3 Reactivo utilizado" name="reactivoUtilizado">
           <Checkbox.Group
           options={[
                 { label: "Hielo", value: 1 },
@@ -397,7 +428,22 @@ const enviarSeccion = async (punto, ref) => {
                 { label: "HNO3 1:1", value: 7 },
           ]}
           />
-     </Form.Item>
+     </Form.Item> */}
+
+      <SelectAllCheckboxGroup
+        form={form}
+        name="recipiente"
+        label="3.2 Tipo de instrumento de medición utilizado"   // cámbialo por el texto que quieras
+        options={RECIPIENTES}
+      />
+
+      <SelectAllCheckboxGroup
+        form={form}
+        name="reactivoUtilizado"
+        label="3.3 Reactivo utilizado"
+        options={REACTIVOS}
+      />
+
 
       <Form.Item label="3.4 Tipo de Muestreo" name="tipoMuestreo">
         <Radio.Group>
@@ -410,7 +456,7 @@ const enviarSeccion = async (punto, ref) => {
   <Form.Item
     label="3.5 Frecuencia de muestreo"
     name="frecuenciaMuestreo"
-    rules={[{ required: true, message: "Seleccione una frecuencia" }]}
+    // rules={[{ required: true, message: "Seleccione una frecuencia" }]}
   >
     {/* Este campo es el valor que capturará el Form */}
     <Radio.Group style={{ display: "none" }} />

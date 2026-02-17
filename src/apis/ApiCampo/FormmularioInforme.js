@@ -5,7 +5,7 @@ import { Api_Host } from "../Api";
 //campo/procedimientomuestreo/
 //campo/planmuestreo/
 //campo/intermediario/
-export const getexcelprotocolo = (id) => Api_Host.get(`/campo/llenar_protocolo_muestreo/${id}/`, {
+export const getexcelprotocolo = (id, protocoloId) => Api_Host.get(`/campo/llenar_protocolo_muestreo/${id}/${protocoloId}/`, {
   responseType: "blob", // ⬅️ esto es obligatorio
 });
 export const createProtocoloMuestreo = (data) => Api_Host.post('/campo/protocolomuestreo/',data);

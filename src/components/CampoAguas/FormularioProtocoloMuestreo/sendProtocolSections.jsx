@@ -62,7 +62,7 @@ export async function sendProtocolSections(punto, values, id, protocoloId) {
           aguaResidualOtro: values.tratamientoAntesDescargaOtro,
           horasOperacion:values.horasOpera,
           horasDescarga: values.horasDescarga,
-          frecuenciaDescarga: values.modalidadDescarga,
+          frecuenciaDescarga: values.frecuenciaDescarga,
           informacionProporcionada: (values?.nombreResponsable || "")+"."+(values?.puestoResponsable || ""),
           aguaResidualTratamiento:values.tratamientoAntesDescarga,
           tipoDescarga: values.modalidadDescarga,

@@ -2,7 +2,7 @@
 import {
      Card, Row, Col, Form, Input, DatePicker, TimePicker,
      Typography, Space, Radio, Button, Collapse, message,
-     Modal, Tag, Alert
+     Modal, Tag, Alert, Checkbox
 } from "antd";
 import { ExperimentOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import React, { useState} from "react";
@@ -24,9 +24,87 @@ const { Panel } = Collapse;
 
 
 /* ---------- Bloque individual ---------- */
-function BloqueEstandar({ pref, titulo }) {
+function BloqueEstandar({ pref, titulo, form, onOpenBulk }) {
      const itemProps = { size: "small", style: { width: "100%" } };
      const cfg = { labelCol: { span: 9 }, wrapperCol: { span: 15 }, style: { marginBottom: 6 } };
+     // const presets= {
+     //      CertLab:{
+     //           ph:"7.00",
+     //           marca:"Control Company",
+     //           lote:"CC805972",
+     //           // lecturas:["7.00","7.01","7.00"]
+     //      },
+     //      ComLab:{
+     //           ph:"7.00",
+     //           marca:"Femont",
+     //           lote:"448441",
+     //           // lecturas:["7.00","7.00","7.00"]
+     //      },
+     //      CertLab2:{
+     //           ph:"4.00",
+     //           marca:"Control Company",
+     //           lote:"CC808510",
+     //           // lecturas:["4.00","4.01","4.00"]
+     //      },
+     //      ComLab2:{
+     //           ph:"4.00",
+     //           marca:"Femont",
+     //           lote:"503242",
+     //           // lecturas:["4.00","4.00","4.00"]
+     //      },
+     //      CertCampo:{
+     //           ph:"7.00",
+     //           marca:"Control Company",
+     //           lote:"CC805972",
+     //           // lecturas:["7.00","7.01","7.00"]
+     //      },
+     //      ComCampo:{
+     //           ph:"7.00",
+     //           marca:"Femont",
+     //           lote:"448441",
+     //           // lecturas:["7.00","7.00","7.00"]
+     //      },
+     //      CertCam2:{
+     //           ph:"4.00",
+     //           marca:"Control Company",
+     //           lote:"CC805670",
+     //           // lecturas:["4.00","4.01","4.00"]
+     //      },
+     //      ComCamp2:{
+     //           ph:"4.00",
+     //           marca:"Femont",
+     //           lote:"44446",
+     //           // lecturas:["4.00","4.00","4.00"]
+     //      },
+
+     //      // default si no coincide el pref
+     //      default: {
+     //           ph: "100",
+     //           marca: "",
+     //           lote: "",
+     //           caducidad: null,
+     //           lecturas: ["", "", ""],
+     //           temps: ["", "", ""],
+     //      },
+     // }
+     // const aplicarValoresSugeridos = () => {
+     // const cfgPreset = presets[pref] || presets.default;
+
+     // const values = {
+     //      [`ph${pref}`]: cfgPreset.ph,
+     //      [`marca${pref}`]: cfgPreset.marca,
+     //      [`lote${pref}`]: cfgPreset.lote,
+     //      // [`caducidad${pref}`]: cfgPreset.caducidad,
+     //      // [`lectura1${pref}`]: cfgPreset.lecturas[0],
+     //      // [`lectura2${pref}`]: cfgPreset.lecturas[1],
+     //      // [`lectura3${pref}`]: cfgPreset.lecturas[2],
+     //      // [`tem1${pref}`]: cfgPreset.temps[0],
+     //      // [`tem2${pref}`]: cfgPreset.temps[1],
+     //      // [`tem3${pref}`]: cfgPreset.temps[2],
+     // };
+
+     // form.setFieldsValue(values);
+     // };
      return (
           <div
           style={{
@@ -36,8 +114,19 @@ function BloqueEstandar({ pref, titulo }) {
           backgroundColor: "#fafafa",    // opcional para mejor contraste
           }}
           >
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+               <Title level={5} style={{ margin: 0 }}>
+                    {titulo}
+               </Title>
+               {/* <Button size="small" type="link" onClick={aplicarValoresSugeridos}>
+                    Usar valores sugeridos
+               </Button> */}
+               <Button size="small" type="link" onClick={onOpenBulk}>
+                    Replicar a varios
+               </Button>
+          </div>
           <Space direction="vertical" size={4} style={{ width: "100%" }}>
-               <Title level={5} style={{ margin: 0 }}>{titulo}</Title>
+               {/* <Title level={5} style={{ margin: 0 }}>{titulo}</Title> */}
                <Form.Item label="pH:" name={`ph${pref}`} {...cfg}><Input {...itemProps} /></Form.Item>
                <Form.Item label="Hora:" name={`hora${pref}`} {...cfg}>
                     <TimePicker format="HH:mm" style={{ width: "100%" }} {...itemProps} />
@@ -69,6 +158,9 @@ export default function CalibracionLab() {
      const navigate = useNavigate();
      const [loading, setLoading] = useState(false);
      const [isDirty, setIsDirty] = useState(false);
+     const [openBulk, setOpenBulk] = useState(false);
+     const [bulkForm] = Form.useForm();
+
      useBeforeUnload(isDirty);
      
      useNavigationPrompt(isDirty);
@@ -84,6 +176,57 @@ export default function CalibracionLab() {
           { pref: "CertCam2", titulo: "Estándar Certificado (Campo 2)" },
           { pref: "ComCamp2", titulo: "Estándar Comercial (Campo 2)" },
      ];
+
+     const CAMPOS_REPETIBLES = [
+     { key: "ph", label: "pH" },
+     { key: "marca", label: "Marca" },
+     { key: "lote", label: "Lote" },
+     { key: "caducidad", label: "Caducidad" },
+     ];
+
+     const abrirBulk = () => {
+     // valores iniciales por comodidad
+          bulkForm.setFieldsValue({
+          campos: ["ph", "marca", "lote", "caducidad"],     // cuáles campos aplicar
+          bloques: bloques.map(b => b.pref),  // a qué bloques aplicar
+          ph: "",
+          marca: "",
+          lote: "",
+          caducidad: "",
+          });
+          setOpenBulk(true);
+     };
+     const aplicarBulk = async () => {
+     const v = await bulkForm.validateFields();
+
+     const patch = {};
+     v.bloques.forEach((pref) => {
+     v.campos.forEach((campo) => {
+          // setFieldsValue requiere el nombre exacto de tu Form.Item
+          patch[`${campo}${pref}`] = v[campo];
+     });
+     });
+
+     form.setFieldsValue(patch);
+     setIsDirty(true);
+     setOpenBulk(false);
+     message.success("Valores aplicados ✅");
+     };
+
+     const abrirBulkDesde = (pref) => {
+     const base = form.getFieldsValue([`ph${pref}`, `marca${pref}`, `lote${pref}`, `caducidad${pref}`]);
+
+     bulkForm.setFieldsValue({
+     campos: ["ph", "marca", "lote"],
+     bloques: bloques.map(b => b.pref),
+     ph: base[`ph${pref}`] ?? "",
+     marca: base[`marca${pref}`] ?? "",
+     lote: base[`lote${pref}`] ?? "",
+     caducidad: base[`caducidad${pref}`] ?? "",
+     });
+
+     setOpenBulk(true);
+     };
 
      const confirmarEnvio = (values) => {
        Modal.confirm({
@@ -223,10 +366,7 @@ export default function CalibracionLab() {
                comercialLectura3: l24,
                asectacion: values.aceptacionPar4
           });
-          console.log("punto1.id",punto1.data.id)
-          console.log("punto2.id",punto2.data.id)
-          console.log("punto3.id",punto3.data.id)
-          console.log("punto4.id",punto4.data.id)
+
           // 3. Crear agrupadores laboratorio/campo
           const laboratorio = await createCalibraionPhLaboratorio({
                primerPuntoLaboratorio: punto1.data.id,
@@ -274,6 +414,7 @@ export default function CalibracionLab() {
      }
 
 return (
+     <>
 <Card
      title="Calibración y Verificación de Ph"
      bordered={false}
@@ -286,6 +427,11 @@ return (
           onValuesChange={()=> setIsDirty(true)}
           scrollToFirstError
      >
+          <Space style={{ marginBottom: 12 }}>
+               <Button onClick={abrirBulk}>
+               Aplicar pH / Marca / Lote a varios / Caducidad
+               </Button>
+          </Space>
           <Collapse
                accordion
                bordered={false}
@@ -405,7 +551,7 @@ return (
                                         <Row gutter={16}>
                                              {par.map(b => (
                                                   <Col key={b.pref} xs={24} sm={24} lg={12}>
-                                                       <BloqueEstandar pref={b.pref} titulo={b.titulo} />
+                                                       <BloqueEstandar pref={b.pref} titulo={b.titulo} form={form} onOpenBulk={() => abrirBulkDesde(b.pref)}/>
                                                   </Col>
                                              ))}
                                         </Row>
@@ -535,5 +681,61 @@ return (
           </div>
      </Form>
 </Card>
+     {/* Modal para entrada masiva */}
+     <Modal
+     open={openBulk}
+     title="Aplicar valores repetidos"
+     onCancel={() => setOpenBulk(false)}
+     onOk={aplicarBulk}
+     okText="Aplicar"
+     cancelText="Cancelar"
+     >
+     <Form form={bulkForm} layout="vertical">
+     <Row gutter={12}>
+          <Col span={8}>
+          <Form.Item name="ph" label="pH">
+               <Input placeholder="Ej. 7.00" />
+          </Form.Item>
+          </Col>
+          <Col span={8}>
+          <Form.Item name="marca" label="Marca">
+               <Input placeholder="Ej. Control Company" />
+          </Form.Item>
+          </Col>
+          <Col span={8}>
+          <Form.Item name="lote" label="Lote">
+               <Input placeholder="Ej. CC805972" />
+          </Form.Item>
+          </Col>
+          <Col span={8}>
+               <Form.Item label="Caducidad" name="caducidad" >
+                    <DatePicker format="YYYY-MM-DD"/>
+               </Form.Item>
+          </Col>
+     </Row>
+
+     <Form.Item
+          name="campos"
+          label="¿Qué campos quieres aplicar?"
+          rules={[{ required: true, message: "Selecciona al menos un campo" }]}
+     >
+          <Checkbox.Group
+          options={CAMPOS_REPETIBLES.map(c => ({ label: c.label, value: c.key }))}
+          />
+     </Form.Item>
+
+     <Form.Item
+          name="bloques"
+          label="¿En qué bloques se aplicarán?"
+          rules={[{ required: true, message: "Selecciona al menos un bloque" }]}
+     >
+          <Checkbox.Group
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}
+          options={bloques.map(b => ({ label: b.titulo, value: b.pref }))}
+          />
+     </Form.Item>
+     </Form>
+     </Modal>
+</>
 );
 }

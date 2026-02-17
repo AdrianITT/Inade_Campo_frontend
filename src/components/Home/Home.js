@@ -10,7 +10,8 @@ import {
   FilterOutlined,
   SignatureFilled,
   FileSearchOutlined,
-  UsergroupAddOutlined
+  UsergroupAddOutlined,
+  BulbTwoTone
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
@@ -170,10 +171,11 @@ const Home = () => {
             {/* Próximamente */}
             <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
-                <Link>
-                  <Card className="card-custom" title="Próximamente" bordered={false}>
+                <Link to="/Iluminacion">
+                  <Card className="card-custom" title="iluminacion" bordered={false}>
                     <div className="icon-container">
-                      <Badge status="processing" />
+                      <BulbTwoTone />
+                      {/* <Badge status="processing" /> */}
                     </div>
                   </Card>
                 </Link>

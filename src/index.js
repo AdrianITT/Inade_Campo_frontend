@@ -35,6 +35,18 @@ import CustodiasEntregadasPage from "./components/CustodiaInterna/CustodiaEntreg
 import EditarCustodia from "./components/CustodiaInterna/LaboratorioId/EditarCustodia.jsx";
 import NoAutorizado from "./components/FetchProtected/NoAutorizado.jsx";
 import Formularios from "./App.js";
+//Importaciones de prueba
+import DARpart1 from "./components/CampoAguas/DetallesAguasR/PageDetallesARPruevas/DARpart1.jsx";
+import IluminacionGate from "./components/CampoIluminacion/AllIluminacion/Iluminacion.jsx";
+import DetailsIluminacion from "./components/CampoIluminacion/DetalsIluminacion/DetallesIlum.jsx";
+import CreateReconocimientoA from "./components/CampoIluminacion/CreateIluminacion/ReconocimientoA.jsx"
+import CreateReconocimientoB from "./components/CampoIluminacion/CreateIluminacion/ReconocimientoB.jsx";
+import CreateReconocimientoC from "./components/CampoIluminacion/CreateIluminacion/ReconocimientoC.jsx";
+import EditarReconocimientoA from "./components/CampoIluminacion/EditIluminacion/ReconocimientoA.jsx";
+import EditarReconocimientoB from "./components/CampoIluminacion/EditIluminacion/ReconocimientoB.jsx";
+import EditarReconocimientoC from "./components/CampoIluminacion/EditIluminacion/ReconocimientoC.jsx";
+import CreateHojaIluminacion from "./components/CampoIluminacion/CreateIluminacion/HojaCampoIlum.jsx";
+import EditarHojaIluminacion from "./components/CampoIluminacion/EditIluminacion/HojaCampoIlum.jsx";
 // import ARPage from "./components/CampoAguas/AguasResiduales/NoEnUso/ARPage.jsx";
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -105,7 +117,7 @@ const AppRouter = () => {
           <Route path="/homeAguas" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion','MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion', 'AdministradorLaboratorioOrganizacion']}><Home/></ProtectedRoute>} />
           <Route path="/AguasResiduales" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><AguasResiduales/></ProtectedRoute>} />
           <Route path="/OrdenTrabajo" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><OrdenTrabajo/></ProtectedRoute>} />
-          <Route path="/DetallesAguasResiduales/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><DetallesAguasResiduales/></ProtectedRoute>} />
+          <Route path="/DetallesAguasResiduales/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><DARpart1/></ProtectedRoute>} />{/*DARpart1 DetallesAguasResiduales*/}
           <Route path="/Formularios/:id" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><Formularios/></ProtectedRoute>} />
           <Route path="/FormularioProtocoloMuestreo/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><FormularioProtocoloMuestreo /></ProtectedRoute>} />
           <Route path="/EditarFormularioProtocoloMuestreo/:id/:idAguas" element={<ProtectedRoute allowedRoles={['MuestreadorOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><EditarFormularioProtocoloMuestreo /></ProtectedRoute>} />
@@ -124,6 +136,8 @@ const AppRouter = () => {
           <Route path= "/insert_id_laboratorio/:id" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion','LaboratorioOrganizacion', 'Administradororganizacion']}><EditarCustodia /></ProtectedRoute>} />
           <Route path= "/usuario" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><Usuario /></ProtectedRoute>} />
           <Route path= "/EditarUsuario/:id" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><EditarUsuario /></ProtectedRoute>} />
+          <Route path= "/Iluminacion" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><IluminacionGate /></ProtectedRoute>} />
+          <Route path= "/DetallesIluminacion/:id" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><DetailsIluminacion /></ProtectedRoute>} />
           {/* <Route path= "/ar_page" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion', 'Administradororganizacion']}><ARPage/></ProtectedRoute>} /> */}
           {/* ARPage  */}
         </Route>
@@ -232,7 +246,7 @@ const router = createBrowserRouter([
                   "AdministradorMuestreadorOrganizacion",
                 ]}
               >
-                <DetallesAguasResiduales />
+                <DARpart1 />
               </ProtectedRoute>
             ),
           },
@@ -483,6 +497,146 @@ const router = createBrowserRouter([
                 ]}
               >
                 <EditarUsuario />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "Iluminacion",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <IluminacionGate />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "DetallesIluminacion/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <DetailsIluminacion />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "CreateReconocimientoA/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <CreateReconocimientoA />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "CreateReconocimientoB/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <CreateReconocimientoB />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "CreateReconocimientoC/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <CreateReconocimientoC />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "EditarReconocimientoA/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <EditarReconocimientoA/>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "EditarReconocimientoB/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <EditarReconocimientoB/>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "EditarReconocimientoC/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <EditarReconocimientoC/>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "CreateHojaIluminacion/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <CreateHojaIluminacion/>
+              </ProtectedRoute>
+            ),
+          },
+                    {
+            path: "EditarHojaIluminacion/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <EditarHojaIluminacion/>
               </ProtectedRoute>
             ),
           },

@@ -53,3 +53,21 @@
      background-color: #f9f9f9;
    }
    
+
+
+
+   /*Segmanto*/
+   .segmented-colored .ant-segmented-item-selected {
+  background-color: #1677ff;
+  color: white;
+}
+
+.segmented-colored
+  .ant-segmented-item-selected[data-value="ph"] {
+  background-color: #52c41a;
+}
+
+.segmented-colored
+  .ant-segmented-item-selected[data-value="intermediario"] {
+  background-color: #fa8c16;
+}

@@ -1,5 +1,21 @@
 import React, {useEffect, useState} from "react";
-import { Form, Input, DatePicker, Divider, Typography, Row, Col, TimePicker, Radio, message, Collapse, Button, Spin } from "antd";
+import { 
+  Form,
+  Input, 
+  DatePicker, 
+  Divider, 
+  Typography, 
+  Row, 
+  Col, 
+  TimePicker, 
+  Radio, 
+  message, 
+  Collapse, 
+  Button, 
+  Spin, 
+  Modal,
+  AutoComplete
+ } from "antd";
 import { useParams, useNavigate} from "react-router-dom";
 import dayjs from "dayjs";
 import {conductividadInfoData} from "../../../apis/ApiCampo/VerificacionConductividad"
@@ -26,6 +42,17 @@ const EditarConductividad = () => {
   useNavigationPrompt(isDirty);
 
   // useFormNavigationGuard(isDirty);
+       const confirmarEnvio = (values, id) => {
+         Modal.confirm({
+           title: "¿Estás seguro de enviar la Conductividad?",
+           content: "Verifica que toda la información esté completa antes de continuar.",
+           okText: "Sí, enviar",
+           cancelText: "Cancelar",
+           onOk: () => {onFinish(values);
+            setIsDirty(false);
+           },  // llama a la función real de envío
+         });
+         };
 
     const onFinish = async (values) => {
       setLoading(true);
@@ -170,7 +197,7 @@ const EditarConductividad = () => {
                 </div>
            ):(
 
-    <Form form={form} layout="vertical" onFinish={onFinish} onValuesChange={()=> setIsDirty(true)}>
+    <Form form={form} layout="vertical" onFinish={confirmarEnvio} onValuesChange={()=> setIsDirty(true)}>
       <Title level={4}>Calibración y Verificación de Equipo en Laboratorio y Campo</Title>
       <Form.Item name="verifId"     hidden><Input /></Form.Item>
       <Form.Item name="conducid"    hidden><Input/></Form.Item>
@@ -185,11 +212,63 @@ const EditarConductividad = () => {
      <Collapse defaultActiveKey={['1']} style={{ marginBottom: 16 }}>
      <Panel header="Datos del equipo" key="1">
           <Row gutter={16}>
-          <Col span={6}><Form.Item label="Equipo Utilizado" name ="equipoUtilizado"><Input /></Form.Item></Col>
-          <Col span={6}><Form.Item label="ID" name="idEquipo"><Input /></Form.Item></Col>
-          <Col span={6}><Form.Item label="Marca" name ="marcaEquipo"><Input /></Form.Item></Col>
-          <Col span={6}><Form.Item label="Modelo" name = "modeloEquipo"><Input /></Form.Item></Col>
-          <Col span={6}><Form.Item label="Serie" name="serialEquipo"><Input /></Form.Item></Col>
+          <Col span={6}>
+            <Form.Item label="Equipo Utilizado" name ="equipoUtilizado">
+            {/* <Input /> */}
+            <AutoComplete
+              options={[
+                    { value: 'Multiparámetro' },
+                  ]}
+                  placeholder="Selecciona o ingresa el equipo"
+              />
+            </Form.Item>
+          </Col>
+          <Col span={6}>
+          <Form.Item label="ID" name="idEquipo">
+            {/* <Input /> */}
+            <AutoComplete
+                options={[
+                      { value: 'PA-05' },
+                      { value: 'PA-04' },
+                ]}
+                placeholder="Selecciona o ingresa el ID"
+            />
+          </Form.Item>
+          </Col>
+          <Col span={6}>
+          <Form.Item label="Marca" name ="marcaEquipo">
+            {/* <Input /> */}
+               <AutoComplete
+                    options={[
+                         { value: 'Conductonic' },
+                    ]}
+                    placeholder="Selecciona o ingresa la marca"
+               />
+          </Form.Item>
+          </Col>
+          <Col span={6}>
+          <Form.Item label="Modelo" name = "modeloEquipo">
+            {/* <Input /> */}
+            <AutoComplete
+                options={[
+                      { value: 'PC-18' },
+                ]}
+                placeholder="Selecciona o ingresa el modelo"
+            />
+          </Form.Item>
+          </Col>
+          <Col span={6}>
+          <Form.Item label="Serie" name="serialEquipo">
+            {/* <Input /> */}
+            <AutoComplete
+                options={[
+                      { value: '7300' },
+                      { value: 'S/N' },
+                ]}
+                placeholder="Selecciona o ingresa el serial"
+            />
+          </Form.Item>
+          </Col>
           </Row>
      </Panel>
      </Collapse>
@@ -199,7 +278,34 @@ const EditarConductividad = () => {
      <Collapse defaultActiveKey={['2']} style={{ marginBottom: 16 }}>
      <Panel header="Calibración y Verificación en Laboratorio" key="2">
        <Row gutter={16}>
-        <Col span={6}><Form.Item label="(µS/cm)" name="usCmLaboratorio"><Input /></Form.Item></Col>
+        <Col span={6}>
+        <Form.Item label="(µS/cm)" name="usCmLaboratorio">
+        <Input 
+        onChange={(e)=>{
+          const value = e.target.value;
+          if(value === "1413"){
+            form.setFieldsValue({
+              estandarMr: "SIn KCI",
+              marcaMr: "Supelco",
+              // loteMr: "LRAD2327",
+              estandarMc: "1413 Us/cm",
+              marcaMc: "Control Company",
+              // loteMc: "CC27851",
+              usCmCampo:"1413",
+              usCmCampoRango:"10000",
+              criterioMr:"6.75",
+              criterioMcL:"4.60",
+              criterioMrCampo:"6.75",
+              criterioMcCampo:"30.00"
+            })
+          }else{
+              form.setFieldsValue({
+                  usCmCampo:value
+                })
+              }
+        }}/>
+        </Form.Item>
+        </Col>
       </Row>
 
      <Row gutter={16}>
@@ -215,44 +321,138 @@ const EditarConductividad = () => {
           <Col span={6}><Form.Item label="Lote" name="loteMc"><Input/></Form.Item></Col>
           <Col span={6}><Form.Item label="Fecha de caducidad" name="fechaMcCaducidad"><DatePicker style={{ width: '100%' }} /></Form.Item></Col>
      </Row>
-     <p>Criterios MR</p>
-      <Row gutter={16}>
-          <Form.Item label="Hora" name="horaMr">
-            <TimePicker format="HH:mm" />
+     <Row gutter={24}>
+     {/* COLUMNA MR */}
+     <Col span={12}>
+     <div
+     style={{
+          border:"1px solid #ccc",
+          padding:16,
+          borderRadius:8,
+          marginBottom:16,
+          textAlign: "center",
+     }}>
+          
+     <h3 style ={{textAlign: "center", marginBoottom:16}}>MR</h3>
+
+     <Form.Item label="Hora" name="horaMr">
+          <TimePicker format="HH:mm" style={{ width: "100%" }} />
+     </Form.Item>
+
+     <Row gutter={8}>
+          <Col span={12}>
+          <Form.Item label="L1 (μS/cm)" name="l1Mr">
+               <Input />
           </Form.Item>
-        <Col span={12}><Form.Item label="L1 (μS/cm)" name = "l1Mr"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="T1 (°C)" name="t1Mr"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="L2 (μS/cm)" name = "l2Mr"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="T2 (°C)" name="t2Mr"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="L3 (μS/cm)" name = "l3Mr"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="T3 (°C)" name="t3Mr"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="Criterio de aceptación del MR" name="criterioMr"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="Se Acepta:" name="seAceptaMr">
-               <Radio.Group>
-                    <Radio value={true}>Si</Radio>
-                    <Radio value={false}>No</Radio>
-               </Radio.Group>
-          </Form.Item></Col>
-      </Row>
-      <p>Criterios criterioMc</p>
-            <Row gutter={16}>
-          <Form.Item label="Hora" name="horaMc">
-            <TimePicker format="HH:mm" />
+          </Col>
+          <Col span={12}>
+          <Form.Item label="T1 (°C)" name="t1Mr">
+               <Input />
           </Form.Item>
-        <Col span={12}><Form.Item label="L1 (μS/cm)" name = "l1Mc"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="T1 (°C)" name="t1Mc"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="L2 (μS/cm)" name = "l2Mc"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="T2 (°C)" name="t2Mc"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="L3 (μS/cm)" name = "l3Mc"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="T3 (°C)" name="t3Mc"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="Criterio de aceptación del MC" name="criterioMcL"><Input /></Form.Item></Col>
-        <Col span={12}><Form.Item label="Se Acepta:" name="seAceptaMcL">
-               <Radio.Group>
-                    <Radio value={true}>Si</Radio>
-                    <Radio value={false}>No</Radio>
-               </Radio.Group>
-          </Form.Item></Col>
-      </Row>
+          </Col>
+
+          <Col span={12}>
+          <Form.Item label="L2 (μS/cm)" name="l2Mr">
+               <Input />
+          </Form.Item>
+          </Col>
+          <Col span={12}>
+          <Form.Item label="T2 (°C)" name="t2Mr">
+               <Input />
+          </Form.Item>
+          </Col>
+
+          <Col span={12}>
+          <Form.Item label="L3 (μS/cm)" name="l3Mr">
+               <Input />
+          </Form.Item>
+          </Col>
+          <Col span={12}>
+          <Form.Item label="T3 (°C)" name="t3Mr">
+               <Input />
+          </Form.Item>
+          </Col>
+     </Row>
+
+     <Form.Item label="Criterio de aceptación del MR" name="criterioMr">
+          <Input />
+     </Form.Item>
+
+     <Form.Item label="Se Acepta:" name="seAceptaMr">
+          <Radio.Group>
+          <Radio value={true}>Si</Radio>
+          <Radio value={false}>No</Radio>
+          </Radio.Group>
+     </Form.Item>
+     </div>
+     </Col>
+
+     {/* COLUMNA MC */}
+     <Col span={12}>
+     <div
+     style={{
+          border:"1px solid #ccc",
+          padding:16,
+          borderRadius:8,
+          marginBottom:16,
+          textAlign: "center",
+     }}>
+          
+     <h3 style ={{textAlign: "center", marginBoottom:16}}>MC</h3>
+     <Form.Item label="Hora" name="horaMc">
+          <TimePicker format="HH:mm" style={{ width: "100%" }} />
+     </Form.Item>
+
+     <Row gutter={8}>
+          <Col span={12}>
+          <Form.Item label="L1 (μS/cm)" name="l1Mc">
+               <Input />
+          </Form.Item>
+          </Col>
+          <Col span={12}>
+          <Form.Item label="T1 (°C)" name="t1Mc">
+               <Input />
+          </Form.Item>
+          </Col>
+
+          <Col span={12}>
+          <Form.Item label="L2 (μS/cm)" name="l2Mc">
+               <Input />
+          </Form.Item>
+          </Col>
+          <Col span={12}>
+          <Form.Item label="T2 (°C)" name="t2Mc">
+               <Input />
+          </Form.Item>
+          </Col>
+
+          <Col span={12}>
+          <Form.Item label="L3 (μS/cm)" name="l3Mc">
+               <Input />
+          </Form.Item>
+          </Col>
+          <Col span={12}>
+          <Form.Item label="T3 (°C)" name="t3Mc">
+               <Input />
+          </Form.Item>
+          </Col>
+     </Row>
+
+     <Form.Item label="Criterio de aceptación del MC" name="criterioMcL">
+          <Input />
+     </Form.Item>
+
+     <Form.Item label="Se Acepta:" name="seAceptaMcL">
+          <Radio.Group>
+          <Radio value={true}>Si</Radio>
+          <Radio value={false}>No</Radio>
+          </Radio.Group>
+     </Form.Item>
+     
+     </div>
+
+     </Col>
+     </Row>
 
      </Panel>
      </Collapse>
@@ -264,44 +464,145 @@ const EditarConductividad = () => {
                <Col span={6}><Form.Item label="(µS/cm)" name="usCmCampo"><Input /></Form.Item></Col>
                <Col span={6}><Form.Item label="(µS/cm)" name="usCmCampoRango"><Input /></Form.Item></Col>
                </Row>
-                <p>Criterios MR</p>
-               <Row gutter={16}>
-                    <Form.Item label="Hora" name="horaMrCampo">
-                    <TimePicker format="HH:mm" />
-                    </Form.Item>
-               <Col span={12}><Form.Item label="L1 (μS/cm)" name = "l1MrCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="T1 (°C)" name="t1MrCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="L2 (μS/cm)" name = "l2MrCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="T2 (°C)" name="t2MrCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="L3 (μS/cm)" name = "l3MrCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="T3 (°C)" name="t3MrCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="Criterio de aceptación del MR" name="criterioMrCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="Se Acepta:" name="seAceptaMrCampo">
-                         <Radio.Group>
-                              <Radio value={true}>Si</Radio>
-                              <Radio value={false}>No</Radio>
-                         </Radio.Group>
-                    </Form.Item></Col>
-               </Row>
-                <p>Criterios Mc</p>
-               <Row gutter={16}>
-                    <Form.Item label="Hora" name="horaMcCampo">
-                    <TimePicker format="HH:mm" />
-                    </Form.Item>
-               <Col span={12}><Form.Item label="L1 (μS/cm)" name = "l1McCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="T1 (°C)" name="t1McCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="L2 (μS/cm)" name = "l2McCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="T2 (°C)" name="t2McCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="L3 (μS/cm)" name = "l3McCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="T3 (°C)" name="t3McCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="Criterio de aceptación del MC" name="criterioMcCampo"><Input /></Form.Item></Col>
-               <Col span={12}><Form.Item label="Se Acepta:" name="seAceptaMcCampo">
-                         <Radio.Group>
-                              <Radio value={true}>Si</Radio>
-                              <Radio value={false}>No</Radio>
-                         </Radio.Group>
-                    </Form.Item></Col>
-               </Row>
+          <Row gutter={24}>
+          {/* COLUMNA MR CAMPO */}
+          <Col span={12}>
+          <div
+          style={{
+               border:"1px solid #ccc",
+               padding:16,
+               borderRadius:8,
+               marginBottom:16,
+               textAlign: "center",
+          }}>
+               
+          <h3 style ={{textAlign: "center", marginBoottom:16}}>MR Campo</h3>
+          <Form.Item label="Hora" name="horaMrCampo">
+               <TimePicker format="HH:mm" style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Row gutter={8}>
+               <Col span={12}>
+               <Form.Item label="L1 (μS/cm)" name="l1MrCampo">
+                    <Input />
+               </Form.Item>
+               </Col>
+               <Col span={12}>
+               <Form.Item label="T1 (°C)" name="t1MrCampo">
+                    <Input />
+               </Form.Item>
+               </Col>
+
+               <Col span={12}>
+               <Form.Item label="L2 (μS/cm)" name="l2MrCampo">
+                    <Input />
+               </Form.Item>
+               </Col>
+               <Col span={12}>
+               <Form.Item label="T2 (°C)" name="t2MrCampo">
+                    <Input />
+               </Form.Item>
+               </Col>
+
+               <Col span={12}>
+               <Form.Item label="L3 (μS/cm)" name="l3MrCampo">
+                    <Input />
+               </Form.Item>
+               </Col>
+               <Col span={12}>
+               <Form.Item label="T3 (°C)" name="t3MrCampo">
+                    <Input />
+               </Form.Item>
+               </Col>
+          </Row>
+
+          <Form.Item
+               label="Criterio de aceptación del MR"
+               name="criterioMrCampo"
+          >
+               <Input />
+          </Form.Item>
+
+          <Form.Item label="Se Acepta:" name="seAceptaMrCampo">
+               <Radio.Group>
+               <Radio value={true}>Si</Radio>
+               <Radio value={false}>No</Radio>
+               </Radio.Group>
+          </Form.Item>
+          
+          </div>
+
+          </Col>
+
+          {/* COLUMNA MC CAMPO */}
+          <Col span={12}>
+          <div
+          style={{
+               border:"1px solid #ccc",
+               padding:16,
+               borderRadius:8,
+               marginBottom:16,
+               textAlign: "center",
+          }}>
+               
+          <h3 style ={{textAlign: "center", marginBoottom:16}}>MC Campo</h3>
+          <Form.Item label="Hora" name="horaMcCampo">
+               <TimePicker format="HH:mm" style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Row gutter={8}>
+               <Col span={12}>
+               <Form.Item label="L1 (μS/cm)" name="l1McCampo">
+                    <Input />
+               </Form.Item>
+               </Col>
+               <Col span={12}>
+               <Form.Item label="T1 (°C)" name="t1McCampo">
+                    <Input />
+               </Form.Item>
+               </Col>
+
+               <Col span={12}>
+               <Form.Item label="L2 (μS/cm)" name="l2McCampo">
+                    <Input />
+               </Form.Item>
+               </Col>
+               <Col span={12}>
+               <Form.Item label="T2 (°C)" name="t2McCampo">
+                    <Input />
+               </Form.Item>
+               </Col>
+
+               <Col span={12}>
+               <Form.Item label="L3 (μS/cm)" name="l3McCampo">
+                    <Input />
+               </Form.Item>
+               </Col>
+               <Col span={12}>
+               <Form.Item label="T3 (°C)" name="t3McCampo">
+                    <Input />
+               </Form.Item>
+               </Col>
+          </Row>
+
+          <Form.Item
+               label="Criterio de aceptación del MC"
+               name="criterioMcCampo"
+          >
+               <Input />
+          </Form.Item>
+
+          <Form.Item label="Se Acepta:" name="seAceptaMcCampo">
+               <Radio.Group>
+               <Radio value={true}>Si</Radio>
+               <Radio value={false}>No</Radio>
+               </Radio.Group>
+          </Form.Item>
+          
+          </div>
+
+          </Col>
+          </Row>
                
           </Panel>
      </Collapse>

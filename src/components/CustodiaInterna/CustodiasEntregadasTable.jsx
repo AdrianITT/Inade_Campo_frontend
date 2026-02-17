@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Table, Typography, message, Space, Button, Modal,
   Checkbox, Radio, Tabs, Tag, Grid, Tooltip, Card,
-  Dropdown
+  Dropdown, Input
 } from "antd";
 import { Link } from "react-router-dom";
 import {  MoreOutlined, ReloadOutlined, FileExcelOutlined } from "@ant-design/icons";
@@ -17,6 +17,7 @@ import {
 import { getDataDisposicionFinal } from "../../apis/ApiCustodiaExterna/ApiDisposicionFinal";
 import { getllenar_excel_custodia_interna } from "../../apis/ApiCustodiaExterna/ApiCustodiaInterna";
 import { updateOrdenTrabajo } from "../../apis/ApisServicioCliente/OrdenTrabajoApi";
+import {colorEstado, colorPrioridad, handleSearch } from "./CustodiasEntregadasHelper"; 
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
@@ -30,11 +31,18 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
   const [cFinalizados, setCFinalizados] = useState([]);
   const [disposiciones, setDisposiciones] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [ordering, setOrdering] = useState(); // p.ej. "codigo" | "-empresa"
+  //estado por tabla
+  const [searchEntText, setSearchEntText] = useState("");
+  const [searchFinText, setSearchFinText] = useState("");
+
+  const [filteredRows, setFilteredRows] = useState([]);
+  const [filteredFinalizados, setFilteredFinalizados] = useState([]);
 
 
     // Finalizadas (server-side)
@@ -55,16 +63,12 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
 
   const [downloadingId, setDownloadingId] = useState(null);
 
-  const colorEstado = (record) => {
-    const code = record?.estado?.codigo ?? record?.estado?.id ?? record?.estado;
-    const desc = record?.estado?.descripcion?.toLowerCase?.() || "";
-    if (String(code) === "4" || desc.includes("final")) return "green";
-    if (desc.includes("entreg")) return "geekblue";
-    if (desc.includes("proceso")) return "processing";
-    return "default";
-  };
+  const handleSearchEnt = (value) =>
+    handleSearch(value, rows, setFilteredRows, setSearchEntText);
 
-  const colorPrioridad = (codigo) => ({ A:"red", B:"orange", C:"gold", 1:"red", 2:"orange", 3:"gold" }[codigo] || "blue");
+  const handleSearchFin = (value) =>
+    handleSearch(value, cFinalizados, setFilteredFinalizados, setSearchFinText);
+
 
   const getDispDesc = (id) => {
     const found = disposiciones.find((d) => String(d.id) === String(id));
@@ -122,6 +126,15 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
       console.error("Error cargando disposiciones:", e);
     }
   };
+
+
+  useEffect(() => {
+    setFilteredRows(rows || []);
+  }, [rows]);
+
+  useEffect(() => {
+    setFilteredFinalizados(cFinalizados || []);
+  }, [cFinalizados]);
 
   // Disposiciones: una vez al montar (o cuando cambie la organización)
   useEffect(() => {
@@ -276,6 +289,7 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
         );
       },
       responsive: ["md"],
+      filterSearch:true,
     },
     {
       title: "Estado",
@@ -424,7 +438,7 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
     return cols.map(c => ({ ...c, fixed: undefined, width: c.responsive ? c.width : undefined }));
   }, [baseColumns, accionesFinalizados, isMobile]);
 
-  // expandible en móvil: mostramos datos que ocultamos en columnas
+
   const expandedRowRender = (record) => (
     <div style={{ fontSize: 12, lineHeight: 1.5 }}>
       <div><b>Empresa:</b> {record?.empresa?.nombre || "—"}</div>
@@ -458,10 +472,23 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
           size={isMobile ? "small" : "middle"}
         >
           <TabPane tab={`Entregadas (${total})`} key="entregadas">
+            <center>
+              <Input.Search
+                className="generarorden-search"
+                placeholder="Buscar órdenes de trabajo..."
+                enterButton="Buscar"
+                value={searchEntText}
+                // onSearch={handleSearch}
+                onChange={(e) => handleSearchEnt(e.target.value)}
+                onSearch={
+                  handleSearchEnt
+                }
+              />
+            </center>
             <div style={{ width: "100%", overflowX: "auto" }}>
               <Table
                 rowKey={(r) => r?.custodiaExterna?.id ?? r?.id ?? Math.random()}
-                dataSource={rows}
+                dataSource={filteredRows}
                 columns={entregadasCols}
                 loading={loadingEnt}
                 onChange={handleTableChange}
@@ -487,10 +514,23 @@ export default function CustodiasEntregadasTable({ organizacionId }) {
           </TabPane>
 
           <TabPane tab={`Finalizadas (${totalFinal})`} key="finalizadas">
+            <center>
+              <Input.Search
+                className="generarorden-search"
+                placeholder="Buscar órdenes de trabajo..."
+                enterButton="Buscar"
+                value={searchFinText}
+                // onSearch={handleSearch}
+                onChange={(e) => handleSearchFin(e.target.value)}
+                onSearch={
+                  handleSearchFin
+                }
+              />
+             </center>
             <div style={{ width: "100%", overflowX: "auto" }}>
               <Table
                 rowKey={(r) => r?.custodiaExterna?.id ?? r?.id ?? Math.random()}
-                dataSource={cFinalizados}
+                dataSource={filteredFinalizados}
                 columns={finalizadosCols}
                 loading={loadingFin}
                 onChange={handleTableChangeFinal}

@@ -1,0 +1,777 @@
+import React, { useMemo, useEffect, useState, useRef } from "react";
+import {
+  Button,
+  Card,
+  Col,
+  Form,
+  Input,
+  InputNumber,
+  Row,
+  Space,
+  Switch,
+  TimePicker,
+  Typography,
+  message,
+  Divider,
+  AutoComplete,
+  Collapse,
+  DatePicker,
+  Tabs,
+} from "antd";
+import TextArea from "antd/es/input/TextArea";
+import { PlusOutlined, DeleteOutlined, DownOutlined } from "@ant-design/icons";
+import { useBeforeUnload, useNavigationPrompt } from "../../../hooks/DetectTabClosure";
+
+const { Text } = Typography;
+
+const MAX_PUNTOS = 100;
+
+const SHARED_POINT_FIELDS = new Set([
+  "numeroPunto",
+  "areaMonitoreo",
+  "posicionTrabajo",
+  "descripcionPunto",
+]);
+
+const makeEmptyPunto = () => ({
+  numeroPunto: null,
+  areaMonitoreo: "",
+  posicionTrabajo: "",
+  descripcionPunto: "",
+  refl_paredes: false,
+  refl_plano_trabajo: false,
+  lux1E2: "",
+  lux2E2: "",
+  lux3E2: "",
+  lux1E1: "",
+  lux2E1: "",
+  lux3E1: "",
+  nivelMinimo: null,
+});
+
+// Etiquetas (solo UI)
+const BLOQUES = [
+  { key: 0, label: "Inicio" },
+  { key: 1, label: "Intermedia" },
+  { key: 2, label: "Final" },
+];
+
+export default function FormNAT({
+  areasPorFila = [],
+  onFinishOK,
+  disabled = false,
+  loading = false,
+}) {
+  const [form] = Form.useForm();
+
+  const [activeSetKey, setActiveSetKey] = useState("0");
+
+  const [isDirty, setIsDirty] = useState(false);
+  useBeforeUnload(isDirty);
+  useNavigationPrompt(isDirty);
+
+  const hydratingRef = useRef(true);
+
+    const tabWrap = {
+    borderRadius: 12,
+    border: "1px solid #e6eaf2",
+    background: "#fff",
+    padding: 8,
+    overflow: "hidden", // IMPORTANTÍSIMO: no deja que el nav “rompa” el layout
+  };
+
+  // --- helpers sets ---
+  const getSetStart = (blockIndex) => Math.floor(blockIndex / 3) * 3;
+  const getTotalSets = (totalBlocks) => Math.max(1, Math.ceil(totalBlocks / 3));
+  const calcSetIndexFromTotalBlocks = (totalBlocks) =>
+    Math.max(0, Math.ceil(totalBlocks / 3) - 1);
+
+  const safeSetField = (namePath, value) => {
+    if (!form) return;
+    form.setFields([{ name: namePath, value }]);
+  };
+
+  const safeSetManyFields = (fields) => {
+    if (!form) return;
+    form.setFields(fields);
+  };
+
+  const ensurePointExists = (bloques, blockIndex, pointIndex) => {
+    const b = bloques?.[blockIndex] ?? {};
+    const puntos = Array.isArray(b.puntos) ? [...b.puntos] : [];
+    while (puntos.length <= pointIndex) puntos.push(makeEmptyPunto());
+    return puntos;
+  };
+
+  const syncSharedPointField = (fromBlockIndex, pointIndex, field, value) => {
+    if (!SHARED_POINT_FIELDS.has(field)) return;
+
+    const start = getSetStart(fromBlockIndex);
+    const targets = [start, start + 1, start + 2].filter((i) => i !== fromBlockIndex);
+
+    const bloques = form.getFieldValue("bloques") || [];
+    const fieldsToSet = [];
+
+    for (const bi of targets) {
+      const puntos = ensurePointExists(bloques, bi, pointIndex);
+
+      fieldsToSet.push({ name: ["bloques", bi, "puntos"], value: puntos });
+      fieldsToSet.push({ name: ["bloques", bi, "puntos", pointIndex, field], value });
+    }
+
+    safeSetManyFields(fieldsToSet);
+  };
+
+  const addPointToSet = (blockIndex) => {
+    const start = getSetStart(blockIndex);
+    const bloques = form.getFieldValue("bloques") || [];
+
+    const lengths = [0, 1, 2].map((k) => (bloques[start + k]?.puntos || []).length);
+    const maxLen = Math.max(...lengths);
+
+    if (maxLen >= MAX_PUNTOS) {
+      message.warning(`Máximo ${MAX_PUNTOS} puntos por bloque.`);
+      return;
+    }
+
+    for (const bi of [start, start + 1, start + 2]) {
+      const puntos = Array.isArray(bloques[bi]?.puntos) ? [...bloques[bi].puntos] : [];
+      puntos.push(makeEmptyPunto());
+      safeSetField(["bloques", bi, "puntos"], puntos);
+    }
+  };
+
+  const removePointFromSet = (blockIndex, pointIndex) => {
+    const start = getSetStart(blockIndex);
+    const bloques = form.getFieldValue("bloques") || [];
+
+    const lengths = [0, 1, 2].map((k) => (bloques[start + k]?.puntos || []).length);
+    const minLen = Math.min(...lengths);
+
+    if (minLen <= 1) {
+      message.warning("No puedes borrar el último punto del set.");
+      return;
+    }
+
+    for (const bi of [start, start + 1, start + 2]) {
+      const puntos = Array.isArray(bloques[bi]?.puntos) ? [...bloques[bi].puntos] : [];
+      puntos.splice(pointIndex, 1);
+      safeSetField(["bloques", bi, "puntos"], puntos);
+    }
+  };
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      hydratingRef.current = false;
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  const makeEmptyBloqueNAT = () => ({
+    tipo: "NAT",
+    observaciones: "",
+    fechaMonitoreo: null,
+    hora: null,
+    puntos: [makeEmptyPunto()],
+    InfluyeLuz: false,
+  });
+
+  const initialValues = useMemo(
+    () => ({
+      bloques: BLOQUES.map(() => makeEmptyBloqueNAT()),
+    }),
+    []
+  );
+
+  const removeSetBySetIndex = (setIndex, remove, totalBlocks) => {
+    if (totalBlocks <= 3) {
+      message.warning("No puedes borrar el último set.");
+      return false;
+    }
+
+    const start = setIndex * 3;
+    remove(start + 2);
+    remove(start + 1);
+    remove(start + 0);
+
+    message.success(`Set eliminado: ${setIndex + 1}`);
+    return true;
+  };
+
+  const handleValuesChange = () => {
+    if (hydratingRef.current) return;
+    setIsDirty(true);
+  };
+
+  const onFinish = (values) => {
+    const bloques = Array.isArray(values?.bloques) ? values.bloques : [];
+    onFinishOK?.(bloques);
+    message.success("Cambios guardados.");
+    setIsDirty(false);
+  };
+
+  const autoCompleteOptions = useMemo(() => {
+    return (Array.isArray(areasPorFila) ? areasPorFila : [])
+      .filter(Boolean)
+      .map((a) => ({ value: String(a) }));
+  }, [areasPorFila]);
+
+  return (
+    <div style={ui.page}>
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={initialValues}
+        onFinish={onFinish}
+        disabled={disabled}
+        onValuesChange={handleValuesChange}
+      >
+        {/* Header sticky */}
+        <div style={ui.header}>
+          <div>
+            <div style={ui.title}>Hoja de Campo</div>
+            <div style={ui.subtitle}>Puntos de Muestreo — Iluminación Natural (NAT)</div>
+          </div>
+
+          <Space wrap>
+            <span style={styles.chip}>{isDirty ? "Cambios sin guardar" : "Sin cambios"}</span>
+            <Button
+              type="primary"
+              size="large"
+              htmlType="submit"
+              loading={loading}
+              disabled={disabled || loading || !isDirty}
+            >
+              Guardar cambios
+            </Button>
+          </Space>
+        </div>
+
+        <Divider style={ui.divider} />
+
+        <Form.List name="bloques">
+          {(bloqueFields, { add, remove }) => {
+            const totalSets = getTotalSets(bloqueFields.length);
+
+            return (
+              <div style={{ display: "grid", gap: 12 }}>
+                {/* Toolbar */}
+                <div style={ui.toolbar}>
+                  <Space wrap>
+                    <Button
+                      type="primary"
+                      ghost
+                      size="large"
+                      icon={<PlusOutlined />}
+                      onClick={() => {
+                        add(makeEmptyBloqueNAT());
+                        add(makeEmptyBloqueNAT());
+                        add(makeEmptyBloqueNAT());
+                        message.success("Se agregaron 3 Bloques: Inicio, Intermedia y Final.");
+
+                        // ✅ activar el nuevo tab
+                        setTimeout(() => {
+                          const totalAfter = bloqueFields.length + 3;
+                          const nextSetIndex = calcSetIndexFromTotalBlocks(totalAfter);
+                          setActiveSetKey(String(nextSetIndex));
+                        }, 0);
+                      }}
+                    >
+                      Agregar set (Inicio / Intermedia / Final)
+                    </Button>
+
+                    <span style={styles.chip}>Total bloques: {bloqueFields.length}</span>
+                  </Space>
+
+                  <Text type="secondary">Cada set contiene 3 bloques</Text>
+                </div>
+
+                <div style={{ overflowX: "auto", overflowY:"hidden"}}>
+
+                <div style={tabWrap}>
+
+                {/* ✅ Tabs por set */}
+                <Tabs
+                  type="card"
+                  activeKey={activeSetKey}
+                  onChange={setActiveSetKey}
+                  items={Array.from({ length: totalSets }).map((_, setIndex) => {
+                    const start = setIndex * 3;
+                    const end = start + 3;
+
+                    return {
+                      key: String(setIndex),
+                      label: setIndex === 0 ? "Set principal" : `Set ${setIndex + 1}`,
+                      children: (
+                        <div style={{ display: "grid", gap: 12 }}>
+                          {/* toolbar del tab */}
+                          <div style={ui.toolbar}>
+                            <Text type="secondary">
+                              Set #{setIndex + 1}: Inicio / Intermedia / Final
+                            </Text>
+
+                            <Button
+                              danger
+                              size="middle"
+                              icon={<DeleteOutlined />}
+                              disabled={bloqueFields.length <= 3}
+                              onClick={() => {
+                                const ok = removeSetBySetIndex(
+                                  setIndex,
+                                  remove,
+                                  bloqueFields.length
+                                );
+
+                                if (ok) {
+                                  // ✅ mover tab seguro
+                                  setActiveSetKey((prev) => {
+                                    const cur = Number(prev);
+                                    const next = Math.max(0, Math.min(cur, totalSets - 2));
+                                    return String(next);
+                                  });
+                                }
+                              }}
+                            >
+                              Quitar este set
+                            </Button>
+                          </div>
+
+                          {/* render de los 3 bloques */}
+                          {bloqueFields.slice(start, end).map((bloqueField, localIdx) => {
+                            const i = start + localIdx; // índice global real
+                            const meta = BLOQUES[localIdx];
+
+                            return (
+                              <Card
+                                key={bloqueField.key}
+                                style={styles.card}
+                                bodyStyle={{ padding: 16 }}
+                                title={
+                                  <Space direction="vertical" style={{ width: "100%" }}>
+                                    <b>
+                                      Bloque #{i + 1} — {meta.label}
+                                    </b>
+                                    <Text type="secondary">Bloque de medición: {meta.label}</Text>
+                                  </Space>
+                                }
+                              >
+                                <Row gutter={[16, 8]}>
+                                  <Col xs={24} sm={12} lg={8}>
+                                    <Form.Item
+                                      label="Fecha de Monitoreo"
+                                      name={[bloqueField.name, "fechaMonitoreo"]}
+                                      style={{ marginBottom: 0 }}
+                                    >
+                                      <DatePicker size="large" style={{ width: "100%" }} />
+                                    </Form.Item>
+                                  </Col>
+
+                                  <Col xs={24} sm={12} lg={8}>
+                                    <Form.Item
+                                      label={`Hora ${meta.label.toLowerCase()}`}
+                                      name={[bloqueField.name, "hora"]}
+                                      style={{ marginBottom: 0 }}
+                                    >
+                                      <TimePicker size="large" format="HH:mm" style={{ width: "100%" }} />
+                                    </Form.Item>
+                                  </Col>
+
+                                  <Col xs={24} sm={12} lg={8}>
+                                    <Form.Item name={[bloqueField.name, "tipo"]} hidden>
+                                      <Input />
+                                    </Form.Item>
+
+                                    <Form.Item
+                                      label="Influye la Luz"
+                                      name={[bloqueField.name, "InfluyeLuz"]}
+                                      valuePropName="checked"
+                                      style={{ marginBottom: 0 }}
+                                    >
+                                      <Switch />
+                                    </Form.Item>
+                                  </Col>
+
+                                  <Col xs={24}>
+                                    <Form.Item label="Observaciones" name={[bloqueField.name, "observaciones"]}>
+                                      <TextArea autoSize={{ minRows: 2, maxRows: 4 }} placeholder="..." />
+                                    </Form.Item>
+                                  </Col>
+                                </Row>
+
+                                <Divider style={ui.dividerSoft} />
+
+                                {/* Puntos dentro del bloque */}
+                                <Form.List name={[bloqueField.name, "puntos"]}>
+                                  {(puntoFields) => (
+                                    <>
+                                      <Space style={{ marginBottom: 12 }} wrap>
+                                        <Button
+                                          type="default"
+                                          size="large"
+                                          icon={<PlusOutlined />}
+                                          onClick={() => addPointToSet(i)}
+                                          disabled={puntoFields.length >= MAX_PUNTOS}
+                                        >
+                                          Agregar punto (al set)
+                                        </Button>
+                                        <span style={styles.chip}>Total puntos: {puntoFields.length}</span>
+                                      </Space>
+
+                                      <div style={styles.collapseWrap}>
+                                        <Collapse
+                                          accordion={false}
+                                          bordered={false}
+                                          expandIconPosition="end"
+                                          expandIcon={({ isActive }) => (
+                                            <DownOutlined rotate={isActive ? 180 : 0} />
+                                          )}
+                                          style={{ background: "transparent" }}
+                                        >
+                                          {puntoFields.map((pField, idx) => (
+                                            <Collapse.Panel
+                                              key={String(pField.name)}
+                                              header={<b>Punto #{idx + 1}</b>}
+                                              style={styles.panel}
+                                              extra={
+                                                <Button
+                                                  danger
+                                                  size="middle"
+                                                  icon={<DeleteOutlined />}
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    removePointFromSet(i, pField.name);
+                                                  }}
+                                                  disabled={puntoFields.length === 1}
+                                                >
+                                                  Quitar
+                                                </Button>
+                                              }
+                                            >
+                                              <Card size="small" style={styles.cardInner} bodyStyle={{ padding: 14 }}>
+                                                <Row gutter={[16, 8]}>
+                                                  <Col xs={24} sm={12} lg={8}>
+                                                    <Form.Item
+                                                      label="Número de punto"
+                                                      name={[pField.name, "numeroPunto"]}
+                                                    >
+                                                      <InputNumber
+                                                        size="large"
+                                                        style={{ width: "100%" }}
+                                                        min={1}
+                                                        onChange={(val) =>
+                                                          syncSharedPointField(i, pField.name, "numeroPunto", val)
+                                                        }
+                                                      />
+                                                    </Form.Item>
+                                                  </Col>
+
+                                                  <Col xs={24} sm={12} lg={8}>
+                                                    <Form.Item
+                                                      label="Área monitoreada"
+                                                      name={[pField.name, "areaMonitoreo"]}
+                                                    >
+                                                      <AutoComplete
+                                                        options={autoCompleteOptions}
+                                                        placeholder="Ej: Cajas"
+                                                        onChange={(val) =>
+                                                          syncSharedPointField(i, pField.name, "areaMonitoreo", val)
+                                                        }
+                                                      >
+                                                        <Input size="large" />
+                                                      </AutoComplete>
+                                                    </Form.Item>
+                                                  </Col>
+
+                                                  <Col xs={24} sm={12} lg={8}>
+                                                    <Form.Item
+                                                      label="Posición de trabajo"
+                                                      name={[pField.name, "posicionTrabajo"]}
+                                                    >
+                                                      <Input
+                                                        size="large"
+                                                        placeholder="Ej: Operador"
+                                                        onChange={(e) =>
+                                                          syncSharedPointField(
+                                                            i,
+                                                            pField.name,
+                                                            "posicionTrabajo",
+                                                            e.target.value
+                                                          )
+                                                        }
+                                                      />
+                                                    </Form.Item>
+                                                  </Col>
+                                                </Row>
+
+                                                <Form.Item
+                                                  label="Descripción de la operación"
+                                                  name={[pField.name, "descripcionPunto"]}
+                                                >
+                                                  <Input
+                                                    size="large"
+                                                    placeholder="Ej: Inspección visual / Lectura etiquetas"
+                                                    onChange={(e) =>
+                                                      syncSharedPointField(
+                                                        i,
+                                                        pField.name,
+                                                        "descripcionPunto",
+                                                        e.target.value
+                                                      )
+                                                    }
+                                                  />
+                                                </Form.Item>
+
+                                                {/* Switches mutuamente excluyentes */}
+                                                <Form.Item
+                                                  noStyle
+                                                  shouldUpdate={(prev, cur) => {
+                                                    const p =
+                                                      prev?.bloques?.[bloqueField.name]?.puntos?.[pField.name] || {};
+                                                    const c =
+                                                      cur?.bloques?.[bloqueField.name]?.puntos?.[pField.name] || {};
+                                                    return (
+                                                      p.refl_paredes !== c.refl_paredes ||
+                                                      p.refl_plano_trabajo !== c.refl_plano_trabajo
+                                                    );
+                                                  }}
+                                                >
+                                                  {({ getFieldValue }) => {
+                                                    const basePath = ["bloques", bloqueField.name, "puntos", pField.name];
+                                                    const paredes = !!getFieldValue([...basePath, "refl_paredes"]);
+                                                    const plano = !!getFieldValue([...basePath, "refl_plano_trabajo"]);
+
+                                                    return (
+                                                      <Row gutter={[16, 8]}>
+                                                        <Col xs={24} sm={12}>
+                                                          <Form.Item
+                                                            label="Pared (reflexión)"
+                                                            name={[pField.name, "refl_paredes"]}
+                                                            valuePropName="checked"
+                                                          >
+                                                            <Switch
+                                                              disabled={plano && !paredes}
+                                                              onChange={(checked) => {
+                                                                if (checked) {
+                                                                  form.setFields([
+                                                                    { name: [...basePath, "refl_plano_trabajo"], value: false },
+                                                                  ]);
+                                                                }
+                                                              }}
+                                                            />
+                                                          </Form.Item>
+                                                        </Col>
+
+                                                        <Col xs={24} sm={12}>
+                                                          <Form.Item
+                                                            label="Plano de trabajo (reflexión)"
+                                                            name={[pField.name, "refl_plano_trabajo"]}
+                                                            valuePropName="checked"
+                                                          >
+                                                            <Switch
+                                                              disabled={paredes && !plano}
+                                                              onChange={(checked) => {
+                                                                if (checked) {
+                                                                  form.setFields([
+                                                                    { name: [...basePath, "refl_paredes"], value: false },
+                                                                  ]);
+                                                                }
+                                                              }}
+                                                            />
+                                                          </Form.Item>
+                                                        </Col>
+                                                      </Row>
+                                                    );
+                                                  }}
+                                                </Form.Item>
+
+                                                <Divider style={ui.dividerSoft} />
+
+                                                <Text strong>Lux E2 Iluminación</Text>
+                                                <Row gutter={[16, 8]} style={{ marginTop: 8 }}>
+                                                  <Col xs={24} sm={12} lg={8}>
+                                                    <Form.Item label="1 Lux E2" name={[pField.name, "lux1E2"]}>
+                                                      <Input size="large" placeholder="Ej: 350" />
+                                                    </Form.Item>
+                                                  </Col>
+                                                  <Col xs={24} sm={12} lg={8}>
+                                                    <Form.Item label="2 Lux E2" name={[pField.name, "lux2E2"]}>
+                                                      <Input size="large" placeholder="Ej: 360" />
+                                                    </Form.Item>
+                                                  </Col>
+                                                  <Col xs={24} sm={12} lg={8}>
+                                                    <Form.Item label="3 Lux E2" name={[pField.name, "lux3E2"]}>
+                                                      <Input size="large" placeholder="Ej: 340" />
+                                                    </Form.Item>
+                                                  </Col>
+                                                </Row>
+
+                                                <Text strong>Lux E1 Reflexión</Text>
+                                                <Row gutter={[16, 8]} style={{ marginTop: 8 }}>
+                                                  <Col xs={24} sm={12} lg={8}>
+                                                    <Form.Item label="1 Lux E1" name={[pField.name, "lux1E1"]}>
+                                                      <Input size="large" placeholder="Ej: 300" />
+                                                    </Form.Item>
+                                                  </Col>
+                                                  <Col xs={24} sm={12} lg={8}>
+                                                    <Form.Item label="2 Lux E1" name={[pField.name, "lux2E1"]}>
+                                                      <Input size="large" placeholder="Ej: 310" />
+                                                    </Form.Item>
+                                                  </Col>
+                                                  <Col xs={24} sm={12} lg={8}>
+                                                    <Form.Item label="3 Lux E1" name={[pField.name, "lux3E1"]}>
+                                                      <Input size="large" placeholder="Ej: 295" />
+                                                    </Form.Item>
+                                                  </Col>
+                                                </Row>
+
+                                                <Divider style={ui.dividerSoft} />
+
+                                                <Form.Item
+                                                  label="Nivel mínimo de iluminación"
+                                                  name={[pField.name, "nivelMinimo"]}
+                                                >
+                                                  <InputNumber size="large" style={{ width: "100%" }} min={0} step={0.01} />
+                                                </Form.Item>
+                                              </Card>
+                                            </Collapse.Panel>
+                                          ))}
+                                        </Collapse>
+                                      </div>
+                                    </>
+                                  )}
+                                </Form.List>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      ),
+                    };
+                  })}
+                />
+
+                </div>
+
+                </div>
+
+                {/* Footer sticky (tablet) */}
+                <div style={ui.footer}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    block
+                    htmlType="submit"
+                    loading={loading}
+                    disabled={disabled || loading || !isDirty}
+                  >
+                    Guardar cambios
+                  </Button>
+                </div>
+              </div>
+            );
+          }}
+        </Form.List>
+      </Form>
+    </div>
+  );
+}
+
+const ui = {
+  page: {
+    padding: 16,
+    background: "#f6f8fb",
+    minHeight: "100%",
+  },
+
+  header: {
+    position: "sticky",
+    top: 0,
+    zIndex: 20,
+    background: "rgba(246, 248, 251, 0.92)",
+    backdropFilter: "blur(8px)",
+    border: "1px solid #e6eaf2",
+    borderRadius: 16,
+    padding: 14,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 12,
+  },
+
+  title: {
+    fontSize: 18,
+    fontWeight: 800,
+    color: "#0f172a",
+    lineHeight: 1.1,
+  },
+
+  subtitle: {
+    fontSize: 13,
+    color: "#64748b",
+    marginTop: 2,
+  },
+
+  toolbar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
+    marginBottom: 12,
+  },
+
+  divider: {
+    margin: "12px 0",
+    borderColor: "#e6eaf2",
+  },
+
+  dividerSoft: {
+    margin: "10px 0",
+    borderColor: "#e6eaf2",
+  },
+
+  footer: {
+    position: "sticky",
+    bottom: 12,
+    zIndex: 20,
+    marginTop: 12,
+  },
+};
+
+const styles = {
+  card: {
+    borderRadius: 16,
+    border: "1px solid #e6eaf2",
+    boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
+    background: "#ffffff",
+  },
+
+  cardInner: {
+    background: "#ffffff",
+    borderRadius: 14,
+  },
+
+  chip: {
+    fontSize: 12,
+    color: "#475569",
+    background: "#f1f5f9",
+    padding: "4px 10px",
+    borderRadius: 999,
+    border: "1px solid #e2e8f0",
+  },
+
+  collapseWrap: {
+    borderRadius: 14,
+    border: "1px solid #e6eaf2",
+    background: "#ffffff",
+    boxShadow: "0 6px 18px rgba(15, 23, 42, 0.04)",
+    overflow: "hidden",
+  },
+
+  panel: {
+    borderRadius: 12,
+    border: "1px solid #e6eaf2",
+    margin: 12,
+    background: "#fff",
+  },
+};

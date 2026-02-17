@@ -42,6 +42,6 @@ export const HojaCampoById= (id) =>
 
 export const deleteHojaCampo = (id) => Api_Host.delete(`/campo/hojacampo/${id}/`);
 
-export const getexcelhojacampo = (id) => Api_Host.get(`/campo/llenar_hoja_campo/${id}/`, {
+export const getexcelhojacampo = (id, IdTwo) => Api_Host.get(`/campo/llenar_hoja_campo/${id}/${IdTwo}/`, {
   responseType: "blob", // ⬅️ esto es obligatorio
 });

@@ -657,7 +657,7 @@ const downloadExcelHojaCampo= async()=>{
           {type.protocoloMuestreo.id && (
           <div style={{ marginBottom: 16 }}>
             <Descriptions size="small" bordered column={1}>
-            <Descriptions.Item label="Protocolo de Muestreo:">{type.protocoloMuestreo.numero || "No asignado"}</Descriptions.Item>
+            {/* <Descriptions.Item label="Protocolo de Muestreo:">{type.protocoloMuestreo.numero || "No asignado"}</Descriptions.Item> */}
             <Descriptions.Item label="Domicilio">{type.protocoloMuestreo.sitioMuestreo.domicilio}</Descriptions.Item>
             <Descriptions.Item label="Giro de la Empresa:">{type.protocoloMuestreo.sitioMuestreo.giroEmpresa}</Descriptions.Item>
           </Descriptions>
@@ -680,7 +680,7 @@ const downloadExcelHojaCampo= async()=>{
           {type.hojaCampo.id && (
           <div style={{ marginBottom: 16 }}>
             <Descriptions size="small" bordered column={1}>
-            <Descriptions.Item label="Hoja de Campo:">{type.hojaCampo?.numero|| "No asignada"}</Descriptions.Item>
+            {/* <Descriptions.Item label="Hoja de Campo:">{type.hojaCampo?.numero|| "No asignada"}</Descriptions.Item> */}
           </Descriptions>
 
             <Space wrap style={{ marginTop: 8 }}>

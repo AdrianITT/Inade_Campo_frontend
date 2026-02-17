@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logout_Api from "../../apis/ApiCampo/LougoutApi";
 
-const AutoLogoutTimer = ({ timeout = 60 * 60 * 1000 }) => { // 1 hora por defecto
+const AutoLogoutTimer = ({ timeout = 480 * 60 * 1000 }) => { // 1 hora por defecto
   const navigate = useNavigate();
   const [remaining, setRemaining] = useState(timeout);
   const lastActiveRef = useRef(Date.now());
