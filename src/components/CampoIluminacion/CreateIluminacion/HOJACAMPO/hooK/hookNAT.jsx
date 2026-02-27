@@ -60,6 +60,7 @@ export default    function PuntosExcelSheet({
       syncSharedPointField,
       form,
       disabled,
+      posiciones,
     }) {
       const nameBase = (pName, key) => [pName, key];
   
@@ -140,24 +141,24 @@ export default    function PuntosExcelSheet({
                     </div>
                   </td>
   
-                  <td style={cellStyle(false)}>
-                    <div style={excel.cell}>
-                      <Form.Item name={nameBase(pField.name, "posicionTrabajo")} style={{ margin: 0 }}>
-                        <Input
-                          disabled={disabled}
-                          style={excel.inputLikeCell}
-                          onChange={(e) =>
-                            syncSharedPointField(
-                              blockIndexGlobal,
-                              pField.name,
-                              "posicionTrabajo",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </Form.Item>
-                    </div>
-                  </td>
+                <td style={cellStyle(false)}>
+                  <div style={excel.cell}>
+                    <Form.Item name={nameBase(pField.name, "posicionTrabajo")} style={{ margin: 0 }}>
+                      <AutoComplete
+                        disabled={disabled}
+                        options={posiciones}
+                        onChange={(val) =>
+                          syncSharedPointField(blockIndexGlobal, pField.name, "posicionTrabajo", val)
+                        }
+                        onSelect={(val) =>
+                          syncSharedPointField(blockIndexGlobal, pField.name, "posicionTrabajo", val)
+                        }
+                      >
+                        <Input disabled={disabled} style={excel.inputLikeCell} />
+                      </AutoComplete>
+                    </Form.Item>
+                  </div>
+                </td>
   
                   <td style={cellStyle(false)}>
                     <div style={excel.cell}>

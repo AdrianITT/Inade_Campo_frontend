@@ -1,21 +1,24 @@
 import { Tabs, message, Button, Spin } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect,useMemo, useEffectEvent } from "react";
-import { getDataAreaTrabajo } from "./hook/getData";
-import { getExisces, getAllDataHojaIlum  } from '../../../apis/ApiCampo/IluminacionApi.js';
+import { useState, useEffect} from "react";
+// import { getDataAreaTrabajo } from "./hook/getData";
+import {getAllDataHojaIlum, getAllDataAreaTrabajo  } from '../../../apis/ApiCampo/IluminacionApi.js';
 import FormHC from "./HOJACAMPO/FormHC.jsx";
 import FormNAT from "./HOJACAMPO/FormNAT.jsx";
 import { insertDataLuzART } from "./HOJACAMPO/insertDataART.jsx";
 import { insertDataIluminacionNAT } from "./HOJACAMPO/insertDataNAT.jsx";
 
 export default function CreateReconocomietoA() {
-  const [areaOption, setAreaOptions] = useState([]);
+  // const [areaOption, setAreaOptions] = useState([]);
   const [hojas, setHojas] = useState([]);
   const [hojasART, setHojasART] = useState([]);
   const [hojasNAT, setHojasNAT] = useState([]);
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading]= useState(false);
+  const [areaNat, setAreaNat] = useState([]);
+  const [areaArt, setAreaArt] = useState([]);
+  const POSICION =[{value:"Parado"}, {value:"Sentado"}, {value: "Parado/Sentado"}];
 
   const [selectedHojaId, setSelectedHojaId] = useState(null);
 
@@ -42,18 +45,31 @@ useEffect(() => {
 
     async function fetchData() {
       try {
-        const r = await getDataAreaTrabajo(id);
+        // const r = await getDataAreaTrabajo(id);
         const res = await getAllDataHojaIlum(id);
+        const c = await getAllDataAreaTrabajo(id);
+        // console.log("data area trabajo", c);
+        // console.log("data area trabajo nat", c?.data?.nat);
+        // console.log("data area trabajo art", c?.data?.art);
+        const dataNat = Array.isArray(c?.data?.nat) ? c.data.nat : [];
+        const dataArt = Array.isArray(c?.data?.art) ? c.data.art : [];
 
-        // const c = await getExisces(id);
+        const natArea = dataNat.map((x) => x.areaTrabajo).filter(Boolean);
+        // console.log("natArea: ", natArea);
+        const artArea = dataArt.map((x) => x.areaTrabajo).filter(Boolean);
+        // console.log("artArea: ", artArea);
+
         setArtSubmitting(false);
         setNatSubmitting(false);
 
-        const areas = Array.isArray(r?.data?.areas) ? r.data.areas : [];
+        // const areas = Array.isArray(r?.data?.areas) ? r.data.areas : [];
+
         const hojaApi = Array.isArray(res?.data?.hojas) ? res.data.hojas : [];
         if (!cancelled){
           setHojas(hojaApi);
-          setAreaOptions(areas);
+          // setAreaOptions(areas);
+          setAreaArt(artArea);
+          setAreaNat(natArea);
           }
       } catch (error) {
         message.error("Error al cargar áreas");
@@ -131,7 +147,7 @@ useEffect(() => {
             try {
               setArtSubmitting(true);
               // ✅ importante: await
-              const res = await insertDataLuzART({ payload, id, saveDataInitial });
+              await insertDataLuzART({ payload, id, saveDataInitial });
 
               // si regresas algo, puedes validar aquí:
               // if (!res) throw new Error("No se pudo guardar");
@@ -145,7 +161,8 @@ useEffect(() => {
               setArtSubmitting(false);
             }
           }}
-          areasPorFila={areaOption}
+          areasPorFila={areaArt}
+          posicion={POSICION}
         />
       ),
     },
@@ -168,7 +185,7 @@ useEffect(() => {
               setNatSubmitting(true);
               // console.log("hola");
               // ✅ importante: await
-              const res = await insertDataIluminacionNAT({ values, id, saveDataInitial });
+              await insertDataIluminacionNAT({ values, id, saveDataInitial });
 
               // if (!res) throw new Error("No se pudo guardar");
 
@@ -182,7 +199,8 @@ useEffect(() => {
               setNatSubmitting(false);
             }
           }}
-          areasPorFila={areaOption}
+          areasPorFila={areaNat}
+          posicion={POSICION}
         />
       ),
     },

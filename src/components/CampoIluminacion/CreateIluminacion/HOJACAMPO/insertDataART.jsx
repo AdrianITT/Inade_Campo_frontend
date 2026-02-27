@@ -9,11 +9,11 @@ import {
 
 export const insertDataLuzART = async ({payload, id}) => {
      try{
-          console.log("payload: ",payload, "ID: ",id);
-          console.log("tipo: ", payload.tipo);
+          // console.log("payload: ",payload, "ID: ",id);
+          // console.log("tipo: ", payload.tipo);
           for (let c = 0; c < payload.bloques.length; c++){
                const data = payload.bloques[c];
-               console.log("datos de array: ",data);
+               // console.log("datos de array: ",data);
                let chci = {
                     "observacion": data.observaciones,
                     "iluminacion": id,
@@ -31,10 +31,10 @@ export const insertDataLuzART = async ({payload, id}) => {
                     "hoja": r.data.id,
                };
                const cr = await creaeteDataIluminacion(cdi);
-               console.log("cr : ",cr );
+               // console.log("cr : ",cr );
                //
                const areaRows = Array.isArray(data?.puntos) ? data?.puntos : [];
-               console.log("areaRows: ",areaRows);
+               // console.log("areaRows: ",areaRows);
                for (let i =0 ; i<areaRows.length; i++){
                     // console.log( "data: ",areaRows[i]);
                     const row = areaRows[i];
@@ -49,7 +49,7 @@ export const insertDataLuzART = async ({payload, id}) => {
                          "hojaCampo": r.data.id,
                     };
                     const rth = await createTableHojaIlum(layetdata);
-                    console.log("rth: ",rth);
+                    // console.log("rth: ",rth);
                     let lux ={
                          "lux1E2": row?.lux1E2 ?? "0",
                          "lux2E2": row?.lux2E2 ?? "0",
@@ -57,7 +57,7 @@ export const insertDataLuzART = async ({payload, id}) => {
                          "punto": rth.data.id,
                     }
                     const luxE2 = await createE2(lux)
-                    console.log("lux: ",lux);
+                    // console.log("lux: ",lux);
                     let lux1 ={
                          "lux1E1": row?.lux1E1 ?? "0",
                          "lux2E1": row?.lux2E1 ?? "0",
@@ -65,7 +65,7 @@ export const insertDataLuzART = async ({payload, id}) => {
                          "punto": rth.data.id,
                     }
                     const luxE1 = await createE1(lux1)
-                    console.log("lux1: ",lux1);
+                    // console.log("lux1: ",lux1);
                }
           };
 

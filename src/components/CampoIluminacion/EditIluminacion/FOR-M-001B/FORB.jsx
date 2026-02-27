@@ -98,6 +98,7 @@ export default function FormatoB({
   // ✅ guardado real
   const doSave = async (values) => {
     if (loading) return;
+    setIsDirty(false);
 
     setLoading(true);
     try {
@@ -115,6 +116,7 @@ export default function FormatoB({
       message.error("Error al guardar.");
     } finally {
       setLoading(false);
+      // setIsDirty(false);
     }
   };
 

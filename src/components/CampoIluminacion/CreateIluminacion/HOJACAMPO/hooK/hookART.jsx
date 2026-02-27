@@ -87,6 +87,7 @@ export default function PuntosExcelSheetART({
     autoCompleteOptions,
     form,
     disabled,
+    posiciones,
   }) {
     const nameBase = (pName, key) => [pName, key];
   
@@ -166,7 +167,12 @@ export default function PuntosExcelSheetART({
                     <td style={td(false)}>
                       <div style={excel.cell}>
                         <Form.Item name={nameBase(pField.name, "posicionTrabajo")} style={{ margin: 0 }}>
-                          <Input disabled={disabled} style={excel.inputCell} />
+                          <AutoComplete
+                            disabled={disabled}
+                            options={posiciones}
+                          >
+                            <Input style={excel.inputCell} />
+                          </AutoComplete>
                         </Form.Item>
                       </div>
                     </td>

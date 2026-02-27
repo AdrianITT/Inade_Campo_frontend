@@ -23,8 +23,8 @@ export default function CreateReconocomietoB() {
           getDataAreaTrabajo(id),      // trae {areas: [...]}
           getReconocimientoB(id),      // trae {reconocimiento_ilum:{id,observaciones}, dataTabla:[...]}
         ]);
-        console.log("areasRES: ",areasRes);
-        console.log(recoRes);
+        // console.log("areasRES: ",areasRes);
+        // console.log(recoRes);
         setAreaOptions(areasRes?.data?.areas || recoRes?.data?.areasTrabajo || []);
         setAreaPuntos(areasRes.data.punto || []);
         setInitialData(recoRes?.data || null);

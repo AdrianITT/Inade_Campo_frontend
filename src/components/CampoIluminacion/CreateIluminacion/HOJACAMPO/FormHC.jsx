@@ -15,6 +15,7 @@ import {
   Typography,
   message,
   DatePicker,
+  Collapse,
 } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import TextArea from "antd/es/input/TextArea";
@@ -56,13 +57,38 @@ const getIsSmall = () =>
   window.matchMedia &&
   window.matchMedia("(max-width: 576px)").matches;
 
+const excelWrap = {
+  border: "1px solid #e6eaf2",
+  borderRadius: 14,
+  background: "#fff",
+  maxWidth: "100%",
+  width: "100%",
+  minWidth: 0,
+  overflow: "visible",
+};
+
+const excelScroller = {
+  maxWidth: "100%",
+  width: "100%",
+  minWidth: 0,
+  overflowX: "auto",
+  overflowY: "hidden",
+  WebkitOverflowScrolling: "touch",
+  paddingBottom: 8,
+  overscrollBehaviorX: "contain",
+};
+
 export default function FormHCArtificial({
   areasPorFila = [],
   onFinishOK,
   disabled = false,
   loading = false,
+  posicion,
 }) {
   const [form] = Form.useForm();
+
+  const [openKeys, setOpenKeys] = useState(["0"]); // abre el primer bloque
+  const normalizeKeys = (k) => (Array.isArray(k) ? k : k ? [k] : []);
 
   // ✅ detectar móvil y reaccionar al resize
   const [isSmall, setIsSmall] = useState(getIsSmall());
@@ -291,8 +317,29 @@ export default function FormHCArtificial({
                 <Text type="secondary">Captura por bloques y puntos</Text>
               </div>
 
-              <div style={{ display: "grid", gap: 12, minWidth: 0 }}>
-                {bloqueFields.map((bloqueField, bloqueIdx) => (
+              <div style={{ minWidth: 0, maxWidth: "100%", overflowX: "hidden" }}>
+                <Collapse
+                  activeKey={openKeys}
+                  onChange={(k) => setOpenKeys(normalizeKeys(k))}
+                  destroyInactivePanel={false} // ✅ conserva inputs/scroll
+                  expandIconPosition="end"
+                  style={{ background: "transparent", border: "none" }}
+                >
+                {bloqueFields.map((bloqueField, bloqueIdx) => {
+
+                  const panelKey = String(bloqueField.name);
+                return(
+                  <Collapse.Panel
+                      key={panelKey}
+                      style={{ background: "transparent", border: "none" }}
+                      header={
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <b>Hoja de Campo #{bloqueIdx + 1}</b>
+                          <Text type="secondary">Luz Artificial (ART) — Bloque #{bloqueIdx + 1}</Text>
+                        </div>
+                      }
+                  >
+                    <div style={{ minWidth: 0, maxWidth: "100%", overflowX: "hidden" }}>
                   <Card
                     key={bloqueField.key}
                     style={{ ...styles.card, minWidth: 0 }}
@@ -464,6 +511,7 @@ export default function FormHCArtificial({
                                     form={form}
                                     disabled={disabled}
                                     compact={isSmall} // (si tu hook lo usa, mejor)
+                                    posiciones={posicion}
                                   />
                                 </div>
                               </div>
@@ -480,7 +528,15 @@ export default function FormHCArtificial({
                       )}
                     </Form.List>
                   </Card>
-                ))}
+
+                    </div>
+
+                  </Collapse.Panel>
+                )
+                }
+                )}
+                  
+                </Collapse>
               </div>
 
               {/* ✅ BARRA INFERIOR PEGADA A PANTALLA */}

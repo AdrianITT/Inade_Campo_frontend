@@ -67,6 +67,7 @@ export default function FormNAT({
   onFinishOK,
   disabled = false,
   loading = false,
+  posicion,
 }) {
   const [form] = Form.useForm();
 
@@ -605,6 +606,7 @@ export default function FormNAT({
                                                             syncSharedPointField={syncSharedPointField}
                                                             onRemovePoint={(pointIndex) => removePointFromSet(i, pointIndex)}
                                                             compact={isSmall} // si tu hook lo soporta
+                                                            posiciones={posicion}
                                                           />
                                                         </div>
                                                       </div>

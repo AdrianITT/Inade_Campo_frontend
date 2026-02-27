@@ -3,7 +3,7 @@ import { createZonaIlum, createTablaCalZona, createPuntoIluminacion } from "../.
 
 export const InsertData = async ({ cards, id }) => {
   try {
-    console.log("cards:", cards);
+    // console.log("cards:", cards);
 
     const list = Array.isArray(cards) ? cards : [];
 
@@ -19,7 +19,7 @@ export const InsertData = async ({ cards, id }) => {
         (v)=> String(v ?? "").trim() !==""
         )
       );
-      console.log("rowsConDatos: ",rowsConDatos);
+      // console.log("rowsConDatos: ",rowsConDatos);
       if( rowsConDatos.length === 0 ) continue;
 
       const zona = await createZonaIlum({

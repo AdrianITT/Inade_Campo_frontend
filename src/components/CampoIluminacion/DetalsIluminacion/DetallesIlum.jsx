@@ -13,8 +13,17 @@ import {
   Grid,
   Flex,
   Divider,
+  Modal,
+  Alert,
+  Select
 } from "antd";
-import { ArrowLeftOutlined, CheckCircleFilled, ClockCircleFilled, DownloadOutlined } from "@ant-design/icons";
+import { 
+  ArrowLeftOutlined, 
+  CheckCircleFilled, 
+  ClockCircleFilled, 
+  DownloadOutlined,
+  EditOutlined,
+} from "@ant-design/icons";
 
 import {
   CardIluminacion,
@@ -23,6 +32,10 @@ import {
   CardLightingDistribution,
 } from "../DetalsIluminacion/CardIluminacion/Card.jsx";
 import { DataDetailsIlum, download } from "../hook/useEffectIlum.jsx";
+import {
+  getAllMachineLight,
+  updateIlumnacionMachine,
+} from "../../../apis/ApiCampo/IluminacionApi.js"
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -35,6 +48,13 @@ export default function DetailsIluminacion() {
   const [detailsIlum, setDetailsIlum] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingButton, setLoadingButton] = useState(false);
+
+  //new const para editas Equipo
+  const [openEquipoModal, setOpenEquipoModal] = useState(false);
+  const [equiposOptions, setEquiposOptions] = useState([]);
+  const [loadingEquipos, setLoadingEquipos] = useState(false);
+  const [savingEquipo, setSavingEquipo] = useState(false);
+  const [selectedEquipoId, setSelectedEquipoId] = useState(null);
 
   const isTablet = screens.md && !screens.lg; // aprox 768-991
   const isMobile = !screens.md;
@@ -116,6 +136,67 @@ export default function DetailsIluminacion() {
     </Flex>
   );
 
+const handleOpenChangeEquipo = async () => {
+  try {
+    setOpenEquipoModal(true);
+    setSelectedEquipoId(detailsIlum?.machinelight?.id ?? null);
+
+    // Carga solo si aún no están cargados (opcional)
+    if (equiposOptions.length === 0) {
+      setLoadingEquipos(true);
+      const res = await getAllMachineLight(); // <-- ajusta a tu API
+      const data = Array.isArray(res?.data) ? res.data : [];
+
+      const options = data.map((eq) => ({
+        value: eq.id,
+        label: `${eq.equipoId ?? "Sin ID"}${eq.marca ? ` · ${eq.marca}` : ""}${eq.modelo ? ` · ${eq.modelo}` : ""}`,
+        raw: eq,
+      }));
+
+      setEquiposOptions(options);
+    }
+  } catch (error) {
+    console.error(error);
+    message.error("No se pudieron cargar los equipos.");
+  } finally {
+    setLoadingEquipos(false);
+  }
+};  
+
+const handleConfirmChangeEquipo = async () => {
+  if (!selectedEquipoId) {
+    message.warning("Selecciona un equipo.");
+    return;
+  }
+
+  const currentEquipoId = detailsIlum?.machinelight?.id;
+  if (Number(selectedEquipoId) === Number(currentEquipoId)) {
+    message.info("Seleccionaste el mismo equipo.");
+    return;
+  }
+
+  try {
+    setSavingEquipo(true);
+
+    // Llama API para actualizar el equipo de esta iluminación
+    await updateIlumnacionMachine(id, { machineLight: selectedEquipoId });
+
+    // Recarga detalles para reflejar cambios
+    const res = await DataDetailsIlum(id);
+    setDetailsIlum(res.data);
+
+    message.success("Equipo actualizado correctamente.");
+    setOpenEquipoModal(false);
+  } catch (error) {
+    console.error(error);
+    message.error("No se pudo actualizar el equipo.");
+  } finally {
+    setSavingEquipo(false);
+  }
+};
+
+const hasProgress =
+  !!detailsIlum?.rec || !!detailsIlum?.rilum || !!detailsIlum?.dilum || !!detailsIlum?.hci;
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? 12 : 20 }}>
       {/* HEADER */}
@@ -155,7 +236,15 @@ export default function DetailsIluminacion() {
             {!loading && chips}
           </div>
 
-          <Space>
+          <Space wrap>
+            <Button
+              icon={<EditOutlined />}
+              onClick={handleOpenChangeEquipo}
+              disabled={loading || !detailsIlum}
+            >
+              {isMobile ? "Equipo" : "Cambiar equipo"}
+            </Button>
+
             <Button
               type="primary"
               icon={<DownloadOutlined />}
@@ -189,7 +278,7 @@ export default function DetailsIluminacion() {
                   </Space>
                 }
                 style={{ borderRadius: 16 }}
-                bodyStyle={{ padding: 16 }}
+                bodyStyle={{ padding: 16, minHeight: 96 }}
                 hoverable
               >
                 <CardIluminacion rec={detailsIlum?.rec || false} idIlum={id} />
@@ -203,7 +292,7 @@ export default function DetailsIluminacion() {
                   </Space>
                 }
                 style={{ borderRadius: 16 }}
-                bodyStyle={{ padding: 16 }}
+                bodyStyle={{ padding: 16, minHeight: 96 }}
                 hoverable
               >
                 <CardIluminacionReconocimiento rI={detailsIlum?.rilum ?? false} rec={detailsIlum?.rec || false} idIlum={id} />
@@ -217,7 +306,7 @@ export default function DetailsIluminacion() {
                   </Space>
                 }
                 style={{ borderRadius: 16 }}
-                bodyStyle={{ padding: 16 }}
+                bodyStyle={{ padding: 16, minHeight: 96 }}
                 hoverable
               >
                 <CardLightingDistribution di={detailsIlum?.dilum ?? false} rI={detailsIlum?.rilum ?? false} rec={detailsIlum?.rec || false} idIlum={id} />
@@ -235,7 +324,7 @@ export default function DetailsIluminacion() {
                   </Space>
                 }
                 style={{ borderRadius: 16 }}
-                bodyStyle={{ padding: 16 }}
+                bodyStyle={{ padding: 16, minHeight: 96 }}
                 hoverable
               >
                 <CardIluminacionHojaCampo hci={detailsIlum?.hci || false} di={detailsIlum?.dilum ?? false} rI={detailsIlum?.rilum ?? false} rec={detailsIlum?.rec || false} idIlum={id} />
@@ -255,6 +344,48 @@ export default function DetailsIluminacion() {
           </Col>
         </Row>
       )}
+      <Modal
+      title="Cambiar equipo"
+      open={openEquipoModal}
+      onCancel={() => {
+        if (!savingEquipo) setOpenEquipoModal(false);
+      }}
+      onOk={handleConfirmChangeEquipo}
+      okText="Guardar cambio"
+      cancelText="Cancelar"
+      confirmLoading={savingEquipo}
+      destroyOnClose
+    >
+  <Space direction="vertical" style={{ width: "100%" }} size={12}>
+    <Text type="secondary">
+      Equipo actual: <b>{detailsIlum?.machinelight?.equipoId ?? "N/A"}</b>
+    </Text>
+
+    {hasProgress && (
+      <Alert
+        type="warning"
+        showIcon
+        message="Este registro ya tiene avance"
+        description="Cambiar el equipo puede afectar la consistencia de los datos capturados (zonas, reconocimiento, distribución u hoja de campo)."
+      />
+    )}
+
+    <div>
+      <Text strong>Selecciona un nuevo equipo</Text>
+      <Select
+        style={{ width: "100%", marginTop: 8 }}
+        placeholder="Buscar / seleccionar equipo"
+        loading={loadingEquipos}
+        options={equiposOptions}
+        value={selectedEquipoId}
+        onChange={setSelectedEquipoId}
+        showSearch
+        optionFilterProp="label"
+        allowClear
+      />
+    </div>
+  </Space>
+</Modal>
     </div>
   );
 }

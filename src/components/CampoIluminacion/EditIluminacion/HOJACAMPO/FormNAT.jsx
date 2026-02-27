@@ -81,6 +81,7 @@ export default function FormNAT({
   onFinishOK,
   disabled = false,
   loading = false,
+  posicion,
 }) {
   const [form] = Form.useForm();
 
@@ -456,8 +457,16 @@ const restorePointsScroll = (panelKey) => {
     syncSharedPointField,
     form,
     disabled,
+    posiciones,
   }) {
     const nameBase = (pName, key) => [pName, key];
+
+    const posicionesOptions = useMemo(() => {
+      return (Array.isArray(posiciones) ? posiciones : [])
+        .filter(Boolean)
+        .map((p) => ({ value: String(p) }));
+    }, [posiciones]);
+
 
     const cellStyle = (isSticky = false) => ({
       ...excel.td,
@@ -539,18 +548,18 @@ const restorePointsScroll = (panelKey) => {
                 <td style={cellStyle(false)}>
                   <div style={excel.cell}>
                     <Form.Item name={nameBase(pField.name, "posicionTrabajo")} style={{ margin: 0 }}>
-                      <Input
+                      <AutoComplete
                         disabled={disabled}
-                        style={excel.inputLikeCell}
-                        onChange={(e) =>
-                          syncSharedPointField(
-                            blockIndexGlobal,
-                            pField.name,
-                            "posicionTrabajo",
-                            e.target.value
-                          )
+                        options={posiciones}
+                        onChange={(val) =>
+                          syncSharedPointField(blockIndexGlobal, pField.name, "posicionTrabajo", val)
                         }
-                      />
+                        onSelect={(val) =>
+                          syncSharedPointField(blockIndexGlobal, pField.name, "posicionTrabajo", val)
+                        }
+                      >
+                        <Input disabled={disabled} style={excel.inputLikeCell} />
+                      </AutoComplete>
                     </Form.Item>
                   </div>
                 </td>
@@ -980,6 +989,7 @@ const restorePointsScroll = (panelKey) => {
                                                       autoCompleteOptions={autoCompleteOptions}
                                                       syncSharedPointField={syncSharedPointField}
                                                       onRemovePoint={(pointIndex) => removePointFromSet(i, pointIndex)}
+                                                      posiciones={posicion}
                                                     />
                                                   </div>
                                                 </div>

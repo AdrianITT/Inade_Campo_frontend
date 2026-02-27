@@ -44,8 +44,8 @@ export default function CreateReconocomietoB(){
                children:(
                <FormatoC
                onFinishOK={(rows, observacion)=>{
-                    console.log("onFinishok : ", rows);
-                    console.log("observacion", observacion);
+                    // console.log("onFinishok : ", rows);
+                    // console.log("observacion", observacion);
                     const r = insertDataC({rows,id, observacion});
                     if (r) {
                          navigate(`/DetallesIluminacion/${id}`);

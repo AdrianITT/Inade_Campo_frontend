@@ -2,7 +2,7 @@ import { Tabs, message, Button } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getDataAreaTrabajo } from "./hook/getData";
-import { getExisces } from '../../../apis/ApiCampo/IluminacionApi.js';
+import { getExisces, getAllDataAreaTrabajo } from '../../../apis/ApiCampo/IluminacionApi.js';
 import FormHC from "./HOJACAMPO/FormHC.jsx";
 import FormNAT from "./HOJACAMPO/FormNAT.jsx";
 import { insertDataLuzART } from "./HOJACAMPO/insertDataART.jsx";
@@ -12,6 +12,9 @@ export default function CreateReconocomietoA() {
   const [areaOption, setAreaOptions] = useState([]);
   const { id } = useParams();
   const navigate = useNavigate();
+  const [areaNat, setAreaNat] = useState([]);
+  const [areaArt, setAreaArt] = useState([]);
+  const POSICION =[{value:"Parado"}, {value:"Sentado"}, {value: "Parado/Sentado"}];
 
 
   // ✅ bloqueo ART
@@ -29,11 +32,26 @@ export default function CreateReconocomietoA() {
       try {
         const r = await getDataAreaTrabajo(id);
         const c = await getExisces(id);
+        const area_art_nat = await getAllDataAreaTrabajo(id);
+
+        
         setArtSubmitting(c.data.exists_art);
         setNatSubmitting(c.data.exists_nat);
      //    console.log("c: ",c);
         const areas = Array.isArray(r?.data?.areas) ? r.data.areas : [];
-        if (!cancelled) setAreaOptions(areas);
+
+        const dataNat = Array.isArray(area_art_nat?.data?.nat) ? area_art_nat.data.nat : [];
+        const dataArt = Array.isArray(area_art_nat?.data?.art) ? area_art_nat.data.art : [];
+
+        const natArea = dataNat.map((x) => x.areaTrabajo).filter(Boolean);
+
+        const artArea = dataArt.map((x) => x.areaTrabajo).filter(Boolean);
+
+        if (!cancelled){
+          setAreaOptions(areas);
+          setAreaArt(artArea);
+          setAreaNat(natArea);
+        }
       } catch (error) {
         message.error("Error al cargar áreas");
         console.error(error);
@@ -81,7 +99,8 @@ export default function CreateReconocomietoA() {
               setArtSubmitting(false);
             }
           }}
-          areasPorFila={areaOption}
+          areasPorFila={areaArt}
+          posicion={POSICION}
         />
       ),
     },
@@ -116,7 +135,8 @@ export default function CreateReconocomietoA() {
               setNatSubmitting(false);
             }
           }}
-          areasPorFila={areaOption}
+          areasPorFila={areaNat}
+          posicion={POSICION}
         />
       ),
     },

@@ -10,7 +10,7 @@ import {
 export const insertDataIluminacionNAT = async ({values, id}) => {
      try{
           //ciclo de dos for anidados
-          console.log("datos de ART: ",values.length, "Id Ilum: ", id);
+          // console.log("datos de ART: ",values.length, "Id Ilum: ", id);
           
           for ( let i = 0 ; i < values.length ; i++){
                const block = values[i];
@@ -35,7 +35,7 @@ export const insertDataIluminacionNAT = async ({values, id}) => {
                     "iluminacion": id,
                     "influenciaLuz": block?.InfluyeLuz ?? null,
                };
-               console.log("chci: ",chci);
+               // console.log("chci: ",chci);
                //console.log("container : ",i);
                const r = await createHojaCampoIlum(chci);
                const fechaStr = block.fechaMonitoreo?.format("YYYY-MM-DD") ?? null;
@@ -46,7 +46,7 @@ export const insertDataIluminacionNAT = async ({values, id}) => {
                     // "fechaMonitoreo":
                };
                const pos = i % 3;
-               console.log("pos: ", pos);
+               // console.log("pos: ", pos);
 
                if ( pos === 0 ){
                     cdi.horaInicio = timeStr;
@@ -106,7 +106,7 @@ export const insertDataIluminacionNAT = async ({values, id}) => {
                     //console.log("lux1: ",lux1);
                }
           }
-          console.log("Fin del ciclo total")
+          // console.log("Fin del ciclo total")
           return false;
 
      }catch(error)

@@ -88,6 +88,7 @@ export default function FormHCArtificial({
   onFinishOK,
   disabled = false,
   loading = false,
+  posicion,
 }) {
   const [form] = Form.useForm();
 
@@ -97,6 +98,7 @@ export default function FormHCArtificial({
   // ✅ responsive real (resize)
   const [isSmall, setIsSmall] = useState(getIsSmall());
   useEffect(() => {
+    // console.log("posicion: 1",posicion)
     const mq = window.matchMedia("(max-width: 576px)");
     const handler = () => setIsSmall(mq.matches);
     handler();
@@ -597,6 +599,7 @@ export default function FormHCArtificial({
                                             autoCompleteOptions={autoCompleteOptions}
                                             form={form}
                                             disabled={disabled}
+                                            posiciones={posicion}
                                           />
                                         </div>
                                       </div>

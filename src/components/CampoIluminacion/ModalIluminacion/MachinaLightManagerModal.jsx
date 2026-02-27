@@ -342,12 +342,12 @@ function UpsertMachineLightModal({ open, machine, onCancel, onSaved }) {
 
         <Card
           size="small"
-          title="Calibraciones (máximo 20)"
+          title="Calibraciones (máximo 10)"
           extra={
             <Form.Item noStyle shouldUpdate>
               {() => {
                 const list = form.getFieldValue("calibraciones") || [];
-                const disabledAdd = list.length >= 20;
+                const disabledAdd = list.length >= 10;
                 return (
                   <Button
                     type="dashed"
@@ -403,7 +403,7 @@ function UpsertMachineLightModal({ open, machine, onCancel, onSaved }) {
             )}
           </Form.List>
 
-          <Text type="secondary">Si agregas más de 20, solo se guardarán las primeras 20.</Text>
+          <Text type="secondary">Si agregas más de 10, solo se guardarán las primeras 10.</Text>
         </Card>
       </Form>
     </Modal>

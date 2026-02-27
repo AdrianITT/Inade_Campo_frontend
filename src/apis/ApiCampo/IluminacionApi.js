@@ -12,6 +12,7 @@ export const createIluminacion = (data_ot) => Api_Host.get(`/campo/get_iluminaci
 export const getDetallesIluminacion = (id) => Api_Host.get(`/campo/get_daetails_iluminacion/${id}/`);
 
 export const createIlum = (data) => Api_Host.post("/campo/iluminacion/",data);
+export const updateIlumnacionMachine = (id, data) => Api_Host.patch(`/campo/iluminacion/${id}/`, data);
 //PuntoIluminacion
 export const createPuntoIluminacion = (data) => Api_Host.post("/campo/PuntoIluminacion/",data);
 
@@ -73,6 +74,7 @@ export const updateE1 = (id, data) => Api_Host.patch(`/campo/iluminacionE1/${id}
 
 //get data Hojas de campo Iluminacion
 export const getAllDataHojaIlum = (id) => Api_Host.get(`/campo/get_data_hoja_iluminacion/${id}/`);
+export const getAllDataAreaTrabajo = (id) => Api_Host.get(`/campo/nat_or_nart_lightning/${id}/`);
 
 
 // Lista máquinas
