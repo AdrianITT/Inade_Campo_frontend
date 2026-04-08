@@ -26,7 +26,7 @@ export const insertDataIluminacionNAT = async ({values, id}) => {
                     const ss = String(hora.getSeconds()).padStart(2, "0");
                     timeStr = `${hh}:${mm}:${ss}`;
                }else{
-                    message.error(`Bloque #${i + 1}: hora inválida`);
+                    message.error(`Bloque #${i + 1}: se guardo cono los datos vacios`);
                }
                //console.log(`${hh}:${mm}:${ss}`);
 

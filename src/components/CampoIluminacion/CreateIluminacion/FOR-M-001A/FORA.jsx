@@ -2,8 +2,30 @@ import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MonitoreoCard, { createEmptyCard } from "./MonitoreoCard";
 import {InsertData} from "./insertData";
-import { message, Spin, Modal, Button, Col, Affix, Card, Row, Grid, Typography, Space } from "antd";
+import { message,
+  Spin, 
+  Modal, 
+  Button, 
+  Col, 
+  Affix, 
+  Card, 
+  Row, 
+  Grid, 
+  Typography, 
+  Space,
+  Alert,
+  Upload,
+ } from "antd";
 import { useBeforeUnload, useNavigationPrompt } from "../../../hooks/DetectTabClosure";
+import { useOnlineStatus } from "./useOnlineStatus";
+import {
+  clearDraft,
+  downloadJsonFile,
+  loadDraft,
+  readJsonFile,
+  saveDraft,
+  validateImportedDraft,
+} from "./draftImportExport";
 // import { useBeforeUnload, useNavigationPrompt} from "../../hooks/DetectTabClosure";
 const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;
@@ -27,6 +49,36 @@ export default function FormatoA({onFinishOK}) {
     useBeforeUnload(shouldBlock);
      
     useNavigationPrompt(shouldBlock);
+
+    const isOnline = useOnlineStatus();
+    const scopeId = useMemo(() => `formatoA:${id ?? "default"}`, [id]);
+    const [draftTick, setDraftTick] = useState(0);
+
+    useEffect(() => {
+      const draft = loadDraft({ scopeId });
+      const savedCards = draft?.values?.cards;
+
+      if (Array.isArray(savedCards) && savedCards.length > 0) {
+        hydratingRef.current = true;
+        setCards(savedCards);
+        setIsDirty(true); // o false, según tu UX
+        hydratingRef.current = false;
+      }
+    }, [scopeId]);
+
+    useEffect(() => {
+    if (hydratingRef.current) return;
+
+    const timer = setTimeout(() => {
+      saveDraft({
+        scopeId,
+        values: { cards,}
+      });
+      setDraftTick((t) => t + 1);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [cards, scopeId]);
 
   const addCard = () => {
     setCards((prev) => {
@@ -66,6 +118,7 @@ export default function FormatoA({onFinishOK}) {
     //  console.log("respuesta: ",r);
     //  console.log("PromiseResult", r.PromiseResult);
      if(r){
+      clearDraft({ scopeId });
       setIsDirty(false);
       onFinishOK?.();
       navigate(`/DetallesIluminacion/${id}`); // cambia la ruta a la tuya
@@ -85,6 +138,42 @@ export default function FormatoA({onFinishOK}) {
 
   const headerRight = useMemo(() => {
     // En móvil/tablet: botones “full width” y ordenados
+        const onExport = () => {
+          downloadJsonFile({
+            filename: `FOR-M-001A_${id}_draft.json`,
+            data: {
+              version: 1,
+              scopeId,
+              exportedAt: new Date().toISOString(),
+              values: {
+                cards,
+              },
+            },
+          });
+          message.success("Exportación generada");
+        };
+    
+        const uploadProps = {
+          accept: "application/json",
+          showUploadList: false,
+          beforeUpload: async (file) => {
+            try {
+              const payload = await readJsonFile(file);
+              const result = validateImportedDraft(payload);
+              if (!result.ok) {
+                message.error(result.message);
+                return Upload.LIST_IGNORE;
+              }
+              setCards(result.values.cards);
+              setIsDirty(true);
+              message.success("Datos importados al formulario");
+            } catch (e) {
+              message.error("No se pudo leer el archivo JSON");
+            }
+            return Upload.LIST_IGNORE;
+          },
+        };
+    
     if (isMobile || isTablet) {
       return (
         <Row gutter={[8, 8]} style={{ width: "100%" }}>
@@ -97,6 +186,18 @@ export default function FormatoA({onFinishOK}) {
             <Button block onClick={confirmarEnvio} loading={loading} disabled={!isDirty}>
               Guardar cambios
             </Button>
+          </Col>
+                    <Col xs={24} sm={12}>
+            <Button block onClick={onExport} disabled={loading}>
+              Exportar
+            </Button>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Upload {...uploadProps}>
+              <Button block disabled={loading}>
+                Importar
+              </Button>
+            </Upload>
           </Col>
         </Row>
       );
@@ -111,12 +212,30 @@ export default function FormatoA({onFinishOK}) {
         <Button onClick={confirmarEnvio} loading={loading} disabled={!isDirty}>
           Guardar cambios
         </Button>
+        <Button onClick={onExport} disabled={loading}>
+          Exportar
+        </Button>
+        <Upload {...uploadProps}>
+          <Button disabled={loading}>Importar</Button>
+        </Upload>
       </Space>
     );
   }, [isMobile, isTablet, addCard, onSubmit, loading, isDirty]);
 
+
+
   return (
     <form onSubmit={confirmarEnvio} style={ui.page}>
+              {!isOnline && (
+                <div style={{ marginBottom: 12 }}>
+                  <Alert
+                    type="warning"
+                    showIcon
+                    message="Sin conexión a Internet"
+                    description="Tus cambios se están guardando localmente. Exporta el borrador si necesitas respaldo adicional."
+                  />
+                </div>
+              )}
       <div style={ui.container}>
         {/* Header responsive */}
         <Card style={ui.headerCard} bodyStyle={{ padding: isMobile ? 12 : 16 }}>

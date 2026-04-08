@@ -1,12 +1,21 @@
 // FOR-M-001A/FORA.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Modal, Button, Space, Row, Col, Typography, Card, Grid, Affix } from "antd";
+import { Modal, Button, Space, Row, Col, Typography, Card, Grid, Affix, Alert, Upload, message } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import MonitoreoCard from "./MonitoreoCard";
 import { createEmptyCard, normalizeCardsFromApi } from "./cardFactory";
 import { getAllDataCalculoZona } from "../../../../apis/ApiCampo/IluminacionApi";
 import { saveFormatoA } from "./saveFormatoA";
 import { useBeforeUnload, useNavigationPrompt } from "../../../hooks/DetectTabClosure";
+import { useOnlineStatus } from "./useOnlineStatus";
+import {
+  clearDraft,
+  downloadJsonFile,
+  loadDraft,
+  readJsonFile,
+  saveDraft,
+  validateImportedDraft,
+} from "./draftImportExport";
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -22,6 +31,7 @@ export default function FormatoA({ onFinishOK }) {
 
   const { id } = useParams();
   const navigate = useNavigate();
+  const isOnline = useOnlineStatus();
 
   const screens = useBreakpoint();
   const isMobile = !screens.sm;         // < 576
@@ -38,6 +48,25 @@ export default function FormatoA({ onFinishOK }) {
         setCards(base);
         setCarded(base);
         setIsDirty(false);
+
+        const draft = loadDraft({ iluminacionId: id });
+        if (draft?.cards?.length) {
+          Modal.confirm({
+            title: "Se encontró un respaldo local",
+            content:
+              "Hay un borrador guardado localmente. ¿Quieres restaurarlo para no perder cambios?",
+            okText: "Restaurar",
+            cancelText: "Ignorar",
+            onOk: () => {
+              setCards(draft.cards);
+              setIsDirty(true);
+              message.success("Borrador restaurado");
+            },
+            onCancel: () => {
+              // no hacemos nada, pero mantenemos el draft por si acaso
+            },
+          });
+        }
       } catch (e) {
         setCards([createEmptyCard()]);
         setCarded([createEmptyCard()]);
@@ -48,6 +77,15 @@ export default function FormatoA({ onFinishOK }) {
     };
     load();
   }, [id]);
+
+  // Autosave local (debounce) para no perder cambios en movimiento/offline
+  useEffect(() => {
+    if (!isDirty) return;
+    const t = setTimeout(() => {
+      saveDraft({ iluminacionId: id, cards });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [cards, id, isDirty]);
 
   const addCard = () => {
     setCards((prev) => [...prev, createEmptyCard()]);
@@ -71,6 +109,7 @@ export default function FormatoA({ onFinishOK }) {
     const ok = await saveFormatoA({ cards, iluminacionId: id, carded });
     if (ok) {
       setIsDirty(false);
+      clearDraft({ iluminacionId: id });
       onFinishOK?.();
       navigate(`/DetallesIluminacion/${id}`);
     }
@@ -95,6 +134,40 @@ export default function FormatoA({ onFinishOK }) {
 
   const headerRight = useMemo(() => {
     // En móvil/tablet: botones “full width” y ordenados
+    const onExport = () => {
+      downloadJsonFile({
+        filename: `FOR-M-001A_${id}_draft.json`,
+        data: {
+          version: 1,
+          iluminacionId: id,
+          exportedAt: new Date().toISOString(),
+          cards,
+        },
+      });
+      message.success("Exportación generada");
+    };
+
+    const uploadProps = {
+      accept: "application/json",
+      showUploadList: false,
+      beforeUpload: async (file) => {
+        try {
+          const payload = await readJsonFile(file);
+          const result = validateImportedDraft(payload);
+          if (!result.ok) {
+            message.error(result.message);
+            return Upload.LIST_IGNORE;
+          }
+          setCards(result.cards);
+          setIsDirty(true);
+          message.success("Datos importados al formulario");
+        } catch (e) {
+          message.error("No se pudo leer el archivo JSON");
+        }
+        return Upload.LIST_IGNORE;
+      },
+    };
+
     if (isMobile || isTablet) {
       return (
         <Row gutter={[8, 8]} style={{ width: "100%" }}>
@@ -107,6 +180,18 @@ export default function FormatoA({ onFinishOK }) {
             <Button block onClick={onClickGuardar} loading={loading} disabled={!isDirty}>
               Guardar cambios
             </Button>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Button block onClick={onExport} disabled={loading}>
+              Exportar
+            </Button>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Upload {...uploadProps}>
+              <Button block disabled={loading}>
+                Importar
+              </Button>
+            </Upload>
           </Col>
         </Row>
       );
@@ -121,15 +206,31 @@ export default function FormatoA({ onFinishOK }) {
         <Button onClick={onClickGuardar} loading={loading} disabled={!isDirty}>
           Guardar cambios
         </Button>
+        <Button onClick={onExport} disabled={loading}>
+          Exportar
+        </Button>
+        <Upload {...uploadProps}>
+          <Button disabled={loading}>Importar</Button>
+        </Upload>
       </Space>
     );
-  }, [isMobile, isTablet, addCard, onClickGuardar, loading, isDirty]);
+  }, [isMobile, isTablet, addCard, onClickGuardar, loading, isDirty, id, cards]);
 
   return (
     <form onSubmit={onSubmitForm} style={ui.page}>
       <div style={ui.container}>
         {/* Header responsive */}
         <Card style={ui.headerCard} bodyStyle={{ padding: isMobile ? 12 : 16 }}>
+          {!isOnline && (
+            <div style={{ marginBottom: 12 }}>
+              <Alert
+                type="warning"
+                showIcon
+                message="Sin conexión a Internet"
+                description="Tus cambios se están guardando localmente. Exporta el borrador si necesitas respaldo adicional."
+              />
+            </div>
+          )}
           <Row gutter={[12, 12]} align="middle">
             <Col xs={24} lg={12}>
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>

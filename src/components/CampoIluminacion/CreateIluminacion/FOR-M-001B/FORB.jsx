@@ -13,9 +13,20 @@ import {
   Affix,
   Spin,
   Typography,
+  Alert,
+  Upload,
 } from "antd";
 import { flushSync } from "react-dom";
 import { useBeforeUnload, useNavigationPrompt } from "../../../hooks/DetectTabClosure";
+import { useOnlineStatus } from "./useOnlineStatus";
+import {
+  clearDraft,
+  downloadJsonFile,
+  loadDraft,
+  readJsonFile,
+  saveDraft,
+  validateImportedDraft,
+} from "./draftImportExport";
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -45,6 +56,9 @@ export default function FormatoB({ areasPorFila = [], onFinishOK, areasPunto = [
   const hydratingRef = useRef(false);
 
   const { isMobile, isTablet } = useMedia();
+  const isOnline = useOnlineStatus();
+  const scopeId = "default";
+  const [draftTick, setDraftTick] = useState(0);
 
   const shouldBlock = isDirty && !loading && !bypassPrompt;
   useBeforeUnload(shouldBlock);
@@ -72,6 +86,25 @@ export default function FormatoB({ areasPorFila = [], onFinishOK, areasPunto = [
 
       form.setFieldsValue({ rows });
       setIsDirty(false);
+
+      const draft = loadDraft({ scopeId });
+      if (draft?.values) {
+        Modal.confirm({
+          title: "Se encontró un respaldo local",
+          content: "Hay un borrador guardado localmente. ¿Quieres restaurarlo?",
+          okText: "Restaurar",
+          cancelText: "Ignorar",
+          onOk: () => {
+            hydratingRef.current = true;
+            form.setFieldsValue(draft.values);
+            setTimeout(() => {
+              hydratingRef.current = false;
+            }, 0);
+            setIsDirty(true);
+            message.success("Borrador restaurado");
+          },
+        });
+      }
     } catch (error) {
       message.error("Error");
     } finally {
@@ -81,6 +114,15 @@ export default function FormatoB({ areasPorFila = [], onFinishOK, areasPunto = [
       }, 0);
     }
   }, [areasPorFila, areasPunto, form]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const t = setTimeout(() => {
+      const values = form.getFieldsValue(true);
+      saveDraft({ scopeId, values });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [draftTick, form, isDirty, scopeId]);
 
   const confirmarEnvio = (values) => {
     Modal.confirm({
@@ -108,6 +150,9 @@ export default function FormatoB({ areasPorFila = [], onFinishOK, areasPunto = [
 
       message.success("FOR-M-001B guardado correctamente.");
       onFinishOK?.(rows, observacion);
+      clearDraft({ scopeId });
+      setIsDirty(false);
+      setBypassPrompt(false);
     } catch (err) {
       message.error("Error al guardar");
       setBypassPrompt(false);
@@ -118,23 +163,68 @@ export default function FormatoB({ areasPorFila = [], onFinishOK, areasPunto = [
   };
 
   const tareasOptions = [
-    { value: "En exteriores." },
-    { value: "En Interiores." },
-    { value: "En interiores." },
-    { value: "Requerimiento visual simple." },
-    { value: "Distinción moderada de detalles." },
-    { value: "Distincion clara de detalles." },
-    { value: "Distinción clara de detalles." },
-    { value: "Distinción fina de detalle." },
-    { value: "Alta exactitud en la distinción de detalles." },
-    { value: "Alto grado de especialización en la distinción de detalles." },
+    { value: "En exteriores" },
+    { value: "En Interiores" },
+    { value: "En interiores" },
+    { value: "Requerimiento visual simple" },
+    { value: "Distinción moderada de detalles" },
+    { value: "Distincion clara de detalles" },
+    { value: "Distinción clara de detalles" },
+    { value: "Distinción fina de detalle" },
+    { value: "Alta exactitud en la distinción de detalles" },
+    { value: "Alto grado de especialización en la distinción de detalles" },
   ];
+
+  const onExport = () => {
+    const values = form.getFieldsValue(true);
+    downloadJsonFile({
+      filename: "FOR-M-001B_create_draft.json",
+      data: { version: 1, exportedAt: new Date().toISOString(), values },
+    });
+    message.success("Exportación generada");
+  };
+
+  const uploadProps = {
+    accept: "application/json",
+    showUploadList: false,
+    beforeUpload: async (file) => {
+      try {
+        const payload = await readJsonFile(file);
+        const result = validateImportedDraft(payload);
+        if (!result.ok) {
+          message.error(result.message);
+          return Upload.LIST_IGNORE;
+        }
+        hydratingRef.current = true;
+        form.setFieldsValue(result.values);
+        setTimeout(() => {
+          hydratingRef.current = false;
+        }, 0);
+        setIsDirty(true);
+        setDraftTick((v) => v + 1);
+        message.success("Datos importados al formulario");
+      } catch {
+        message.error("No se pudo leer el archivo JSON");
+      }
+      return Upload.LIST_IGNORE;
+    },
+  };
 
   return (
     <div style={ui.page}>
       <div style={ui.container}>
         {/* Header sticky */}
         <Card style={ui.headerCard} bodyStyle={{ padding: isMobile ? 12 : 16 }}>
+          {!isOnline && (
+            <div style={{ marginBottom: 12 }}>
+              <Alert
+                type="warning"
+                showIcon
+                message="Sin conexión a Internet"
+                description="Tus cambios se están guardando localmente. Exporta el borrador si necesitas respaldo adicional."
+              />
+            </div>
+          )}
           <Row gutter={[12, 12]} align="middle">
             <Col xs={24} lg={14}>
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -159,6 +249,14 @@ export default function FormatoB({ areasPorFila = [], onFinishOK, areasPunto = [
                 >
                   Guardar
                 </Button>
+                <Button onClick={onExport} disabled={loading} block={isMobile}>
+                  Exportar
+                </Button>
+                <Upload {...uploadProps}>
+                  <Button disabled={loading} block={isMobile}>
+                    Importar
+                  </Button>
+                </Upload>
               </Space>
             </Col>
           </Row>
@@ -173,6 +271,7 @@ export default function FormatoB({ areasPorFila = [], onFinishOK, areasPunto = [
             onValuesChange={() => {
               if (hydratingRef.current) return;
               setIsDirty(true);
+              setDraftTick((v) => v + 1);
             }}
           >
             {/* Carrusel horizontal (se queda porque te gusta) */}

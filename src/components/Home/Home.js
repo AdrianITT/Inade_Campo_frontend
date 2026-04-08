@@ -156,7 +156,7 @@ const Home = () => {
             </Col>
 
             {/* Usuarios */}
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+            <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
               <div>
                 <Link to="/usuario">
                   <Card className="card-custom" title="Usuarios" bordered={false}>
@@ -168,14 +168,29 @@ const Home = () => {
               </div>
             </Col>
 
-            {/* Próximamente */}
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+            {/* Iluminacion */}
+            <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
               <div>
                 <Link to="/Iluminacion">
                   <Card className="card-custom" title="iluminacion" bordered={false}>
                     <div className="icon-container">
                       <BulbTwoTone />
                       {/* <Badge status="processing" /> */}
+                    </div>
+                  </Card>
+                </Link>
+              </div>
+            </Col>
+
+            {/* Vibraciones */}
+            <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
+              <div>
+                <Link to="/GetOrCreateVibracionesPanel">
+                  <Card className="card-custom" title="Vibraciones" bordered={false}>
+                    <div className="icon-container">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" class="bi bi-speaker" viewBox="0 0 24 24">
+                        <path d="m14.914,24.021l-2.914-14.085-2.914,14.085-3.095-12.534-2.299,9.146L.809,13h-.809v-2h2.191l1.116,2.957L6.009,3.213l2.905,11.767L12,.064l3.086,14.915,2.905-11.767,2.701,10.744,1.116-2.957h2.191v2h-.809l-2.884,7.633-2.299-9.146-3.095,12.534Z" fill="#0e8aff" fill-opacity="1" data-original-color="#000000ff" stroke="none" stroke-opacity="1"/>
+                      </svg>
                     </div>
                   </Card>
                 </Link>

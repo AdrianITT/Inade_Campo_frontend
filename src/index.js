@@ -47,6 +47,10 @@ import EditarReconocimientoB from "./components/CampoIluminacion/EditIluminacion
 import EditarReconocimientoC from "./components/CampoIluminacion/EditIluminacion/ReconocimientoC.jsx";
 import CreateHojaIluminacion from "./components/CampoIluminacion/CreateIluminacion/HojaCampoIlum.jsx";
 import EditarHojaIluminacion from "./components/CampoIluminacion/EditIluminacion/HojaCampoIlum.jsx";
+// Vibraciones
+import ExcelUploader from "./components/CampoVibraciones/FileVibraciones.jsx";
+import GetOrCreateVibracionesPanel from "./components/CampoVibraciones/GetOrCreateVibraciones/GetOrCreateVibracionesPanel.jsx";
+import DetallesVibracione from "./components/CampoVibraciones/DetallesVibracion/DetallesVibracion.jsx";
 // import ARPage from "./components/CampoAguas/AguasResiduales/NoEnUso/ARPage.jsx";
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -136,8 +140,8 @@ const AppRouter = () => {
           <Route path= "/insert_id_laboratorio/:id" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion','LaboratorioOrganizacion', 'Administradororganizacion']}><EditarCustodia /></ProtectedRoute>} />
           <Route path= "/usuario" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><Usuario /></ProtectedRoute>} />
           <Route path= "/EditarUsuario/:id" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><EditarUsuario /></ProtectedRoute>} />
-          <Route path= "/Iluminacion" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><IluminacionGate /></ProtectedRoute>} />
-          <Route path= "/DetallesIluminacion/:id" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion']}><DetailsIluminacion /></ProtectedRoute>} />
+          <Route path= "/Iluminacion" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion',"MuestreadorOrganizacion",]}><IluminacionGate /></ProtectedRoute>} />
+          <Route path= "/DetallesIluminacion/:id" element={<ProtectedRoute allowedRoles={['AdministradorLaboratorioOrganizacion', 'Administradororganizacion', 'AdministradorMuestreadorOrganizacion',"MuestreadorOrganizacion",]}><DetailsIluminacion /></ProtectedRoute>} />
           {/* <Route path= "/ar_page" element={<ProtectedRoute allowedRoles={['LaboratorioOrganizacion', 'Administradororganizacion']}><ARPage/></ProtectedRoute>} /> */}
           {/* ARPage  */}
         </Route>
@@ -506,6 +510,7 @@ const router = createBrowserRouter([
               <ProtectedRoute
                 allowedRoles={[
                   "AdministradorLaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
                   "Administradororganizacion",
                   "AdministradorMuestreadorOrganizacion",
                 ]}
@@ -520,6 +525,7 @@ const router = createBrowserRouter([
               <ProtectedRoute
                 allowedRoles={[
                   "AdministradorLaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
                   "Administradororganizacion",
                   "AdministradorMuestreadorOrganizacion",
                 ]}
@@ -534,6 +540,7 @@ const router = createBrowserRouter([
               <ProtectedRoute
                 allowedRoles={[
                   "AdministradorLaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
                   "Administradororganizacion",
                   "AdministradorMuestreadorOrganizacion",
                 ]}
@@ -548,6 +555,7 @@ const router = createBrowserRouter([
               <ProtectedRoute
                 allowedRoles={[
                   "AdministradorLaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
                   "Administradororganizacion",
                   "AdministradorMuestreadorOrganizacion",
                 ]}
@@ -562,6 +570,7 @@ const router = createBrowserRouter([
               <ProtectedRoute
                 allowedRoles={[
                   "AdministradorLaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
                   "Administradororganizacion",
                   "AdministradorMuestreadorOrganizacion",
                 ]}
@@ -576,6 +585,7 @@ const router = createBrowserRouter([
               <ProtectedRoute
                 allowedRoles={[
                   "AdministradorLaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
                   "Administradororganizacion",
                   "AdministradorMuestreadorOrganizacion",
                 ]}
@@ -590,6 +600,7 @@ const router = createBrowserRouter([
               <ProtectedRoute
                 allowedRoles={[
                   "AdministradorLaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
                   "Administradororganizacion",
                   "AdministradorMuestreadorOrganizacion",
                 ]}
@@ -604,6 +615,7 @@ const router = createBrowserRouter([
               <ProtectedRoute
                 allowedRoles={[
                   "AdministradorLaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
                   "Administradororganizacion",
                   "AdministradorMuestreadorOrganizacion",
                 ]}
@@ -618,6 +630,7 @@ const router = createBrowserRouter([
               <ProtectedRoute
                 allowedRoles={[
                   "AdministradorLaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
                   "Administradororganizacion",
                   "AdministradorMuestreadorOrganizacion",
                 ]}
@@ -626,17 +639,63 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
-                    {
+          {
             path: "EditarHojaIluminacion/:id",
             element: (
               <ProtectedRoute
                 allowedRoles={[
                   "AdministradorLaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
                   "Administradororganizacion",
                   "AdministradorMuestreadorOrganizacion",
                 ]}
               >
                 <EditarHojaIluminacion/>
+              </ProtectedRoute>
+            ),
+          },
+          // {
+          //   path: "UpArchive",
+          //   element: (
+          //     <ProtectedRoute
+          //       allowedRoles={[
+          //         "AdministradorLaboratorioOrganizacion",
+          //         "MuestreadorOrganizacion",
+          //         "Administradororganizacion",
+          //         "AdministradorMuestreadorOrganizacion",
+          //       ]}
+          //     >
+          //       <ExcelUploader/>
+          //     </ProtectedRoute>
+          //   ),
+          // },
+          {
+            path: "GetOrCreateVibracionesPanel",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <GetOrCreateVibracionesPanel/>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "DetallesVibracion/:id",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "AdministradorLaboratorioOrganizacion",
+                  "MuestreadorOrganizacion",
+                  "Administradororganizacion",
+                  "AdministradorMuestreadorOrganizacion",
+                ]}
+              >
+                <DetallesVibracione/>
               </ProtectedRoute>
             ),
           },

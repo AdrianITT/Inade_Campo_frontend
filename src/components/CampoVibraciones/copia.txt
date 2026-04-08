@@ -1,0 +1,86 @@
+import React, { useState } from "react";
+import { Upload, Button, Card, Typography, message } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+import {uploadExcels} from "../../apis/ApiCampo/ApiVibraciones";
+
+const { Title, Text } = Typography;
+
+const ExcelUploader = () => {
+  const [fileList, setFileList] = useState([]);
+
+  const uploadProps = {
+    multiple: true, // permite varios archivos
+    accept: ".xls,.xlsx", // solo archivos Excel
+    beforeUpload: () => false, // evita subida automática
+    fileList,
+    onChange: ({ fileList: newFileList }) => {
+      setFileList(newFileList);
+    },
+    onRemove: (file) => {
+      const updatedList = fileList.filter((item) => item.uid !== file.uid);
+      setFileList(updatedList);
+    },
+  };
+
+  const handleSubmit = async () => {
+    if (fileList.length === 0) {
+      message.warning("Selecciona al menos un archivo Excel");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+
+      fileList.forEach((file) => {
+        formData.append("files", file.originFileObj);
+      });
+
+      const response = await uploadExcels(formData);
+
+      const contentType = response.headers["content-type"];
+      let fileName = "archivo_descargado";
+
+      if (contentType.includes("application/zip")) {
+        fileName = "excels_modificados.zip";
+      } else {
+        fileName = "archivo_modificado.xlsx";
+      }
+
+      const url = window.URL.createObjectURL(response.data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      message.success("Archivos procesados correctamente");
+    } catch (error) {
+      console.error(error);
+      message.error("Error al procesar los archivos");
+      
+    }
+  };
+
+  return (
+    <Card style={{ maxWidth: 600, margin: "40px auto" }}>
+      <Title level={3}>Subir archivos Excel</Title>
+      <Text>
+        Selecciona uno o varios archivos con extensión .xls o .xlsx
+      </Text>
+
+      <div style={{ marginTop: 20, marginBottom: 20 }}>
+        <Upload {...uploadProps}>
+          <Button icon={<UploadOutlined />}>Seleccionar archivos</Button>
+        </Upload>
+      </div>
+
+      <Button type="primary" onClick={handleSubmit}>
+        Procesar archivos
+      </Button>
+    </Card>
+  );
+};
+
+export default ExcelUploader;

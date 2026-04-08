@@ -14,9 +14,20 @@ import {
   Typography,
   Spin,
   Affix,
+  Alert,
+  Upload,
 } from "antd";
 import { buildRowsCByIndex } from "./mapperC";
 import { useBeforeUnload, useNavigationPrompt } from "../../../hooks/DetectTabClosure";
+import { useOnlineStatus } from "./useOnlineStatus";
+import {
+  clearDraft,
+  downloadJsonFile,
+  loadDraft,
+  readJsonFile,
+  saveDraft,
+  validateImportedDraft,
+} from "./draftImportExport";
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -58,6 +69,10 @@ export default function FormatoC({
 
   const { isMobile, isTablet } = useMedia();
   const cardWidth = isMobile ? "88vw" : isTablet ? 420 : 360;
+  const isOnline = useOnlineStatus();
+  const scopeId =
+    initialData?.distribucion_ilum?.id ?? initialData?.distribucion_ilum?.iluminacion ?? "default";
+  const [draftTick, setDraftTick] = useState(0);
 
   const existingRows = useMemo(() => {
     return Array.isArray(initialData?.dataTabla) ? initialData.dataTabla : [];
@@ -87,6 +102,25 @@ export default function FormatoC({
       });
 
       setIsDirty(false);
+
+      const draft = loadDraft({ scopeId });
+      if (draft?.values) {
+        Modal.confirm({
+          title: "Se encontró un respaldo local",
+          content: "Hay un borrador guardado localmente. ¿Quieres restaurarlo?",
+          okText: "Restaurar",
+          cancelText: "Ignorar",
+          onOk: () => {
+            hydratingRef.current = true;
+            form.setFieldsValue(draft.values);
+            setTimeout(() => {
+              hydratingRef.current = false;
+            }, 0);
+            setIsDirty(true);
+            message.success("Borrador restaurado");
+          },
+        });
+      }
     } catch (err) {
       console.error(err);
       message.error("Error al cargar datos");
@@ -97,6 +131,15 @@ export default function FormatoC({
       }, 0);
     }
   }, [areasPorFila, areasPunto, existingRows, initialObservacion, form]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const t = setTimeout(() => {
+      const values = form.getFieldsValue(true);
+      saveDraft({ scopeId, values });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [draftTick, form, isDirty, scopeId]);
 
   // ========= GUARDAR REAL =========
   const onFinishReal = async (values) => {
@@ -114,6 +157,7 @@ export default function FormatoC({
       if (ok) {
         message.success("FOR-M-001C guardado correctamente.");
         setIsDirty(false);
+        clearDraft({ scopeId });
         setTimeout(() => onSaveOK?.(), 0);
       } else {
         setIsDirty(true);
@@ -151,11 +195,56 @@ export default function FormatoC({
     });
   };
 
+  const onExport = () => {
+    const values = form.getFieldsValue(true);
+    downloadJsonFile({
+      filename: `FOR-M-001C_edit_${scopeId}_draft.json`,
+      data: { version: 1, exportedAt: new Date().toISOString(), values },
+    });
+    message.success("Exportación generada");
+  };
+
+  const uploadProps = {
+    accept: "application/json",
+    showUploadList: false,
+    beforeUpload: async (file) => {
+      try {
+        const payload = await readJsonFile(file);
+        const result = validateImportedDraft(payload);
+        if (!result.ok) {
+          message.error(result.message);
+          return Upload.LIST_IGNORE;
+        }
+        hydratingRef.current = true;
+        form.setFieldsValue(result.values);
+        setTimeout(() => {
+          hydratingRef.current = false;
+        }, 0);
+        setIsDirty(true);
+        setDraftTick((v) => v + 1);
+        message.success("Datos importados al formulario");
+      } catch {
+        message.error("No se pudo leer el archivo JSON");
+      }
+      return Upload.LIST_IGNORE;
+    },
+  };
+
   return (
     <div style={ui.page}>
       <div style={ui.container}>
         {/* Header sticky */}
         <Card style={ui.headerCard} bodyStyle={{ padding: isMobile ? 12 : 16 }}>
+          {!isOnline && (
+            <div style={{ marginBottom: 12 }}>
+              <Alert
+                type="warning"
+                showIcon
+                message="Sin conexión a Internet"
+                description="Tus cambios se están guardando localmente. Exporta el borrador si necesitas respaldo adicional."
+              />
+            </div>
+          )}
           <Row gutter={[12, 12]} align="middle">
             <Col xs={24} lg={14}>
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -185,6 +274,14 @@ export default function FormatoC({
                 >
                   Guardar cambios
                 </Button>
+                <Button onClick={onExport} disabled={loading} block={isMobile}>
+                  Exportar
+                </Button>
+                <Upload {...uploadProps}>
+                  <Button disabled={loading} block={isMobile}>
+                    Importar
+                  </Button>
+                </Upload>
               </Space>
             </Col>
           </Row>
@@ -197,6 +294,7 @@ export default function FormatoC({
             disabled={loading}
             onValuesChange={() => {
               if (!hydratingRef.current) setIsDirty(true);
+              if (!hydratingRef.current) setDraftTick((v) => v + 1);
             }}
           >
             {/* Carrusel horizontal (se mantiene) */}
@@ -236,7 +334,8 @@ export default function FormatoC({
                             placeholder="Selecciona"
                             options={[
                               { value: "Disperso", label: "Disperso" },
-                              { value: "Hileras", label: "Hileras" },
+                              { value: "Lineal", label: "Lineal" },
+                              // { value: "Hileras", label: "Hileras" },
                             ]}
                           />
                         </Form.Item>
@@ -251,7 +350,7 @@ export default function FormatoC({
                         >
                           {({ getFieldValue }) => {
                             const dist = getFieldValue(["rows", field.name, "distribucionlamparas"]);
-                            const isHileras = dist === "Hileras";
+                            const isHileras = dist === "Lineal";
 
                             return (
                               <>
