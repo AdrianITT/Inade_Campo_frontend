@@ -278,16 +278,16 @@ const FileVibraciones = ({dataCliente, idVibracion, onUploadSuccess}) => {
       const response = await uploadExcels(formData);
 
       const contentType = response.headers["content-type"] || "";
-      let fileName = "archivo_descargado.xlsx";
+      let fileName = `${dataCliente.codigo ?? "OT"}_vibracion_${idVibracion}_resultado.xlsx`;
 
       if (contentType.includes("application/zip")) {
-        fileName = "excels_modificados.zip";
+        fileName = `${dataCliente.codigo ?? "OT"}.zip`;
       } else if (
         contentType.includes(
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
       ) {
-        fileName = "archivo_modificado.xlsx";
+        fileName = `${dataCliente.codigo ?? "OT"}_vibracion_${idVibracion}_resultado.xlsx`;
       }
 
       const url = window.URL.createObjectURL(response.data);
