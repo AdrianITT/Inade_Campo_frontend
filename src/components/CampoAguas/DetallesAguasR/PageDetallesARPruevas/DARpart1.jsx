@@ -888,7 +888,7 @@ const DARpart1 = () => {
                         >
                           {ph.id && (
                             <div style={{ marginBottom: 16 }}>
-                              <Descriptions size="small" column={1} bordered>
+                              {/* <Descriptions size="small" column={1} bordered>
                                 <Descriptions.Item label="¿Uso de tira de pH?">
                                   {ph.calibracionPhCampo?.usoPh ? "Sí" : "No"}
                                 </Descriptions.Item>
@@ -898,7 +898,7 @@ const DARpart1 = () => {
                                     ? `${ph.calibracionPhCampo.rangoA} a ${ph.calibracionPhCampo.rangoB}`
                                     : "No asignado"}
                                 </Descriptions.Item>
-                              </Descriptions>
+                              </Descriptions> */}
 
                               <Space wrap style={{ marginTop: 8 }}>
                                 <Text strong>Acciones:</Text>

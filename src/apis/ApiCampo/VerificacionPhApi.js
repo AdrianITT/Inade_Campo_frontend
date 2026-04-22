@@ -7,6 +7,9 @@ export const createPrimerPuntoLaboratorio = (data)=> Api_Host.post('/campo/prime
 export const createSegundoPuntoLaboratorio =(data)=> Api_Host.post('/campo/segundopuntolaboratorio/',data);
 export const createPrimerPuntoCampo = (data)=> Api_Host.post('/campo/primerpuntocampo/', data);
 export const createSegundoPuntoCampo =(data)=> Api_Host.post('/campo/segundopuntocampo/',data);
+
+export const createPuntoLaboratorio =(data)=> Api_Host.post('/campo/puntoLaboratorio/',data);
+export const createPuntoCampo =(data)=> Api_Host.post('/campo/puntoCampo/',data);
 export const createLecturaVerificacion =(data)=> Api_Host.post('/campo/lecturaverificacion/',data);
 
 export const updateCalibracionPh = (id, data) => Api_Host.put(`/campo/calibracionph/${id}/`,data);
@@ -17,6 +20,9 @@ export const updatePrimerPuntoLaboratorio = (id, data,)=> Api_Host.put(`/campo/p
 export const updateSegundoPuntoLaboratorio =(id, data,)=> Api_Host.put(`/campo/segundopuntolaboratorio/${id}/`,data);
 export const updatePrimerPuntoCampo = (id, data)=> Api_Host.put(`/campo/primerpuntocampo/${id}/`,data);
 export const updateSegundoPuntoCampo =(id, data)=> Api_Host.put(`/campo/segundopuntocampo/${id}/`,data);
+
+export const updatePuntoLaboratorio =(id, data)=> Api_Host.put(`/campo/puntoLaboratorio/${id}/`,data);
+export const updatePuntoCampo =(id, data)=> Api_Host.put(`/campo/puntoCampo/${id}/`,data);
 export const updateLecturaVerificacion =(id,data)=> Api_Host.put(`/campo/lecturaverificacion/${id}/`,data);
 
 export const verificacionPhData =(id)=> Api_Host.get(`/campo/calibracion_ph_data/${id}/`);
