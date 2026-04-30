@@ -183,7 +183,7 @@ const Home = () => {
             </Col>
 
             {/* Vibraciones */}
-            <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
+            {/* <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
               <div>
                 <Link to="/GetOrCreateVibracionesPanel">
                   <Card className="card-custom" title="Vibraciones" bordered={false}>
@@ -195,7 +195,7 @@ const Home = () => {
                   </Card>
                 </Link>
               </div>
-            </Col>
+            </Col> */}
 
           </Row>
         </Space>

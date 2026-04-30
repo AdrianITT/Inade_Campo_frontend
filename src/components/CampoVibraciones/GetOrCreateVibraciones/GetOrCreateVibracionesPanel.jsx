@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Input,
@@ -12,7 +12,7 @@ import {
   message,
   ConfigProvider,
 } from "antd";
-import { SearchOutlined, PlusCircleOutlined, FileSearchOutlined } from "@ant-design/icons";
+import { PlusCircleOutlined, FileSearchOutlined } from "@ant-design/icons";
 import {
   DataModalVibraciones,
   ModalVibracionesOT,
@@ -25,6 +25,36 @@ import {
 
 const { Search } = Input;
 const { Title, Text } = Typography;
+
+const THEME = {
+  primary: "#1677ff",
+  success: "#52c41a",
+  bgCard: "#1677ff08",
+  bgCardSearch: "#52c41a08",
+};
+
+const CARD_STYLE = {
+  borderRadius: 16,
+  border: "1px solid rgba(0,0,0,0.04)",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.02)",
+  transition: "all 0.2s ease",
+  height: "100%",
+};
+
+const ICON_STYLE = {
+  fontSize: 20,
+  color: THEME.primary,
+  opacity: 0.8,
+};
+
+const ICON_WRAPPER = {
+  width: 40,
+  height: 40,
+  borderRadius: 12,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
 
 function GetOrCreateVibracionesPanel() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,7 +82,7 @@ function GetOrCreateVibracionesPanel() {
     }
   };
 
-  const handleOk = async (values) => {
+  const handleOk = useCallback(async (values) => {
     try {
       if (!otData?.ot?.orden_trabajo_id) {
         message.error("OT no válida");
@@ -85,7 +115,7 @@ function GetOrCreateVibracionesPanel() {
       message.error("No se pudo crear el registro de vibraciones");
       setIsModalOpen(false);
     }
-  };
+  }, [otData, navigate]);
 
   const handleCancel = () => setIsModalOpen(false);
 
@@ -106,30 +136,15 @@ function GetOrCreateVibracionesPanel() {
     }
   };
 
-  const handleOkSearch = () => {
+  const handleOkSearch = useCallback(() => {
     setIsModalOpenSearch(false);
     const id = vibracionData?.data?.vibracion_id;
     if (id) {
       navigate(`/DetallesVibracion/${id}`);
     }
-  };
+  }, [vibracionData, navigate]);
 
   const handleCancelSearch = () => setIsModalOpenSearch(false);
-
-  // Estilos minimalistas
-  const cardStyle = {
-    borderRadius: 16,
-    border: "1px solid rgba(0,0,0,0.04)",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.02)",
-    transition: "all 0.2s ease",
-    height: "100%",
-  };
-
-  const iconStyle = {
-    fontSize: 20,
-    color: "#1677ff",
-    opacity: 0.8,
-  };
 
   return (
     <ConfigProvider
@@ -178,28 +193,17 @@ function GetOrCreateVibracionesPanel() {
         </Flex>
 
         <Row gutter={[20, 20]}>
-          {/* Card: Crear */}
           <Col xs={24} lg={12}>
             <Card
-              style={cardStyle}
+              style={CARD_STYLE}
               bodyStyle={{ padding: "28px 24px 32px" }}
               bordered={false}
             >
               <Flex vertical gap={20}>
                 {/* Header de la card */}
                 <Flex align="center" gap={12}>
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 12,
-                      backgroundColor: "#1677ff08",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <PlusCircleOutlined style={iconStyle} />
+                  <div style={{ ...ICON_WRAPPER, backgroundColor: THEME.bgCard }}>
+                    <PlusCircleOutlined style={ICON_STYLE} />
                   </div>
                   <div>
                     <Title level={4} style={{ margin: 0, fontWeight: 500 }}>
@@ -221,19 +225,12 @@ function GetOrCreateVibracionesPanel() {
                   value={otCodeCreate}
                   onChange={(e) => setOtCodeCreate(e.target.value.toUpperCase())}
                   placeholder="OT-000123"
-                  enterButton={
-                    <span style={{ padding: "0 4px" }}>
-                      Buscar OT
-                    </span>
-                  }
+                  enterButton="Buscar OT"
                   size="large"
                   allowClear
                   loading={isSearching}
-                  prefix={<SearchOutlined style={{ opacity: 0.5 }} />}
                   onSearch={showModal}
-                  style={{
-                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.02))",
-                  }}
+                  style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.02))" }}
                 />
 
                 <Text 
@@ -250,28 +247,17 @@ function GetOrCreateVibracionesPanel() {
             </Card>
           </Col>
 
-          {/* Card: Buscar */}
           <Col xs={24} lg={12}>
             <Card
-              style={cardStyle}
+              style={CARD_STYLE}
               bodyStyle={{ padding: "28px 24px 32px" }}
               bordered={false}
             >
               <Flex vertical gap={20}>
                 {/* Header de la card */}
                 <Flex align="center" gap={12}>
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 12,
-                      backgroundColor: "#52c41a08",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <FileSearchOutlined style={{ ...iconStyle, color: "#52c41a" }} />
+                  <div style={{ ...ICON_WRAPPER, backgroundColor: THEME.bgCardSearch }}>
+                    <FileSearchOutlined style={{ ...ICON_STYLE, color: THEME.success }} />
                   </div>
                   <div>
                     <Title level={4} style={{ margin: 0, fontWeight: 500 }}>
@@ -291,19 +277,12 @@ function GetOrCreateVibracionesPanel() {
 
                 <Search
                   placeholder="OT-000123"
-                  enterButton={
-                    <span style={{ padding: "0 4px" }}>
-                      Buscar
-                    </span>
-                  }
+                  enterButton="Buscar"
                   size="large"
                   allowClear
                   loading={isSearching}
-                  prefix={<SearchOutlined style={{ opacity: 0.5 }} />}
                   onSearch={showModalVibraciones}
-                  style={{
-                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.02))",
-                  }}
+                  style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.02))" }}
                 />
 
                 <Text 
@@ -321,7 +300,6 @@ function GetOrCreateVibracionesPanel() {
           </Col>
         </Row>
 
-        {/* Footer sutil */}
         <Divider style={{ margin: "40px 0 16px", opacity: 0.3 }} />
         <Flex justify="center">
           <Text style={{ fontSize: 12, color: "#9ca3af" }}>

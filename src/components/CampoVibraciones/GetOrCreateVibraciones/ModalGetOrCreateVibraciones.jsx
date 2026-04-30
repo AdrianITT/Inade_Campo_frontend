@@ -18,8 +18,7 @@ export function DataModalVibraciones({ ot_data, open, onOk, onCancel }) {
   const [dateTime, setDateTime] = useState(null);
 
   const handleConfirm = () => {
-    const value =
-      typeof dateTime?.toISOString === "function" ? dateTime.toISOString() : dateTime;
+    const value = dateTime ? dateTime.toISOString() : null;
     onOk?.(value);
   };
 
@@ -78,7 +77,7 @@ export function DataModalVibraciones({ ot_data, open, onOk, onCancel }) {
               style={{ width: "100%", maxWidth: 360 }}
               placeholder="Selecciona fecha y hora"
               value={dateTime}
-              onChange={(value) => setDateTime(value)}
+              onChange={setDateTime}
             />
           </div>
           <Text type="secondary" style={{ fontSize: 12 }}>
