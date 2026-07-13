@@ -1,0 +1,412 @@
+import React, { act, useEffect, useState } from "react";
+import {
+  Form,
+  Input,
+  Button,
+  Card,
+  Row,
+  Col,
+  DatePicker,
+  Space,
+  Checkbox,
+  Table,
+} from "antd";
+
+import {
+  PlusOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
+
+import { useParams, useNavigate } from "react-router-dom";
+
+import ModalExito from "../ModalTierrasFisicas/ModalCreacion";
+
+import { 
+  createReconocimientoTF, 
+  createUbicacionTF, 
+  getReconocimientoTF,
+  updateReconocimientoTF,
+  updateUbicacionTF,
+  deleteUbicacionTF,
+ } from '../../../apis/ApiCampo/TierrasFisicasApi'; 
+
+import dayjs from "dayjs";
+
+const ReconocimientoTFForm = () => {
+  const [form] = Form.useForm();
+  const { id } = useParams();
+
+  const [isEdit, setIsEdit] = useState(false);
+  const [reconocimientoId, setReconocimientoId] = useState(null);
+  const [loading, setLoading] =useState(true);
+  const [ubicacionesEliminadas, setUbicacionElimina] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const navigate = useNavigate();
+
+
+
+  //funcion Eliminar
+  const eliminarUbicacion = (field, remove) => {
+
+    // obtener ubicaciones actuales
+    const ubicaciones =
+    form.getFieldValue("ubicaciones");
+
+    //Ubicaciones seleccionada
+    const ubicacion =
+    ubicaciones[field.name];
+
+    // Si tiene id significa que existe en DB
+    if (ubicacion?.id){
+      setUbicacionElimina( (prev) => [
+        ...prev,
+        ubicacion.id,
+      ]);
+    }
+    //Eliminar visualmente
+    remove(field.name);
+  };
+
+  const obtenerReconocimiento = async () => {
+    try{
+      const response = await getReconocimientoTF(id);
+      const data = response.data.ubicacion;
+
+      console.log(data);
+      console.log(data.id);
+
+      //Activar modo edicion
+      setIsEdit(true)
+
+      //Guardar id del Reconocimiento
+      setReconocimientoId(data.id);
+
+      //Llenar formulario
+      form.setFieldsValue({
+        fechaMonitoreo: data.fechaMonitoreo
+        ? dayjs(data.fechaMonitoreo)
+        : null,
+
+        direccion: data.direccon,
+
+        observacion: data.observacion,
+
+        ubicaciones: data.ubicacion?.map((item)=>({
+          id: item.id,
+          numeroPunto: item.numeroPunto,
+          area: item.area,
+          proceso: item.proceso,
+          maquinaUbicacion: item.maquinaUbicacion,
+          actividad: item.actividad,
+          conexion: item.conexion,
+        })),
+      });
+
+    }catch(error){
+      
+        // Si es 404 significa que no existe
+      if (error.response?.status === 404) {
+        setIsEdit(false);
+      } else {
+        console.log(error);
+      }
+
+    }finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(()=>{
+    obtenerReconocimiento();
+  }, []);
+
+
+  // Enviar datos
+  const handleFinish = async (values) => {
+    // Aquí haces tu petición POST
+    try {
+      console.log(values);
+
+    //   Crear payload reconocimiento
+      const payloadReconocimiento = {
+        tierraFisica: id,
+        fechaMonitoreo: values.fechaMonitoreo
+        ? values.fechaMonitoreo.format("YYYY-MM-DD")
+        : null,
+        observacion: values.observacion,
+        direccion: values.direccion,
+      }
+    //   Crear/Edicion ReconocimientoTF
+    // const responseReconocimiento = 
+    // await createReconocimientoTF(payloadReconocimiento);
+    let reconocimientoID = reconocimientoId;
+    if (isEdit){
+      await updateReconocimientoTF(
+        reconocimientoID,
+        payloadReconocimiento
+      );
+    }else{
+      const responseReconocimiento = 
+      await createReconocimientoTF(
+        payloadReconocimiento
+      );
+      reconocimientoID = responseReconocimiento.data.id;
+    }
+
+    // const reconocimientoID = responseReconocimiento.data.id;
+
+    if (values.ubicaciones?.length > 0){
+        const promesasUbicacion = 
+        values.ubicaciones.map(
+          async (ubicaciones) => {
+
+            const payloadUbicacion = {
+
+                reconocimientoTF: reconocimientoID,
+                numeroPunto: ubicaciones.numeroPunto,
+                area: ubicaciones.area,
+                proceso: ubicaciones.proceso,
+                maquinaUbicacion: ubicaciones.maquinaUbicacion,
+                actividad: ubicaciones.actividad,
+                conexion: ubicaciones.conexion,
+
+            };
+            // Si existe -> Update
+            if (ubicaciones.id){
+              return updateUbicacionTF(
+                ubicaciones.id,
+                payloadUbicacion
+              );
+            }
+
+            //si no existe -> create
+            return createUbicacionTF(payloadUbicacion);
+        });
+        await Promise.all(promesasUbicacion);
+    }
+    if (ubicacionesEliminadas.length > 0) {
+
+      const promesasEliminar =
+        ubicacionesEliminadas.map((id) =>
+          deleteUbicacionTF(id)
+        );
+
+      await Promise.all(promesasEliminar);
+    }
+
+    if (!isEdit) {
+      form.resetFields();
+    }
+    
+
+      setModalOpen(true);
+
+      setTimeout(()=>{
+        navigate(`/DetallesTierrasFisicas/${id}`);
+      }, 400);
+
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  if(loading){
+    return <p> Cargando..... </p>
+  }
+
+  return (
+    <>
+    <Card title={
+      isEdit
+      ? "Editar Reconocimiento Tierras Físicas"
+      : "Crear Reconocimiento Tierra Físicaas"
+    }
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleFinish}
+      >
+        {/* DATOS PRINCIPALES */}
+        <Row gutter={16}>
+          <Col xs={24} md={12}>
+            <Form.Item
+              label="Fecha Monitoreo"
+              name="fechaMonitoreo"
+            >
+              <DatePicker
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col xs={24} md={12}>
+            <Form.Item
+              label="Dirección"
+              name="direccion"
+            >
+              <Input placeholder="Dirección" />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Form.Item
+          label="Observación"
+          name="observacion"
+        >
+          <Input.TextArea
+            rows={3}
+            placeholder="Observaciones..."
+          />
+        </Form.Item>
+
+        {/* UBICACIONES */}
+        <Card
+          size="small"
+          title="Ubicaciones"
+          style={{ marginTop: 20 }}
+        >
+          <Form.List name="ubicaciones">
+            {(fields, { add, remove }) => {
+              // Columnas tabla
+              const columns = [
+                {
+                  title: "Punto",
+                  render: (_, field) => (
+                    <Form.Item
+                      name={[field.name, "numeroPunto"]}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Input placeholder="1" />
+                    </Form.Item>
+                  ),
+                },
+                {
+                  title: "Área",
+                  render: (_, field) => (
+                    <Form.Item
+                      name={[field.name, "area"]}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Input placeholder="Área" />
+                    </Form.Item>
+                  ),
+                },
+                {
+                  title: "Proceso",
+                  render: (_, field) => (
+                    <Form.Item
+                      name={[field.name, "proceso"]}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Input placeholder="Proceso" />
+                    </Form.Item>
+                  ),
+                },
+                {
+                  title: "Máquina",
+                  render: (_, field) => (
+                    <Form.Item
+                      name={[field.name, "maquinaUbicacion"]}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Input placeholder="Máquina" />
+                    </Form.Item>
+                  ),
+                },
+                {
+                  title: "Actividad",
+                  render: (_, field) => (
+                    <Form.Item
+                      name={[field.name, "actividad"]}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Input placeholder="Actividad" />
+                    </Form.Item>
+                  ),
+                },
+                {
+                  title: "Conexión",
+                  width: 100,
+                  render: (_, field) => (
+                    <Form.Item
+                      name={[field.name, "conexion"]}
+                      valuePropName="checked"
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Checkbox />
+                    </Form.Item>
+                  ),
+                },
+                {
+                  title: "",
+                  width: 80,
+                  render: (_, field) => (
+                    <Button
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => 
+                        eliminarUbicacion(field, remove)
+                      }
+                    />
+                  ),
+                },
+              ];
+
+              return (
+                <>
+                  <Button
+                    type="dashed"
+                    icon={<PlusOutlined />}
+                    onClick={() =>
+                      add({
+                        conexion: false,
+                      })
+                    }
+                    style={{
+                      marginBottom: 16,
+                    }}
+                  >
+                    Agregar Ubicación
+                  </Button>
+
+                  <Table
+                    rowKey="key"
+                    pagination={false}
+                    dataSource={fields}
+                    columns={columns}
+                    scroll={{ x: true }}
+                  />
+                </>
+              );
+            }}
+          </Form.List>
+        </Card>
+
+        {/* BOTÓN */}
+        <Space
+          style={{
+            marginTop: 20,
+            width: "100%",
+            justifyContent: "end",
+          }}
+        >
+          <Button
+            type="primary"
+            htmlType="submit"
+          >
+            {isEdit ? "Actualizar" : "Guardar"}
+          </Button>
+        </Space>
+      </Form>
+    </Card>
+
+    <ModalExito
+    visible={modalOpen}
+    onClose={() => (setModalOpen(false))}/>
+  </>
+  );
+};
+
+export default ReconocimientoTFForm;

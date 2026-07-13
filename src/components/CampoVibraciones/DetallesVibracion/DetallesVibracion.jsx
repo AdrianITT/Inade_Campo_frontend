@@ -20,9 +20,13 @@ import {
   NumberOutlined,
   CheckCircleFilled,
   CloseCircleFilled,
+  DashboardOutlined,
+  ToolOutlined,
 } from "@ant-design/icons";
 
 import FileVibraciones from "../FileVibraciones";
+import FormCalibracion from "../FormCalibracion";
+import FormVibrometro from "../FormVibrometro";
 import "./DetallesVibracion.css";
 
 /* ─── Subcomponentes ─── */
@@ -54,6 +58,9 @@ function DetallesVibracione() {
   const [DetailsVibracion, setDetailsVibracion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [isModalOpenVibrometro, setIsModalOpenVibrometro] = useState(false)
+  const [isModalOpenCalibracion, setIsModalOpenCalibracion] = useState(false)
 
   const fetchData = useCallback(async () => {
     try {
@@ -95,9 +102,6 @@ function DetallesVibracione() {
         <div className="dv-wrapper">
           {/* ── Hero ── */}
           <div className="dv-hero">
-            <div className="dv-hero-orb" />
-            <div className="dv-hero-orb-2" />
-
             <div className="dv-badge">
               <span className="dv-hero-dot" />
               Detalle de vibración
@@ -111,6 +115,22 @@ function DetallesVibracione() {
             </p>
           </div>
 
+              <div className="dv-hero-actions">
+                <Button
+                  icon={<DashboardOutlined />}
+                  onClick={() => setIsModalOpenVibrometro(true)}
+                  className="dv-hero-btn dv-hero-btn--vibro"
+                >
+                  Vibrómetro
+                </Button>
+                <Button
+                  icon={<ToolOutlined />}
+                  onClick={() => setIsModalOpenCalibracion(true)}
+                  className="dv-hero-btn dv-hero-btn--calib"
+                >
+                  Calibrador
+                </Button>
+              </div>
           {/* ── Body ── */}
           <div className="dv-body">
             <Row gutter={[24, 24]}>
@@ -129,7 +149,7 @@ function DetallesVibracione() {
               </Col>
 
               {/* Dirección */}
-              <Col xs={24}>
+              <Col xs={24} md={12}>
                 <InfoCard icon={<EnvironmentOutlined />} label="Ubicación del Servicio">
                   <div className="dv-field-value" style={{ fontWeight: 400 }}>
                     {direccionCompleta || "Sin información de dirección"}
@@ -138,7 +158,7 @@ function DetallesVibracione() {
               </Col>
 
               {/* Información Técnica */}
-              <Col xs={24}>
+              <Col xs={24} md={12}>
                 <InfoCard icon={<NumberOutlined />} label="Información Técnica">
                   <div className="dv-stats-grid">
                     <div className="dv-stat-chip">
@@ -150,31 +170,29 @@ function DetallesVibracione() {
 
                     <div className="dv-stat-chip">
                       <span className="dv-field-label">Estado de Reconocimiento</span>
-                      <div style={{ marginTop: 4 }}>
-                        <Tag
-                          icon={
-                            tieneReconocimiento
-                              ? <CheckCircleFilled />
-                              : <CloseCircleFilled />
-                          }
-                          color={tieneReconocimiento ? "success" : "default"}
-                          style={{
-                            borderRadius: 8,
-                            padding: "4px 12px",
-                            fontWeight: 600,
-                            margin: 0,
-                          }}
-                        >
-                          {tieneReconocimiento ? "RECONOCIDO" : "SIN RECONOCIMIENTO"}
-                        </Tag>
-                      </div>
+                      <Tag
+                        icon={
+                          tieneReconocimiento
+                            ? <CheckCircleFilled />
+                            : <CloseCircleFilled />
+                        }
+                        color={tieneReconocimiento ? "success" : "default"}
+                        style={{
+                          borderRadius: 8,
+                          padding: "4px 12px",
+                          fontWeight: 600,
+                          margin: 0,
+                        }}
+                      >
+                        {tieneReconocimiento ? "RECONOCIDO" : "SIN RECONOCIMIENTO"}
+                      </Tag>
                     </div>
                   </div>
                 </InfoCard>
               </Col>
             </Row>
 
-            <Divider style={{ margin: "40px 0" }} />
+            <Divider style={{ margin: "24px 0" }} />
 
             <div className="dv-action-container">
               <Button
@@ -222,6 +240,78 @@ function DetallesVibracione() {
             onUploadSuccess={async () => {
               await fetchData();
               setIsModalOpen(false);
+            }}
+          />
+        </Modal>
+
+        {/* ── Modal Vibrometro ── */}
+        <Modal
+          title={
+            <Space>
+              <FileAddOutlined style={{ color: "#1677ff" }} />
+              <span style={{ fontWeight: 700 }}>Gestión de Vibraciones</span>
+            </Space>
+          }
+          open={isModalOpenVibrometro}
+          onCancel={() => setIsModalOpenVibrometro(false)}
+          footer={null}
+          width={1200}
+          centered
+          destroyOnClose
+          styles={{
+            body: {
+              background: "#f8fafc",
+              padding: "24px",
+              borderRadius: "0 0 12px 12px",
+            },
+            mask: {
+              backdropFilter: "blur(4px)",
+              background: "rgba(15, 23, 42, 0.4)",
+            },
+          }}
+        >
+          <FormVibrometro
+            vibracionId={id}
+            inventarioMaquinaId={DetailsVibracion?.inventarioMaquina}
+            onSuccess={async () => {
+              await fetchData();
+              setIsModalOpenVibrometro(false);
+            }}
+          />
+        </Modal>
+
+                {/* ── Modal Calibracion ── */}
+        <Modal
+          title={
+            <Space>
+              <FileAddOutlined style={{ color: "#1677ff" }} />
+              <span style={{ fontWeight: 700 }}>Gestión de Vibraciones</span>
+            </Space>
+          }
+          open={isModalOpenCalibracion}
+          onCancel={() => setIsModalOpenCalibracion(false)}
+          footer={null}
+          width={1200}
+          centered
+          destroyOnClose
+          styles={{
+            body: {
+              background: "#f8fafc",
+              padding: "24px",
+              borderRadius: "0 0 12px 12px",
+            },
+            mask: {
+              backdropFilter: "blur(4px)",
+              background: "rgba(15, 23, 42, 0.4)",
+            },
+          }}
+        >
+          <FormCalibracion
+            vibracionId={id}
+            calibradorId={DetailsVibracion?.calibrador}
+            onSuccess={async () => {
+              await fetchData();
+              setIsModalOpenCalibracion(false);
             }}
           />
         </Modal>

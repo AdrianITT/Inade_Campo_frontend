@@ -9,7 +9,7 @@ export const searchOTData = async (data) => {
     ]);
 
     const otData = otRes?.data ?? null;
-    const iluminaciones = ilumRes?.data ?? [];
+    const iluminaciones = ilumRes?.data?.machines ?? [];
 
     // Si no existe la OT
     if (!otData) {

@@ -11,7 +11,8 @@ import {
   SignatureFilled,
   FileSearchOutlined,
   UsergroupAddOutlined,
-  BulbTwoTone
+  BulbTwoTone,
+  ReconciliationTwoTone
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
@@ -120,7 +121,7 @@ const Home = () => {
                   <Card className="card-custom" title="Custodia Externa" bordered={false}>
                     <div className="icon-container">
                     {/* <FileTextOutlined />*/}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" fill="currentColor" class="bi bi-hammer" viewBox="0 0 16 16">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" fill="currentColor" className="bi bi-hammer" viewBox="0 0 16 16">
                       <path d="M9.972 2.508a.5.5 0 0 0-.16-.556l-.178-.129a5 5 0 0 0-2.076-.783C6.215.862 4.504 1.229 2.84 3.133H1.786a.5.5 0 0 0-.354.147L.146 4.567a.5.5 0 0 0 0 .706l2.571 2.579a.5.5 0 0 0 .708 0l1.286-1.29a.5.5 0 0 0 .146-.353V5.57l8.387 8.873A.5.5 0 0 0 14 14.5l1.5-1.5a.5.5 0 0 0 .017-.689l-9.129-8.63c.747-.456 1.772-.839 3.112-.839a.5.5 0 0 0 .472-.334"/>
                     </svg>
                     </div>
@@ -188,9 +189,36 @@ const Home = () => {
                 <Link to="/GetOrCreateVibracionesPanel">
                   <Card className="card-custom" title="Vibraciones" bordered={false}>
                     <div className="icon-container">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" class="bi bi-speaker" viewBox="0 0 24 24">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" className="bi bi-speaker" viewBox="0 0 24 24">
                         <path d="m14.914,24.021l-2.914-14.085-2.914,14.085-3.095-12.534-2.299,9.146L.809,13h-.809v-2h2.191l1.116,2.957L6.009,3.213l2.905,11.767L12,.064l3.086,14.915,2.905-11.767,2.701,10.744,1.116-2.957h2.191v2h-.809l-2.884,7.633-2.299-9.146-3.095,12.534Z" fill="#0e8aff" fill-opacity="1" data-original-color="#000000ff" stroke="none" stroke-opacity="1"/>
                       </svg>
+                    </div>
+                  </Card>
+                </Link>
+              </div>
+            </Col> */}
+
+            {/* <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
+              <div>
+                <Link to="/CrearTF">
+                  <Card className="card-custom" title="Tierras Fisicas" bordered={false}>
+                    <div className="icon-container">
+                      
+                      <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24">
+                        <path fill="none" stroke="#3d9bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13V5m-8 8h16M7 16h10m-7 3h4"/>
+                      </svg>
+                    </div>
+                  </Card>
+                </Link>
+              </div>
+            </Col> */}
+
+              {/* <Col xs={48} sm={24} md={12} lg={8} xl={6} className="col-style">
+              <div>
+                <Link to="/Inventario">
+                  <Card className="card-custom" title="Inventario" bordered={false}>
+                    <div className="icon-container">
+                    <ReconciliationTwoTone />
                     </div>
                   </Card>
                 </Link>

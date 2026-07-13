@@ -6,6 +6,7 @@ import { MenuOutlined, LogoutOutlined } from "@ant-design/icons";
 import Logout_Api from "../../apis/ApiCampo/LougoutApi";
 import { getOrganizacionById } from "../../apis/ApiCampo/OrganizacionApi";
 import "./Header.css";
+import { clearSession } from "../../utils/session";
 
 const { Text } = Typography;
 
@@ -42,9 +43,10 @@ const Header = () => {
         { headers: { Authorization: `Token ${localStorage.getItem("token")}` } }
       );
 
-      ["token", "user_id", "username", "rol", "organizacion", "organizacion_id"].forEach((k) =>
-        localStorage.removeItem(k)
-      );
+      // ["token", "user_id", "username", "rol", "organizacion", "organizacion_id"].forEach((k) =>
+      //   localStorage.removeItem(k)
+      // );
+      clearSession();
       navigate("/");
     } catch (error) {
       console.error("Error al cerrar sesión:", error);

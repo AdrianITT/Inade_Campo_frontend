@@ -8,8 +8,8 @@ const isLocalhost = window.location.hostname === "localhost" ;
 // });
 
 const baseURL = isLocalhost 
-? 'http://localhost:8000/api'
-: 'https://test.simplaxi.com/api';
+? process.env.REACT_APP_BASE_URL
+: process.env.REACT_APP_API_URL;
 
 export const Api_Host = axios.create({ baseURL});
 

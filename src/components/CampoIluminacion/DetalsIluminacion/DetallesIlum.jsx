@@ -145,7 +145,7 @@ const handleOpenChangeEquipo = async () => {
     if (equiposOptions.length === 0) {
       setLoadingEquipos(true);
       const res = await getAllMachineLight(); // <-- ajusta a tu API
-      const data = Array.isArray(res?.data) ? res.data : [];
+      const data = Array.isArray(res?.data?.machines) ? res.data.machines : [];
 
       const options = data.map((eq) => ({
         value: eq.id,

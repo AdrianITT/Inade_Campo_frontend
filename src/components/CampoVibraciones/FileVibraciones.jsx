@@ -171,10 +171,10 @@ const FileVibraciones = ({dataCliente, idVibracion, onUploadSuccess}) => {
           item?.horaTrabajoDia !== undefined && item?.horaTrabajoDia !== null
             ? Number(item.horaTrabajoDia)
             : null,
-        horasExposicionDia:
-          item?.horaExposicion !== undefined && item?.horaExposicion !== null
-            ? Number(item.horaExposicion)
-            : null,
+        // horasExposicionDia:
+        //   item?.horaExposicion !== undefined && item?.horaExposicion !== null
+        //     ? Number(item.horaExposicion)
+        //     : null,
         metodoEvaluar:
           item?.metodoAEvaluar !== undefined && item?.metodoAEvaluar !== null
             ? Number(item.metodoAEvaluar)
@@ -221,7 +221,7 @@ const FileVibraciones = ({dataCliente, idVibracion, onUploadSuccess}) => {
       area: p?.area ?? "",
       proceso: p?.proceso ?? "",
       poe: p?.poe ?? "",
-      horasExposicionDia: p?.horasExposicionDia ?? null,
+      // horasExposicionDia: p?.horasExposicionDia ?? null,
       horasTrabajoDia: p?.horasTrabajoDia ?? null,
       metodoEvaluar: p?.metodoEvaluar ?? null,
       actividad: p?.actividad ?? "",
@@ -494,7 +494,7 @@ const FileVibraciones = ({dataCliente, idVibracion, onUploadSuccess}) => {
                           </Form.Item>
                         </Col>
 
-                        <Col xs={24} md={12}>
+                        {/* <Col xs={24} md={12}>
                           <Form.Item
                             label="Hora de exposición al día"
                             name={[field.name, "horasExposicionDia"]}
@@ -502,7 +502,7 @@ const FileVibraciones = ({dataCliente, idVibracion, onUploadSuccess}) => {
                           >
                             <InputNumber min={0} style={{ width: "100%" }} />
                           </Form.Item>
-                        </Col>
+                        </Col> */}
                       </Row>
 
                       <Form.Item

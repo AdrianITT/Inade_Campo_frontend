@@ -1,0 +1,335 @@
+import React, { useState, useEffect} from "react";
+import {
+  Card,
+  Button,
+  Row,
+  Col,
+  Checkbox,
+  message,
+} from "antd";
+
+import {
+  LockOutlined,
+  CheckCircleOutlined,
+  FileExcelOutlined,
+} from "@ant-design/icons";
+
+import { useParams, useNavigate } from "react-router-dom";
+import { getTierrasFisicas, getDownloadExcel } from "../../../apis/ApiCampo/TierrasFisicasApi";
+
+const DetallesTierrasFisicas = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
+
+    //cambio de estso de cada nodo 
+    const [reconocimientoTF, setReconocimientoTF] = useState(false);
+    const [verificacionTF, setVerificacionTF] = useState(false);
+    const [hojaCampoTF, setHojaCampoTF] = useState(false);
+
+    const [genericData, setGenericData] = useState();
+
+    useEffect(()=> {
+        async function fetchData() {
+            const dataTF = await getTierrasFisicas(id);
+            console.log("dataTF: ",dataTF);
+            setReconocimientoTF(dataTF.data.reconocimiento);
+            setVerificacionTF(dataTF.data.verificacion);
+            setHojaCampoTF(dataTF.data.hojacampo);
+
+            setGenericData(dataTF.data);
+        }
+        fetchData();
+    },[id]);
+  /*
+    ESTADOS
+    Estos después pueden venir del backend
+  */
+  const reconocimientoCompleto = false;
+  const verificacionCompleta = false;
+
+  /*
+    CONFIGURACIÓN DE FASES
+  */
+  const fases = [
+    {
+      id: 1,
+      fase: "Fase 1",
+      titulo: "Reconocimiento TF",
+      ruta: `/ReconocimientoTF/${id}`,
+      desbloqueado: true,
+      completado: reconocimientoTF,
+    },
+    {
+      id: 2,
+      fase: "Fase 2",
+      titulo: "Verificación de TF",
+      ruta: `/VerificacionTF/${id}`,
+      desbloqueado: reconocimientoTF,
+      completado: verificacionTF,
+    },
+    {
+      id: 3,
+      fase: "Fase 3",
+      titulo: "Hoja de Campo",
+      ruta: `/HojaCampoTF/${id}`,
+      desbloqueado:
+        reconocimientoTF && verificacionTF,
+      completado: hojaCampoTF,
+    },
+  ];
+
+  /*
+    NAVEGACIÓN
+  */
+  const handleNavigate = (fase) => {
+    if (!fase.desbloqueado) {
+      return message.warning(
+        "Debes completar la fase anterior."
+      );
+    }
+
+    navigate(fase.ruta);
+  };
+
+  // downloadExcel
+const downloadExcel = async () => {
+  try {
+    const respuesta = await getDownloadExcel(id);
+
+    if (!respuesta || !respuesta.data) {
+      throw new Error("No se recibieron datos del servidor");
+    }
+
+    // =========================
+    // HEADERS
+    // =========================
+    const headers = respuesta.headers || {};
+
+    const disposition =
+      headers["content-disposition"] ||
+      headers["Content-Disposition"] ||
+      "";
+
+    const contentType =
+      headers["content-type"] ||
+      headers["Content-Type"] ||
+      "application/octet-stream";
+
+    // =========================
+    // NOMBRE DEL ARCHIVO
+    // =========================
+    let filename = "archivo";
+
+    const match = disposition.match(/filename="?([^"]+)"?/);
+
+    if (match && match[1]) {
+      filename = match[1];
+    } else {
+      // fallback según tipo
+      if (contentType.includes("zip")) {
+        filename = "archivos_excel.zip";
+      } else if (contentType.includes("spreadsheet")) {
+        filename = "reporte.xlsx";
+      }
+    }
+
+    // =========================
+    // CREAR BLOB
+    // =========================
+    const blob = new Blob([respuesta.data], {
+      type: contentType,
+    });
+
+    // =========================
+    // DESCARGA
+    // =========================
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = filename;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    window.URL.revokeObjectURL(url);
+
+    message.success("Archivo descargado correctamente");
+
+  } catch (error) {
+    console.error(error);
+
+    message.error("Error al descargar el archivo");
+  }
+};
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "40px 60px",
+        background:
+          "linear-gradient(to bottom, #f7f7f7, #ececec)",
+      }}
+    >
+      {/* HEADER */}
+      <Row justify="space-between" align="middle">
+        <div>
+          <h1
+            style={{
+              fontSize: 38,
+              margin: 0,
+              fontWeight: "bold",
+            }}
+          >
+            Tierras Físicas OT {genericData?.OT ?? ""}
+          </h1>
+
+          <p
+            style={{
+              color: "#777",
+              marginTop: 5,
+            }}
+          >
+            Flujo de trabajo y control de fases
+          </p>
+        </div>
+
+        <Button
+          type="primary"
+          size="large"
+          icon={<FileExcelOutlined />}
+          onClick={downloadExcel}
+          style={{
+            height: 50,
+            borderRadius: 10,
+            fontWeight: "bold",
+          }}
+        >
+          Descargar Excel
+        </Button>
+      </Row>
+
+      {/* CONTENIDO */}
+      <Row
+        justify="center"
+        gutter={[50, 50]}
+        style={{
+          marginTop: 90,
+        }}
+      >
+        {fases.map((fase) => {
+          const bloqueado = !fase.desbloqueado;
+
+          return (
+            <Col key={fase.id}>
+              {/* TITULO */}
+              <div
+                style={{
+                  marginBottom: 15,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <Checkbox checked={fase.completado} />
+
+                <span
+                  style={{
+                    fontWeight: 600,
+                    color: "#555",
+                  }}
+                >
+                  {fase.fase}
+                </span>
+              </div>
+
+              {/* CARD */}
+              <Card
+                hoverable={!bloqueado}
+                onClick={() => handleNavigate(fase)}
+                style={{
+                  width: 320,
+                  height: 120,
+                  borderRadius: 18,
+                  cursor: bloqueado
+                    ? "not-allowed"
+                    : "pointer",
+                  opacity: bloqueado ? 0.6 : 1,
+                  transition: "0.3s",
+                  border: fase.completado
+                    ? "2px solid #52c41a"
+                    : "1px solid #d9d9d9",
+                  boxShadow:
+                    "0 8px 20px rgba(0,0,0,0.08)",
+                }}
+                bodyStyle={{
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: 25,
+                }}
+              >
+                <div>
+                  <h2
+                    style={{
+                      margin: 0,
+                      fontSize: 28,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {fase.titulo}
+                  </h2>
+
+                  <p
+                    style={{
+                      marginTop: 10,
+                      color: "#777",
+                    }}
+                  >
+                    {bloqueado
+                      ? "Bloqueado"
+                      : "Disponible"}
+                  </p>
+                </div>
+
+                {/* ICONO */}
+                <div>
+                  {fase.completado ? (
+                    <CheckCircleOutlined
+                      style={{
+                        fontSize: 40,
+                        color: "#52c41a",
+                      }}
+                    />
+                  ) : bloqueado ? (
+                    <LockOutlined
+                      style={{
+                        fontSize: 40,
+                        color: "#999",
+                      }}
+                    />
+                  ) : (
+                    <CheckCircleOutlined
+                      style={{
+                        fontSize: 40,
+                        color: "#1677ff",
+                      }}
+                    />
+                  )}
+                </div>
+              </Card>
+            </Col>
+          );
+        })}
+      </Row>
+    </div>
+  );
+};
+
+export default DetallesTierrasFisicas;

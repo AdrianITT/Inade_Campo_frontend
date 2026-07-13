@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logout_Api from "../../apis/ApiCampo/LougoutApi";
+import { clearSession } from "../../utils/session";
 
 const AutoLogoutTimer = ({ timeout = 480 * 60 * 1000 }) => { // 1 hora por defecto
   const navigate = useNavigate();
@@ -27,7 +28,8 @@ const AutoLogoutTimer = ({ timeout = 480 * 60 * 1000 }) => { // 1 hora por defec
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     } finally {
-      localStorage.clear();
+      // localStorage.clear();
+      clearSession();
       sessionStorage.clear();
       alert("Tu sesión ha expirado por inactividad.");
       navigate("/");

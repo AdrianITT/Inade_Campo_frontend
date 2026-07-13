@@ -36,3 +36,23 @@ export const createVibracionesCampo = (data) =>
 
 export const getDetallesVibraciones =(id) =>
   Api_Host.get(`/campo/get_detalles_vibraciones/${id}/`);
+
+//update
+
+export const updateVibracionesCampo = (id, data) =>
+  Api_Host.patch(`/campo/vibraciones/${id}/`, data);
+
+// --- Calibracion ---
+
+export const getCalibracion = (id) =>
+  Api_Host.get(`/campo/calibracion/${id}/`);
+
+export const createCalibracion = (data) =>
+  Api_Host.post('/campo/calibracion/',data);
+
+export const updateCalibracion = (id, data) =>
+  Api_Host.patch(`/campo/calibracion/${id}/`,data);
+
+//Obtener Maquinas de Vibraciones
+export const getMachineVibracion = () =>
+  Api_Host.get('/campo/get_all_machine_vibraciones/');

@@ -5,7 +5,7 @@ export const existe = (id) => Api_Host.get(`/campo/existe_ot_for_ilum/${id}/`);
 export const downloadExcel = (id) => Api_Host.get(`/campo/hoja_campo_iluminacion/${id}/`,{responseType:"blob",});
 
 export const searchIluminacion = (data_ot) => Api_Host.get(`/campo/orden_trabajo_iluminacion/${data_ot}/`);
-export const showIluminacion = () => Api_Host.get('/campo/machineLight/');
+export const showIluminacion = () => Api_Host.get('/campo/get_all_machine_iluminacion/');
 export const createIluminacion = (data_ot) => Api_Host.get(`/campo/get_iluminacion_ot/${data_ot}/`);
 
 //detalles Iluminacion
@@ -78,7 +78,7 @@ export const getAllDataAreaTrabajo = (id) => Api_Host.get(`/campo/nat_or_nart_li
 
 
 // Lista máquinas
-export const getAllMachineLight = () => Api_Host.get("/campo/machineLight/");
+export const getAllMachineLight = () => Api_Host.get("/campo/get_all_machine_iluminacion/");
 export const getcalibracionesLightforMachineLight = (id) => Api_Host.get(`/campo/get_data_calibracion/${id}/`);
 
 // Crear máquina
@@ -86,7 +86,9 @@ export const createMachineLight = (payload) => Api_Host.post("/campo/machineLigh
 
 // Crear calibración (1 registro)
 export const createCalibracionLight = (payload) => Api_Host.post("/campo/calibracionesLight/", payload);
+export const createMaquina = (payload) => Api_Host.post("/campo/maquina/", payload);
 export const updateMachineLight = (id, payload) => Api_Host.patch(`/campo/machineLight/${id}/`, payload);
+export const updateMaquina = (id, payload) => Api_Host.patch(`/campo/maquina/${id}/`, payload);
 
 export const updateCalibracionLight = (id, payload) => Api_Host.patch(`/campo/calibracionesLight/${id}/`, payload);
 export const deleteCalibracionLight = (id) => Api_Host.delete(`/campo/calibracionesLight/${id}/`);

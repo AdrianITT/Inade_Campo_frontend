@@ -59,11 +59,11 @@ const CONDICION_CLIMA = [
     });
   }, [form]);
 
-const onFinish = (values) => {
-  confirmarEnvio(values); // pasamos los datos al componente padre
+const onFinish = () => {
+  confirmarEnvio();
 };
 
-const confirmarEnvio = async (values) => {
+const confirmarEnvio = async () => {
   try {
     const values = await form.validateFields();
     Modal.confirm({
@@ -71,7 +71,7 @@ const confirmarEnvio = async (values) => {
       content: "Verifica que toda la información esté completa antes de continuar.",
       okText: "Sí, enviar",
       cancelText: "Cancelar",
-      onOk: () => handleSave(values), // ← ahora sí pasa los valores
+      onOk: () => handleSave(values),
     });
   } catch (error) {
     message.warning("Completa todos los campos obligatorios antes de continuar.");

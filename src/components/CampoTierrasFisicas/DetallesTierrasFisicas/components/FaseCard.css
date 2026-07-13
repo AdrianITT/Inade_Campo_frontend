@@ -1,0 +1,84 @@
+.fase-card {
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  background: white;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.fase-card:hover {
+  border-color: #1677ff;
+  box-shadow: 0 4px 12px rgba(22, 119, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.fase-card.bloqueado {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.fase-card.bloqueado:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.fase-card-header {
+  padding: 20px;
+  border-bottom: 1px solid #fafafa;
+}
+
+.fase-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: #f5f5f5;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.fase-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+  margin: 0;
+}
+
+.fase-body {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.fase-status {
+  font-size: 13px;
+  color: #999;
+}
+
+.fase-icon {
+  font-size: 24px;
+  color: #d9d9d9;
+  transition: color 0.2s ease;
+}
+
+.fase-card:hover .fase-icon {
+  color: #1677ff;
+}
+
+.fase-card.completado .fase-icon {
+  color: #52c41a;
+}
+
+.fase-card.bloqueado .fase-icon {
+  color: #bfbfbf;
+}

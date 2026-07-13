@@ -1,0 +1,949 @@
+import React, { use, useState } from "react";
+
+import {
+  Form,
+  Input,
+  Button,
+  Card,
+  Row,
+  Col,
+  Checkbox,
+  TimePicker,
+  Divider,
+  message,
+} from "antd";
+
+import dayjs from "dayjs";
+
+import {
+  createHojaCampoTF,
+  createValoresResistencia,
+  createOhmsTF,
+  updateHojaCampoTF,
+  updateValoresResistencia,
+  updateOhmsTF,
+  getExistsHojaCampoTF,
+} from "../../../apis/ApiCampo/TierrasFisicasApi";
+
+import ModalExito from "../ModalTierrasFisicas/ModalCreacion";
+
+import {
+  PlusOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
+
+import {
+  useParams,
+  useNavigate
+} from "react-router-dom";
+
+const HojaCampoTFForm = ({
+  onSuccess = null,
+}) => {
+
+  const [form] = Form.useForm();
+
+  const { id } = useParams();
+
+  const [loading, setLoading] =
+    React.useState(false);
+
+  const [idVerificacion, setIdVerificacion] =
+    React.useState(null);
+
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const navigate = useNavigate()
+
+  // =========================
+  // CARGAR DATOS
+  // =========================
+
+  React.useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  const cargarDatos = async () => {
+
+    try {
+
+      setLoading(true);
+
+      const response =
+        await getExistsHojaCampoTF(id);
+
+      setIdVerificacion(
+        response.data.id
+      );
+
+      // =========================
+      // SI NO EXISTEN HOJAS
+      // =========================
+
+      if (!response.data.exists) {
+
+        form.setFieldsValue({
+          hojasCampo: [],
+        });
+
+        return;
+      }
+
+      // =========================
+      // FORMATEAR HOJAS
+      // =========================
+
+      const hojas =
+        response.data.HojaCampo || [];
+
+      const hojasFormateadas =
+        hojas.map((hoja) => ({
+
+          ...hoja,
+
+          horaInicio:
+            hoja.horaInicio
+              ? dayjs(
+                  hoja.horaInicio,
+                  "HH:mm:ss"
+                )
+              : null,
+
+          horaTermino:
+            hoja.horaTermino
+              ? dayjs(
+                  hoja.horaTermino,
+                  "HH:mm:ss"
+                )
+              : null,
+
+          valoresResistencia:
+            hoja.valoresResistencia?.map(
+              (valor) => ({
+
+                ...valor,
+
+                ohms:
+                  valor.ohms?.length > 0
+                    ? valor.ohms
+                    : [
+                        {
+                          valorOhms: "",
+                        },
+                        {
+                          valorOhms: "",
+                        },
+                        {
+                          valorOhms: "",
+                        },
+                        {
+                          valorOhms: "",
+                        },
+                        {
+                          valorOhms: "",
+                        },
+                      ],
+              })
+            ) || [],
+        }));
+
+      form.setFieldsValue({
+        hojasCampo:
+          hojasFormateadas,
+      });
+
+    } catch (error) {
+
+      console.error(error);
+
+      message.error(
+        "Error cargando hojas"
+      );
+
+    } finally {
+
+      setLoading(false);
+    }
+  };
+
+  // =========================
+  // AGREGAR HOJA
+  // =========================
+
+  const agregarHojaCampo = () => {
+
+    const hojas =
+      form.getFieldValue(
+        "hojasCampo"
+      ) || [];
+
+    hojas.push({
+
+      horaInicio: null,
+
+      horaTermino: null,
+
+      resolucion: "",
+
+      temperatura: "",
+
+      humedad: "",
+
+      humedadRelativa: false,
+
+      humedadRelativaPorcentaje: "",
+
+      valoresResistencia: [],
+    });
+
+    form.setFieldsValue({
+      hojasCampo: hojas,
+    });
+  };
+
+  // =========================
+  // ELIMINAR HOJA
+  // =========================
+
+  const eliminarHojaCampo = (
+    indexHoja
+  ) => {
+
+    const hojas =
+      form.getFieldValue(
+        "hojasCampo"
+      ) || [];
+
+    hojas.splice(indexHoja, 1);
+
+    form.setFieldsValue({
+      hojasCampo: hojas,
+    });
+  };
+
+  // =========================
+  // AGREGAR VALOR
+  // =========================
+
+  const agregarValor = (
+    indexHoja
+  ) => {
+
+    const hojas =
+      form.getFieldValue(
+        "hojasCampo"
+      ) || [];
+
+    if (
+      !hojas[indexHoja]
+        .valoresResistencia
+    ) {
+
+      hojas[indexHoja]
+        .valoresResistencia = [];
+    }
+
+    hojas[indexHoja]
+      .valoresResistencia.push({
+
+        elementoMedido: "",
+
+        existenciaContinuidad: false,
+
+        altura: "",
+
+        angulo: "",
+
+        ohms: [
+          { valorOhms: "" },
+          { valorOhms: "" },
+          { valorOhms: "" },
+          { valorOhms: "" },
+          { valorOhms: "" },
+        ],
+      });
+
+    form.setFieldsValue({
+      hojasCampo: hojas,
+    });
+  };
+
+  // =========================
+  // ELIMINAR VALOR
+  // =========================
+
+  const eliminarValor = (
+    indexHoja,
+    indexValor
+  ) => {
+
+    const hojas =
+      form.getFieldValue(
+        "hojasCampo"
+      ) || [];
+
+    hojas[
+      indexHoja
+    ].valoresResistencia.splice(
+      indexValor,
+      1
+    );
+
+    form.setFieldsValue({
+      hojasCampo: hojas,
+    });
+  };
+
+  // =========================
+  // GUARDAR
+  // =========================
+
+  const onFinish = async (
+    values
+  ) => {
+
+    try {
+
+      setLoading(true);
+
+      // =========================
+      // RECORRER HOJAS
+      // =========================
+
+      for (const hoja of (
+        values.hojasCampo || []
+      )) {
+
+        // =========================
+        // PAYLOAD HOJA
+        // =========================
+
+        const payloadHojaCampo = {
+
+          verificacionTF:
+            idVerificacion,
+
+          horaInicio:
+            hoja.horaInicio?.format(
+              "HH:mm:ss"
+            ),
+
+          horaTermino:
+            hoja.horaTermino?.format(
+              "HH:mm:ss"
+            ),
+
+          resolucion:
+            hoja.resolucion,
+
+          temperatura:
+            hoja.temperatura,
+
+          humedad:
+            hoja.humedad,
+
+          humedadRelativa:
+            hoja.humedadRelativa,
+
+          humedadRelativaPorcentaje:
+            hoja.humedadRelativa
+              ? hoja.humedadRelativaPorcentaje
+              : null,
+        };
+
+        let hojaResponse;
+
+        // =========================
+        // UPDATE / CREATE HOJA
+        // =========================
+
+        if (hoja.id) {
+
+          hojaResponse =
+            await updateHojaCampoTF(
+              hoja.id,
+              payloadHojaCampo
+            );
+
+        } else {
+
+          hojaResponse =
+            await createHojaCampoTF(
+              payloadHojaCampo
+            );
+        }
+
+        const hojaActualId =
+          hoja.id ||
+          hojaResponse.data.id;
+
+        // =========================
+        // VALORES RESISTENCIA
+        // =========================
+
+        for (const valor of (
+          hoja.valoresResistencia || []
+        )) {
+
+          const payloadValor = {
+
+            hojaCampoTF:
+              hojaActualId,
+
+            elementoMedido:
+              valor.elementoMedido,
+
+            existenciaContinuidad:
+              valor.existenciaContinuidad,
+
+            altura:
+              valor.altura,
+
+            angulo:
+              valor.angulo,
+          };
+
+          let valorResponse;
+
+          // =========================
+          // UPDATE / CREATE VALOR
+          // =========================
+
+          if (valor.id) {
+
+            valorResponse =
+              await updateValoresResistencia(
+                valor.id,
+                payloadValor
+              );
+
+          } else {
+
+            valorResponse =
+              await createValoresResistencia(
+                payloadValor
+              );
+          }
+
+          const valorActualId =
+            valor.id ||
+            valorResponse.data.id;
+
+          // =========================
+          // OHMS
+          // =========================
+
+          for (const ohm of (
+            valor.ohms || []
+          )) {
+
+            const payloadOhm = {
+
+              valoresResistencia:
+                valorActualId,
+
+              valorOhms:
+                ohm.valorOhms,
+            };
+
+            // =========================
+            // UPDATE / CREATE OHM
+            // =========================
+
+            if (ohm.id) {
+
+              await updateOhmsTF(
+                ohm.id,
+                payloadOhm
+              );
+
+            } else {
+
+              await createOhmsTF(
+                payloadOhm
+              );
+            }
+          }
+        }
+      }
+
+      message.success(
+        "Hojas guardadas correctamente"
+      );
+
+      if (onSuccess) {
+        onSuccess();
+      }
+      setModalOpen(true);
+
+      setTimeout(()=>{
+        navigate(`/DetallesTierrasFisicas/${id}`);
+      }, 1000)
+
+    } catch (error) {
+
+      console.error(error);
+
+      message.error(
+        "Error guardando hojas"
+      );
+
+    } finally {
+
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+    <Card title="Hoja de Campo TF">
+
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={onFinish}
+      >
+
+        {/* ========================= */}
+        {/* AGREGAR HOJA */}
+        {/* ========================= */}
+
+        <Button
+          type="dashed"
+          icon={<PlusOutlined />}
+          onClick={agregarHojaCampo}
+        >
+          Agregar Hoja Campo
+        </Button>
+
+        <br />
+        <br />
+
+        {/* ========================= */}
+        {/* HOJAS */}
+        {/* ========================= */}
+
+        <Form.Item shouldUpdate>
+
+          {() => {
+
+            const hojas =
+              form.getFieldValue(
+                "hojasCampo"
+              ) || [];
+
+            return hojas.map(
+              (
+                hoja,
+                indexHoja
+              ) => {
+
+                const humedadRelativa =
+                  form.getFieldValue([
+                    "hojasCampo",
+                    indexHoja,
+                    "humedadRelativa",
+                  ]);
+
+                return (
+
+                  <Card
+                    key={indexHoja}
+                    style={{
+                      marginBottom: 30,
+                    }}
+                    title={`Hoja Campo #${
+                      indexHoja + 1
+                    }`}
+                    extra={
+
+                      <Button
+                        danger
+                        type="text"
+                        icon={
+                          <DeleteOutlined />
+                        }
+                        onClick={() =>
+                          eliminarHojaCampo(
+                            indexHoja
+                          )
+                        }
+                      >
+                        Eliminar
+                      </Button>
+                    }
+                  >
+
+                    {/* ========================= */}
+                    {/* ID HOJA */}
+                    {/* ========================= */}
+
+                    <Form.Item
+                      hidden
+                      name={[
+                        "hojasCampo",
+                        indexHoja,
+                        "id",
+                      ]}
+                    >
+                      <Input />
+                    </Form.Item>
+
+                    <Row gutter={16}>
+
+                      <Col span={6}>
+                        <Form.Item
+                          label="Hora Inicio"
+                          name={[
+                            "hojasCampo",
+                            indexHoja,
+                            "horaInicio",
+                          ]}
+                        >
+                          <TimePicker
+                            style={{
+                              width:
+                                "100%",
+                            }}
+                          />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={6}>
+                        <Form.Item
+                          label="Hora Termino"
+                          name={[
+                            "hojasCampo",
+                            indexHoja,
+                            "horaTermino",
+                          ]}
+                        >
+                          <TimePicker
+                            style={{
+                              width:
+                                "100%",
+                            }}
+                          />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={6}>
+                        <Form.Item
+                          label="Resolución"
+                          name={[
+                            "hojasCampo",
+                            indexHoja,
+                            "resolucion",
+                          ]}
+                        >
+                          <Input />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={6}>
+                        <Form.Item
+                          label="Temperatura"
+                          name={[
+                            "hojasCampo",
+                            indexHoja,
+                            "temperatura",
+                          ]}
+                        >
+                          <Input />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={6}>
+                        <Form.Item
+                          label="Humedad"
+                          name={[
+                            "hojasCampo",
+                            indexHoja,
+                            "humedad",
+                          ]}
+                        >
+                          <Input />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={6}>
+                        <Form.Item
+                          label="Humedad Relativa"
+                          name={[
+                            "hojasCampo",
+                            indexHoja,
+                            "humedadRelativa",
+                          ]}
+                          valuePropName="checked"
+                        >
+                          <Checkbox />
+                        </Form.Item>
+                      </Col>
+
+                      {humedadRelativa && (
+
+                        <Col span={6}>
+                          <Form.Item
+                            label="% Humedad Relativa"
+                            name={[
+                              "hojasCampo",
+                              indexHoja,
+                              "humedadRelativaPorcentaje",
+                            ]}
+                            rules={[
+                              {
+                                required: true,
+                                message:
+                                  "Ingresa el porcentaje",
+                              },
+                            ]}
+                          >
+                            <Input />
+                          </Form.Item>
+                        </Col>
+                      )}
+
+                    </Row>
+
+                    <Divider />
+
+                    {/* ========================= */}
+                    {/* AGREGAR VALOR */}
+                    {/* ========================= */}
+
+                    <Button
+                      type="dashed"
+                      icon={
+                        <PlusOutlined />
+                      }
+                      onClick={() =>
+                        agregarValor(
+                          indexHoja
+                        )
+                      }
+                    >
+                      Agregar Valor
+                    </Button>
+
+                    <br />
+                    <br />
+
+                    {/* ========================= */}
+                    {/* VALORES */}
+                    {/* ========================= */}
+
+                    {(
+                      hoja.valoresResistencia || []
+                    ).map(
+                      (
+                        valor,
+                        indexValor
+                      ) => (
+
+                        <Card
+                          key={indexValor}
+                          size="small"
+                          style={{
+                            marginBottom: 20,
+                          }}
+                          title={`Valor #${
+                            indexValor + 1
+                          }`}
+                          extra={
+
+                            <Button
+                              danger
+                              type="text"
+                              icon={
+                                <DeleteOutlined />
+                              }
+                              onClick={() =>
+                                eliminarValor(
+                                  indexHoja,
+                                  indexValor
+                                )
+                              }
+                            >
+                              Eliminar
+                            </Button>
+                          }
+                        >
+
+                          {/* ========================= */}
+                          {/* ID VALOR */}
+                          {/* ========================= */}
+
+                          <Form.Item
+                            hidden
+                            name={[
+                              "hojasCampo",
+                              indexHoja,
+                              "valoresResistencia",
+                              indexValor,
+                              "id",
+                            ]}
+                          >
+                            <Input />
+                          </Form.Item>
+
+                          <Row gutter={16}>
+
+                            <Col span={6}>
+                              <Form.Item
+                                label="Elemento Medido"
+                                name={[
+                                  "hojasCampo",
+                                  indexHoja,
+                                  "valoresResistencia",
+                                  indexValor,
+                                  "elementoMedido",
+                                ]}
+                              >
+                                <Input />
+                              </Form.Item>
+                            </Col>
+
+                            <Col span={6}>
+                              <Form.Item
+                                label="Altura"
+                                name={[
+                                  "hojasCampo",
+                                  indexHoja,
+                                  "valoresResistencia",
+                                  indexValor,
+                                  "altura",
+                                ]}
+                              >
+                                <Input />
+                              </Form.Item>
+                            </Col>
+
+                            <Col span={6}>
+                              <Form.Item
+                                label="Ángulo"
+                                name={[
+                                  "hojasCampo",
+                                  indexHoja,
+                                  "valoresResistencia",
+                                  indexValor,
+                                  "angulo",
+                                ]}
+                              >
+                                <Input />
+                              </Form.Item>
+                            </Col>
+
+                            <Col span={6}>
+                              <Form.Item
+                                label="Continuidad"
+                                name={[
+                                  "hojasCampo",
+                                  indexHoja,
+                                  "valoresResistencia",
+                                  indexValor,
+                                  "existenciaContinuidad",
+                                ]}
+                                valuePropName="checked"
+                              >
+                                <Checkbox />
+                              </Form.Item>
+                            </Col>
+
+                          </Row>
+
+                          <Divider>
+                            Valores Ohms
+                          </Divider>
+
+                          <Row gutter={16}>
+
+                            {(valor.ohms || []).map(
+                              (
+                                ohm,
+                                indexOhm
+                              ) => (
+
+                                <Col
+                                  span={4}
+                                  key={indexOhm}
+                                >
+
+                                  {/* ========================= */}
+                                  {/* ID OHM */}
+                                  {/* ========================= */}
+
+                                  <Form.Item
+                                    hidden
+                                    name={[
+                                      "hojasCampo",
+                                      indexHoja,
+                                      "valoresResistencia",
+                                      indexValor,
+                                      "ohms",
+                                      indexOhm,
+                                      "id",
+                                    ]}
+                                  >
+                                    <Input />
+                                  </Form.Item>
+
+                                  <Form.Item
+                                    label={`Ohm ${
+                                      indexOhm + 1
+                                    }`}
+                                    name={[
+                                      "hojasCampo",
+                                      indexHoja,
+                                      "valoresResistencia",
+                                      indexValor,
+                                      "ohms",
+                                      indexOhm,
+                                      "valorOhms",
+                                    ]}
+                                  >
+                                    <Input />
+                                  </Form.Item>
+
+                                </Col>
+                              )
+                            )}
+
+                          </Row>
+
+                        </Card>
+                      )
+                    )}
+
+                  </Card>
+                );
+              }
+            );
+          }}
+
+        </Form.Item>
+
+        {/* ========================= */}
+        {/* GUARDAR */}
+        {/* ========================= */}
+
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={loading}
+        >
+          Guardar
+        </Button>
+
+      </Form>
+
+    </Card>
+    
+    <ModalExito
+    visible={modalOpen}
+    onClose={() => setModalOpen(false)}/>
+
+    </>
+  );
+};
+
+export default HojaCampoTFForm;

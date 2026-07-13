@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Api_Host } from "../Api";
-const isLocalhost = window.location.hostname === "localhost" ;
+// const isLocalhost = window.location.hostname === "localhost" ;
 // const Login_Api = axios.create({
 //   baseURL: Api_Host.defaults.baseURL + '/login/',
 // });
@@ -8,9 +8,8 @@ const isLocalhost = window.location.hostname === "localhost" ;
 //    baseURL: "https://test.simplaxi.com/api/login/",
 //  });
 
-const baseURL = isLocalhost 
-? Api_Host.defaults.baseURL + '/login/'
-: "https://test.simplaxi.com/api/login/";
+const baseURL = Api_Host.defaults.baseURL + '/login/';
+
 
 export const Login_Api = axios.create({ baseURL});
 

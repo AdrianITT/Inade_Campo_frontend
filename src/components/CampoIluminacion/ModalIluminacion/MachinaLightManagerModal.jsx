@@ -17,10 +17,12 @@ import dayjs from "dayjs";
 import { PlusOutlined, ReloadOutlined, EditOutlined } from "@ant-design/icons";
 
 import {
+  getcalibracionesLightforMachineLight,
   getAllMachineLight,
   createMachineLight,
   updateMachineLight,
-  getcalibracionesLightforMachineLight,
+  createMaquina,
+  updateMaquina,
 
   createCalibracionLight,
   updateCalibracionLight,
@@ -46,7 +48,7 @@ export function MachineLightManagerModal({ open, onCancel }) {
     setLoading(true);
     try {
       const r = await getAllMachineLight();
-      const rows = Array.isArray(r?.data) ? r.data : [];
+      const rows = Array.isArray(r?.data.machines) ? r.data.machines : [];
       setMachines(rows);
     } catch (e) {
       console.error(e);
@@ -95,7 +97,7 @@ export function MachineLightManagerModal({ open, onCancel }) {
                //console.log(row);
               // ✅ trae calibraciones del machine seleccionado
               const resp = await getcalibracionesLightforMachineLight(row.id);
-              //console.log("resp: ",resp);
+              console.log("resp: ",resp);
               const calibs = Array.isArray(resp?.data.calibracionData) ? resp.data.calibracionData : [];
 
               // ✅ inyecta calibraciones al objeto machine para que el modal las precargue
@@ -189,6 +191,8 @@ function UpsertMachineLightModal({ open, machine, onCancel, onSaved }) {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
 
+  const [initialCalibracionesSnapshot, setInitialCalibracionesSnapshot] = useState([]);
+
   const isEdit = !!machine?.id;
 
   useEffect(() => {
@@ -200,6 +204,8 @@ function UpsertMachineLightModal({ open, machine, onCancel, onSaved }) {
         Array.isArray(machine?.calibracionesLight) ? machine.calibracionesLight :
         Array.isArray(machine?.calibraciones_data) ? machine.calibraciones_data :
         [];
+
+      setInitialCalibracionesSnapshot(calibs);
 
       form.setFieldsValue({
         equipoId: machine?.equipoId ?? "",
@@ -219,6 +225,7 @@ function UpsertMachineLightModal({ open, machine, onCancel, onSaved }) {
             : [{ id: null, fc: null, inicial: null, final: null }],
       });
     } else {
+      setInitialCalibracionesSnapshot([]);
       form.resetFields();
       form.setFieldsValue({
         equipoId: "",
@@ -237,23 +244,45 @@ function UpsertMachineLightModal({ open, machine, onCancel, onSaved }) {
       setSaving(true);
 
       // 1) create/update machine
-      const machinePayload = {
+      let machinePayload={}
+      const maquinaPatload ={
         equipoId: values?.equipoId ?? null,
         marca: values?.marca ?? null,
         modelo: values?.modelo ?? null,
         serie: values?.serie ?? null,
-        fechaCalibracion: values?.fechaCalibracion
-          ? values.fechaCalibracion.format("YYYY-MM-DD")
-          : null,
-      };
+      }
+      let maquina = machine?.id_maquina ??null;
 
       let machineId = machine?.id ?? null;
 
       if (machineId) {
+
+        machinePayload = {
+          maquina: maquina ?? null,
+          fechaCalibracion: values?.fechaCalibracion
+            ? values.fechaCalibracion.format("YYYY-MM-DD")
+            : null,
+        };
+
         await updateMachineLight(machineId, machinePayload);
+
+        await updateMaquina(maquina, maquinaPatload);
+
       } else {
+
+        const dataMaquina = await createMaquina(maquinaPatload);
+
+        machinePayload = {
+          maquina: dataMaquina?.data?.id ?? null,
+          fechaCalibracion: values?.fechaCalibracion
+            ? values.fechaCalibracion.format("YYYY-MM-DD")
+            : null,
+        };
+
         const r = await createMachineLight(machinePayload);
+
         machineId = r?.data?.id;
+        
       }
 
       if (!machineId) {
@@ -269,13 +298,18 @@ function UpsertMachineLightModal({ open, machine, onCancel, onSaved }) {
         .filter((c) => c && (c.fc !== null || c.inicial !== null || c.final !== null))
         .slice(0, 20);
 
-      const initialCalibs = Array.isArray(machine?.calibraciones) ? machine.calibraciones : [];
-      const initialIds = initialCalibs.map((c) => c?.id).filter(Boolean);
+      const initialIds = initialCalibracionesSnapshot.map((c) => c?.id).filter(Boolean);
       const currentIds = currentNormalized.map((c) => c?.id).filter(Boolean);
 
       const deletedIds = initialIds.filter((id) => !currentIds.includes(id));
+      console.log("Calibraciones a eliminar (IDs):", deletedIds);
       for (const id of deletedIds) {
-        await deleteCalibracionLight(id);
+        console.log("Eliminando calibración con id:", id);
+        try {
+          await deleteCalibracionLight(id);
+        } catch (err) {
+          console.error(`Error al borrar calibración ${id}:`, err);
+        }
       }
 
       for (const c of currentNormalized) {

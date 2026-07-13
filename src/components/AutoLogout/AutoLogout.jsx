@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Logout_Api from "../../apis/ApiCampo/LougoutApi"; // tu instancia de axios
+import {clearSession} from "../../utils/session"; // función para limpiar sesión
 
 const AutoLogout = ({ timeout = 1 * 60 * 1000 }) => { // 15 minutos por defecto
   const navigate = useNavigate();
@@ -27,14 +28,9 @@ const AutoLogout = ({ timeout = 1 * 60 * 1000 }) => { // 15 minutos por defecto
       );
 
       // 🔒 Limpieza completa de datos locales
-      [
-        "token",
-        "user_id",
-        "username",
-        "rol",
-        "organizacion",
-        "organizacion_id",
-      ].forEach((key) => localStorage.removeItem(key));
+      
+      clearSession()
+
 
       sessionStorage.clear();
 
@@ -43,7 +39,7 @@ const AutoLogout = ({ timeout = 1 * 60 * 1000 }) => { // 15 minutos por defecto
     } catch (error) {
       console.error("Error al cerrar sesión automáticamente:", error.response?.data || error);
       // Aunque falle, limpia sesión local por seguridad
-      localStorage.clear();
+      clearSession()
       sessionStorage.clear();
       navigate("/");
     }

@@ -11,6 +11,7 @@ export function DataModalIluminacion({ ot_data,open, onOk, onCancel }) {
        iluminaciones.map((item) => ({
        value: item.id, // o item.pk
        label: `Máquina # ${item.equipoId}` || `Máquina # ${item.id}`,
+       disabled: !item.estado, // deshabilitar si el estado no es true,
        })),
        [iluminaciones]
 
